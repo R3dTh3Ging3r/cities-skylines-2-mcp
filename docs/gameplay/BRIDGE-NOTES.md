@@ -85,3 +85,15 @@ B001 follow-up: `cs2_set_service_budget` again passed `Garbage+Management` and w
 Landfill-area editing follow-up: at02:15 January2027 UI storage reached135/151t despite maximum funding. The user explicitly approved extending the narrow disposal strip about75m east at unchanged depth, on surveyed empty land and clear of treatment expansion. Native automated corner drags did not visibly change the shape or151t capacity, even after a short simulation advance. No successful expansion claimed. User offered to perform the two drags manually; leave input control alone until that action is complete, then verify capacity. Add polygon-read/edit with normal placement validation, current/proposed capacity, owner association and checkpoint support. Record this as an observed automation limitation, not a proven game bug.
 
 Manual landfill edit follow-up: the user finished it, and a subsequent native UI read confirmed353t capacity with133t stored. Keep the earlier failed automation observations; do not attribute this successful polygon edit to the agent.
+
+## B011 — Read-only loan quotes and staffed operating estimates
+
+The current loan endpoint reports only existing debt. Source inspection found SetLoan calls RequestLoanOffer and then ChangeLoan in the same request, so it must not be used to obtain a harmless quote. The native Loans UI previews principal, interest and monthly cost separately from Accept. Add a read-only quote endpoint using RequestLoanOffer without ChangeLoan, with explicit time units matching the UI. At zero existing debt, returned zero interest is not an offer of interest-free borrowing.
+
+The recycling purchase card exposed 120,000/month upkeep and 1,500 tonnes/month processing, but its future wage bill and budget-adjusted capacity/cost remain absent from the current prefab endpoint. Add read-only base maintenance, workplace mix, wage assumptions, service-budget effects and estimated versus actual labels. Profitability forecasts should exclude unmeasured recovered-material revenue or show it separately as a scenario.
+
+## B012 — Road reconstruction can omit successful segments from receipts
+
+Fifth challenge: extending the new southbound road by50m returned built:true, segments:[] and null junction data. A fresh road graph verified new segment69054v27 and movement of the previous intermediate node toz1106.68359. Add a post-operation topology diff including reused/changed entities, explicit completion state and final snapped coordinates. Avoid interpreting an empty segment list as cancellation.
+
+The game also automatically added traffic lights at a paired one-way highway to two-way boulevard taper. Road preflight should disclose resulting controls and closely spaced junctions. Full lane-level route tests, curve radius/grade diagnostics and merge spacing would improve planning beyond graph connectivity. No code fix was made during gameplay.
