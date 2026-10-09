@@ -1,0 +1,18 @@
+# Replace C:/path/to/cities-skylines-2-mcp with your absolute checkout path.
+# If Node is installed elsewhere, replace command with its absolute executable.
+# Add these tables to a trusted project's .codex/config.toml or user config.
+# Merge with existing configuration; do not replace unrelated settings.
+[mcp_servers.cs2]
+command = 'C:/Program Files/nodejs/node.exe'
+args = ['C:/path/to/cities-skylines-2-mcp/mcp-server/dist/index.js']
+cwd = 'C:/path/to/cities-skylines-2-mcp/mcp-server'
+startup_timeout_sec = 20
+tool_timeout_sec = 45
+enabled_tools = [
+  'cs2_ping', 'cs2_game_state', 'cs2_city_overview', 'cs2_budget',
+  'cs2_city_services', 'cs2_demand', 'cs2_get_camera', 'cs2_screenshot',
+  'cs2_set_simulation', 'cs2_run_simulation'
+]
+
+[mcp_servers.cs2.env]
+CS2_BRIDGE_URL = 'http://127.0.0.1:8642'

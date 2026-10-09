@@ -7,3 +7,8 @@
 # OS
 Thumbs.db
 .DS_Store
+
+# Local Codex configuration and validation artifacts
+.codex/
+.local/
+.superpowers/
