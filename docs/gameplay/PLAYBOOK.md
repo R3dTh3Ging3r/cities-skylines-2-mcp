@@ -98,3 +98,12 @@ Record targets, ranking, restrictions, starting save, and the meaning of the clo
 For a real-time challenge, provisionally budget 10% for baseline/checkpoint work, 70% for useful interventions, and 20% for observation, final evidence, and saving. Change those proportions if the task demands it. Near the deadline, finish and verify existing work before starting a large project. Report success only from measured targets and a verified save.
 
 Read [LEARNING.md](LEARNING.md) for corrections. Our first live session is documented in L004–L006. Starter utility budget reductions helped retain cash, but growth required raising capacity; monitor fulfilled consumption and leave headroom. These observations come from one city and are not universal settings.
+
+## Lessons from the second challenge
+
+- Inspect happiness-factor contributions before adding services. Crime risk can depress happiness even when recorded crimes are zero; a count alone misses that problem (L009).
+- Compare job vacancies by education with unemployment. Newly unlocked offices may help an educated workforce, but add a modest cluster and observe hiring before expanding further (L010).
+- Review development points at each milestone through the UI until the bridge exposes the tree and legitimate spending. Advanced Road Services and Roundabouts were purchased normally in session two.
+- A locally verified utilization reading is stronger evidence of service operation than aggregate capacity; retain unexplained endpoint warnings for investigation (L011).
+
+- Employment and traffic need repeated observations after growth. In session two, unemployment temporarily rebounded above target before recovering; report both the final result and volatility. A better individual road does not establish better citywide flow (L012).

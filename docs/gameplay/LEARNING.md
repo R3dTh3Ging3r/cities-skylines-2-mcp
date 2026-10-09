@@ -78,3 +78,21 @@ After the diagonal road link, the flagged intersection bottleneck cleared on a s
 Final paused state: population 1758, money 761670, income 167734/month, operating costs 150952/month, surplus 16782/month, no debt, XP 6133. Large Village achieved; Big Town not achieved. Happiness 52, health 56, unemployment 8.59%, no homelessness. Traffic flow ended at 79% despite the intermediate bottleneck clearing: do not generalize that intermediate success.
 
 Late budget readings remained positive but varied from 29,158 to 7,271 before ending at 16,782. Industrial taxes declined, and staffing mismatch remained. The sustainable next step is diagnosis and consolidation, not more service commitments or indiscriminate industrial zoning. The next challenge should budget time for transport and economic stabilization. Deadline polling ran slightly past 30 real minutes; add an independent bridge-side real-time pause deadline in a future update.
+
+## L009 Happiness diagnosis and targeted policing
+
+Second challenge, October 8–9, 2026. Happiness fell to48 despite adequate aggregate utilities. UI factor panel identified crime risk -13, taxes -2, unreliable healthcare -2 and traffic -1. CrimeCount was0, while the police UI showed90% crime probability: risk and actual crime counts are different measures. Built Small Police Station (PoliceStation02) for100,000, initially75% budget then100%; staffed operating cost25,200/month at100%. UI risk later fell to19%, happiness rose to63, and surplus remained positive above59,000/month. Population growth, office jobs and time are confounders; this is one city experiment, not a universal optimal service threshold. Read the actual happiness causes before choosing a building.
+
+## L010 Educated jobs reduce the observed mismatch
+
+Before low-density office zoning, unemployed residents coexisted with mostly uneducated vacancies and no educated vacancies. After Grand Village unlocked Office Low, zoned183 cells along the new western loop near the school and shops. Employment readings subsequently showed unemployment4.93% and4.17%, down from roughly12%; office tax income appeared. Commercial expansion and changes in the labor pool also occurred, so the office effect is not isolated. Keep education-specific vacancy data in the decision loop rather than responding to industrial demand alone.
+
+## L011 Verify local service operation and road outcomes
+
+The sewage outlet UI showed 71,000 m3/month capacity and 16% usage at approximately 03:48 (UI September; API calendar remains incorrect), despite the lingering pipeline endpoint warning. This confirms observed operation, not that the pipe warning or its surface elevation is correct. Do not confuse aggregate capacity with utilization; inspect the building.
+
+Traffic: entrance signal removal, northeast loop, a small tree roundabout and same-width asymmetric main-street replacements have not established an overall improvement. City flow readings79->81->79->78->77 while traffic volume rose. Original worst segment improved28->39%, but the next segment worsened after replacement. Road reconstruction can reset measurements; allow multiple refreshes and preserve uncertain or negative results. Do not claim the experiment succeeded from a nicer-looking junction.
+
+## L012 Late observation changes the outcome
+
+October 9, 2026, second challenge. Surplus exceeded 40,000/month over distinct hourly updates (83,508; 74,597; 114,677), ending at 142,444. Happiness ended at 64. However unemployment rebounded from 3.03% to 8.61% and finally 4.32%; total jobs fell from 1,047 to 965 between late samples while the adult population grew. Jobs recovered to 1,109 and unemployment ended below the target at 4.32%. The cause of the temporary job decline was not isolated. Treat office zoning as a promising intervention, not a demonstrated lasting fix. Final city traffic was 75%, below both the 85% goal and 79% baseline despite an improved original spine segment. Reserve observation time, stop residential growth when hiring falls behind, and report final values alongside intermediate improvements.

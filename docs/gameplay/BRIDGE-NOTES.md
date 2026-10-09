@@ -19,6 +19,7 @@ At the start, UI showed June 2026, API gameDateTime said 2026-01-06. Likely mont
 ## Useful additions
 
 - Dedicated progression endpoint: current milestone, next threshold, XP, unlock points and available development choices.
+- Development-point spending: the user noticed unspent points after the first challenge. The current MCP catalog and server source expose no tool to purchase development-tree unlocks. Add a progression/tree query with point balance, stable node IDs, costs, prerequisites and purchased/available states, plus a purchase action that uses the game's normal rules and returns the verified unlock and remaining points. Reject insufficient points or unmet prerequisites; retrying an already purchased node must not spend twice. Existing placement `force` options bypass locks and are not a substitute for legitimate point spending. Before choosing an unlock, inspect the current tree and compare its benefit and any subsequent building upkeep with the city's needs. This is a feature request, not implemented functionality.
 - Completed-save status including safe checkpoint identity (current tool only acknowledges asynchronous start).
 - Utility network connectivity and fulfilled water/sewage amounts, not only aggregate capacities.
 - Batched observations with one frame/timestamp and typed units.
@@ -48,3 +49,9 @@ Prefab info needs capacity, base operating expenses and likely wages. Building i
 - Distinguish service budget efficiency from actual building efficiency, which also depends on staffing and other conditions.
 
 - Add a real-time stop deadline independent of agent polling. The requested 30-minute stop was detected a few seconds late, and pause/evidence tools finished within the next minute. A bridge-side UTC deadline should pause the game even while the agent is waiting on a tool or writing notes.
+
+## Second-session follow-ups
+
+Signature-building unlock dialogs also pause simulation (Rock Musician Mansion and Baltar Pines observed); extend B005 modal detection/dismissal beyond milestones. Add structured happiness-factor telemetry: the UI identified crime risk -13 while bridge notifications had no crime warning and CrimeCount was zero. CrimeRate corresponds to risk/probability rather than a count of completed crimes; expose units and distinguish these measures.
+
+The UI-built small tree roundabout is confirmed by road graph junction164643v1, roundabout:true. Add a bridge action for roundabout size/style and removal, with normal unlock/cost checks; current junction control offers only lights/nolights/stop/default. Surface default pipe placement is visible at the sewage corridor. The outlet itself showed16% utilization, so the existing warning should not be presented as proof that sewage service failed. Separate the network endpoint channels and expose actual treatment/fulfilled flow.
