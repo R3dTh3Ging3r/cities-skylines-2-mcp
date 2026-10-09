@@ -1,0 +1,65 @@
+# Ezra northern freeway: research and next-run brief
+
+Prepared October 9, 2026. Research is outside the next one-hour gameplay challenge. No city construction or simulation advancement occurred during this preparation. The user wants the incoming freeway to curve west north of industry, continue toward the western owned boundary, and have attractive, efficient access for later expansion.
+
+## Evidence and limits
+
+Read-only bridge inspection confirmed Ezra City remains paused at frame 9462047, the previous challenge's final frame. Nine owned tiles form a square approximately bounded by x=-2181.565 to -311.652 and z=-311.652 to 1558.261. The incoming highway is around x=-1120, giving approximately 1.06 km to the western owned boundary. Its two carriageways continue north beyond owned land; preserve those outside connections. Raw graph and tile data are in ignored `.local/s4-research-*` files.
+
+The user observed vehicles slowing almost to a stop at the sharp industrial exit. This is valuable direct feedback, not an independently measured before/after speed result. The last challenge established connectivity, but final city flow declined from 71% to 66%. A functional graph and an attractive screenshot do not establish good road geometry or throughput.
+
+Exact construction coordinates remain provisional until terrain, buildings, utilities, bridge clearance and lane connections are surveyed. The existing corridor screenshot is historical. Do not treat it as a current terrain survey.
+
+## What the research changes
+
+**Separate freeway movement from property access.** A frontage road runs beside a freeway and receives ramps; cross streets distribute trips from there. Keep driveways and nearby intersections out of ramp connection areas. This is the feeder-road approach relevant to this corridor. [TxDOT frontage-road guidance](https://www.txdot.gov/manuals/des/acm/chapter-2--access-management-standards/section-3--number--location--and-spacing-of-access/frontage-roads.html).
+
+**Use collectors inside town.** Collectors connect local streets with arterials. In Ezra, an industrial collector should gather factory/service traffic, while a separate town collector serves neighborhoods and shops. Their purpose should be visible in junction spacing and connections, not just lane count. [FHWA road hierarchy](https://www.fhwa.dot.gov/policyinformation/pubs/our_nations_highways_2026/roads.cfm).
+
+**Provide room between maneuvers.** Closely spaced entrances and exits create crossing lane-change movements. Ramp spacing and auxiliary lanes must be considered together. Apply this principle to the game; do not transplant real-world distance requirements into a small game tile as if they were simulation rules. [TxDOT interchange design considerations](https://www.txdot.gov/manuals/des/rdw/chapter-15-grade-separations-and-interchanges-/15-6-general-design-considerations.html).
+
+**Start with a simple service interchange.** Diamond layouts connect a freeway to a cross street through four ramps; their terminal intersections still need suitable control and queue storage. A cloverleaf consumes more land and introduces weaving between loops. A freeway-to-freeway junction serves a different purpose. [FHWA interchange guide](https://highways.dot.gov/field-offices/missouri/interchange-design-promptlist).
+
+**Use the game's lane tools deliberately.** The developer describes constructing acceleration/deceleration lanes by widening a highway section by one lane and attaching a one-lane ramp to that extra lane. Parallel roads and curves support a consistent divided alignment. Bridge placement must still be verified in the running game. [Cities: Skylines II road tools](https://www.paradoxinteractive.com/games/cities-skylines-ii/features/road-tools).
+
+**Measure whether drivers actually benefit.** The developer describes routing costs involving time, comfort, money and behavior. A longer bypass may attract little traffic if it offers a poor trip. This is why route usage and queues matter alongside citywide flow. The 2023 diary explains intent, not a guarantee of the installed patch's exact behavior. [Cities: Skylines II traffic AI](https://www.paradoxinteractive.com/games/cities-skylines-ii/features/traffic-ai).
+
+## Recommended layout
+
+1. Make the incoming pair of highway carriageways sweep west through a broad, continuous bend north of industry. Begin the bend early enough to avoid a kink. Preserve two through lanes in each direction initially, with consistent median spacing. The westbound carriageway should be north of the eastbound carriageway on the east-west section under right-hand traffic.
+2. Continue the mainline toward x=-2181, stopping safely inside the owned boundary. Leave aligned extension ends and clear land for later continuation. This is an expansion provision, not a new outside connection at an internal tile boundary. Vehicles must have usable exits before unfinished ends.
+3. Place one diamond-style service interchange on the straight western section, clear of the mainline bend. Favor a single crossroad bridge over two elevated freeway decks if terrain and clearance permit. Provide all four ramp movements, moderate ramp curves, gentle vertical transitions and straight merge/diverge approaches.
+4. Use a short industrial-side frontage/distributor road where it helps distribute trips, connecting the ramp terminal area to the industrial collector and western town collector. Reserve the opposite-side frontage corridor for future development; build only the connections needed now. This is not a requirement to pave two full-length frontage roads immediately.
+5. Keep industrial loading streets off the ramps. Give the main collector fewer, deliberate junctions, and place local accesses away from terminal queues. Keep walking routes connected across the corridor at the crossroad rather than routing pedestrians along highway ramps.
+6. Retain a working city entrance during replacement. Reuse useful parts of the old western route as collectors where appropriate. Remove the sharp ramp and improvised loop only after the replacement is verified in both directions. Avoid redundant ramps crowded against the new bend.
+
+The result should read visually as one coherent corridor: parallel carriageways, smooth approaches, a consistent median, one legible interchange and deliberate green buffers. Planting comes after geometry and operation are checked. Do not add ornamental loops to fill empty space.
+
+## Alternatives considered
+
+| Layout | Advantage | Limitation |
+| --- | --- | --- |
+| Westward mainline bend + one diamond + selective frontage access | Matches the user's alignment, reserves expansion, relatively simple to verify | Needs room for the bend and four ramps; crossroad queues must be checked |
+| Continuous paired frontage roads with multiple ramp pairs | Distributes access along a developed corridor | Too much infrastructure and too little ramp spacing for the current roughly 1 km reach |
+| Keep north-south mainline and add a western freeway branch | Preserves a potential future southern through route | More complex system junction; does not prioritize the requested mainline turn west |
+
+The first option is the working recommendation. If the available land cannot fit it smoothly, simplify access or stage construction rather than squeezing another sharp loop into the footprint. Do not quietly purchase land to rescue a poorly fitted design; surface the measured constraint first.
+
+## Bridge geometry rule
+
+`cs2_connect_road` accepts one quadratic control point, then converts it to cubic form. In [RequestHandlers.Roads.cs](../../CS2MCP.Bridge/RequestHandlers.Roads.cs), the cubic controls are `A + 2/3(C-A)` and `D + 2/3(C-D)`. The curve generally does not pass through C. Its starting direction is C-A and ending direction D-C. The MCP wording "through" the control point is misleading (B009).
+
+For a smooth join at P, align P-C_previous with C_next-P in the same direction. One quadratic cannot express every desirable ramp shape; split a compound curve into deliberately aligned pieces. Offset carriageways must be checked for a consistent gap through curves: copying coordinates with a fixed x/z shift is not a true constant-distance offset. Snapping can alter endpoints, and elevation at a snapped endpoint follows the joined network. Verify the built result, not just the requested coordinates.
+
+## Next hour: flexible priorities and acceptance
+
+The next challenge's wall clock has not started. On user handoff, record the actual start and one-hour deadline, refresh finances and traffic, and verify a separately named checkpoint before substantial construction.
+
+- **Primary:** coherent westward freeway corridor, smooth connections, four usable interchange movements and room for extension. Inspect both overhead and driver-level views; watch trucks negotiate ramps and check lane continuity.
+- **Secondary:** industrial and town collectors feed access without trapping local traffic at ramp mouths. Revalidate buses, service vehicles and utilities after road replacement.
+- **Economic guardrails:** aim to retain at least 500,000 cash, no debt and positive recurring balance; carry forward the 100,000/month surplus target if affordable. Starting values must be refreshed. Avoid growth zoning while evaluating the road experiment.
+- **Traffic evidence:** record comparable daytime observations of the original entrance, industrial collector and shopping spine, plus ramp volumes and queue heads. Where roads are replaced, map by position and role rather than assuming entity IDs persist. Target improvement in persistent queues and forced braking; 80% aggregate flow remains a secondary aspiration, not the sole pass condition.
+- **Capacity guardrail:** inspect landfill storage before a long observation run. Last observed 121/151 tonnes and approximately 129 tonnes/month processing; these are historical, not a current guarantee.
+- **Finish:** leave time to observe and correct the completed layout, pause at the real deadline, verify the final save and record both successes and remaining defects. Allocate time by progress rather than rigid blocks.
+
+Short-term speed/queue improvement will remain a hypothesis until observed. Low current ramp usage cannot demonstrate high-volume capacity; future growth needs another check.

@@ -2,6 +2,10 @@
 
 Third challenge completed October 9, 2026. The game is paused. Refresh these historical measurements before resuming. Earlier challenges: [30 minutes](SESSION-01.md), [35 minutes](SESSION-02.md).
 
+## Next challenge preparation
+
+The user requested a road-focused hour after research: curve the incoming freeway west north of industry, extend toward the western owned boundary, improve ramp geometry and aesthetics, and apply feeder-road/collector thinking. Research and the recommended layout are in [FREEWAY-PLAN.md](FREEWAY-PLAN.md). The next hour has **not started**. Read-only inspection on October 9 confirmed the game still paused at frame 9462047. No city changes were made during research. Next action at handoff: refresh state, record the deadline and verify a new named checkpoint before reconstruction. The sharp-ramp braking report is user-observed; measure it during the next baseline.
+
 ## Objectives and clock
 
 The user approved one real hour, with flexible priorities: improve the entrance and prepare a future freeway corridor; maintain at least 100,000/month surplus over three separate hourly updates, at least 500,000 cash and no loans; target 80% city traffic flow (85% stretch), unemployment below 5% over three hourly updates, happiness 70, coherent development and walking routes, 3,500–4,000 residents and the next milestone. Big Town remained a stretch.

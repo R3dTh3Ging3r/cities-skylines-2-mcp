@@ -118,3 +118,9 @@ Read [LEARNING.md](LEARNING.md) for corrections. Our first live session is docum
 - Purchase cards can exclude wages: the radio mast listed 5,000/month but cost 24,500/month when staffed. Verify total operating cost after staffing, and budget an explicit wage allowance before construction ([L016](LEARNING.md#l016-building-card-upkeep-excludes-wages)).
 
 - Check landfill storage and processing after significant growth, even without warning icons. Compare throughput with current accumulation and leave headroom; track storage trend after funding changes ([L017](LEARNING.md#l017-inspect-storage-before-a-warning-appears)).
+
+## Freeway geometry and feeder-road preparation
+
+The researched working brief is [FREEWAY-PLAN.md](FREEWAY-PLAN.md). Choose a coherent alignment and access hierarchy before placing individual ramps. Use frontage roads selectively beside freeways and collectors to distribute local trips; protect ramp approaches from closely spaced accesses. Real-world design guidance is inspiration, not a guarantee of the game's behavior.
+
+Add visual geometry and vehicle-motion checks to graph verification: consistent carriageway spacing, smooth joining directions, usable merge lanes, no abrupt elevation changes and no persistent forced near-stops on free-flow portions of ramps. Slowing or stopping at a controlled surface-street ramp terminal can be intentional. The bridge's quadratic control point is not a waypoint; plan tangents explicitly and inspect the built result. These are revised decision rules prompted by [L019](LEARNING.md#l019-user-review-exposes-a-geometry-weakness), pending a measured replacement experiment.

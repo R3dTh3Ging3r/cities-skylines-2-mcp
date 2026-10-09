@@ -5,6 +5,7 @@ These files are the durable reference for running the city and improving decisio
 | File | Purpose | Update when |
 | --- | --- | --- |
 | [PLAYBOOK.md](PLAYBOOK.md) | Researched mechanics, strategy, and decision rules | A patch or a supported lesson changes the approach |
+| [FREEWAY-PLAN.md](FREEWAY-PLAN.md) | Researched northern freeway and feeder-road brief | Before the next road-focused challenge; revise with measured results |
 | [SESSION.md](SESSION.md) | User objectives, time limits, current progress, and next action | A meaningful action, milestone, interruption, or session end |
 | [SESSION-01.md](SESSION-01.md) | Archived result of the first 30-minute challenge | Historical reference; do not treat as current state |
 | [SESSION-02.md](SESSION-02.md) | Archived result of the second 35-minute challenge | Historical reference; do not treat as current state |
