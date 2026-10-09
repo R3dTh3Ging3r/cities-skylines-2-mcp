@@ -1,6 +1,8 @@
-# Ezra northern freeway: research and next-run brief
+# Ezra northern freeway and utilities: next-run brief
 
 Prepared October 9, 2026. Research is outside the next one-hour gameplay challenge. No city construction or simulation advancement occurred during this preparation. The user wants the incoming freeway to curve west north of industry, continue toward the western owned boundary, and have attractive, efficient access for later expansion.
+
+The user subsequently added a wastewater treatment facility with full expansion space and a durable location, plus replacement of the landfill with a recycling center **only if affordable**. Plan the industrial district, freeway and utilities together. Reserve space now without purchasing every facility upgrade immediately.
 
 ## Evidence and limits
 
@@ -35,6 +37,39 @@ Exact construction coordinates remain provisional until terrain, buildings, util
 
 The result should read visually as one coherent corridor: parallel carriageways, smooth approaches, a consistent median, one legible interchange and deliberate green buffers. Planting comes after geometry and operation are checked. Do not add ornamental loops to fill empty space.
 
+## Integrated industrial and utility layout
+
+The treatment plant is a core objective alongside the freeway. Recycling is conditional. Keep the industrial collector as the shared access route for factories and utility service roads, with a direct connection to the interchange. Large facility entrances belong on service streets set back from ramp terminals; do not put a queue-producing driveway at a merge. Keep residential through trips on the town collector.
+
+Survey the industrial edge for a contiguous utility campus before fixing the interchange and collector alignment. Choose land outside the freeway widening/extension reserve, away from the intended town expansion and clean-water sources. Inspect terrain, pollution, groundwater and applicable wind direction. Neither treatment nor recycling should be assumed pollution-free. Preserve street connections through the industrial district so a utility parcel does not become a barrier to later expansion.
+
+The treatment plant can be inland: the developer describes sewage purification with water returned to the freshwater network and pollutants collected as solid waste. This makes truck access and waste-processing headroom part of the treatment project. Verify actual output and added waste after commissioning. [Developer electricity and water explanation](https://www.paradoxinteractive.com/games/cities-skylines-ii/features/electricity-water).
+
+Reserve the plant's legal full upgrade envelope, access, pipe corridor and neighboring land for additional future capacity. Inspect attachment sides and upgrade limits in the UI before calling the reservation sufficient. A base building's dimensions alone do not establish its fully expanded footprint. Keep roads, zoning and other facilities out of that space. If an enduring site cannot fit, use a regular, accessible parcel suitable for later industrial/service reuse, preserving utility connections and accounting for any contamination before redevelopment. No promise that one facility will serve an arbitrarily large city.
+
+### Live asset and affordability check
+
+Read-only inspection on October 9, at paused frame 9462047, reported both base facilities unlocked:
+
+| Asset | Base footprint | Construction cost |
+| --- | --- | ---: |
+| WastewaterTreatmentPlant01 | 96 x 80 m | 400,000 |
+| RecyclingCenter01 | 176 x 144 m | 880,000 |
+
+Available treatment upgrade prefabs: Extra Processing Unit (100,000) and Advanced Filtering System (50,000). Recycling upgrades: Storage Extension (150,000; reported 128 x 56 m) and Hazardous Waste Collection Point (200,000; 64 x 80 m). These are owner-attached assets, not independent facilities. Reported dimensions do not establish attachment layout, maximum number of upgrades or the combined footprint. Use normal building upgrade controls, not standalone placement of upgrade prefabs.
+
+Both base facilities together cost 1,280,000, already exceeding the last verified 1,171,721 treasury by 108,279 before infrastructure or upkeep. With the 500,000 reserve, both would require at least 1,780,000 plus road/pipe costs and contingency. Therefore recycling is not presently affordable under the working guardrails. Reassess after construction and earned income; do not spend in anticipation of unearned recycling revenue or a milestone reward. The treatment plant alone would leave 771,721 before all other spending, so the whole project still needs a cost check.
+
+The current prefab response does not expose full staffing costs, service output or upgrade limits. Inspect in-game upkeep/capacity, estimate wages, and check the settled budget after commissioning. Aim to retain the 100,000/month surplus; at minimum, avoid a structural loss and new debt. During landfill/recycling overlap, budget both facilities. The developer says recycling recovers manufacturing resources, but that is not a guaranteed profit estimate. [Developer garbage-service explanation](https://www.paradoxinteractive.com/games/cities-skylines-ii/features/city-services-districts-policies).
+
+### Commission and retire in stages
+
+1. Reserve utility parcels and upgrade envelopes before locking in the new freeway, interchange and collector geometry.
+2. Build and connect treatment using normal unlocks and placement rules. Confirm road access, power, water/sewage connections, staffing, treatment operation and sufficient actual capacity before retiring the old sewage outlet. Inspect reclaimed-water output and the added garbage load.
+3. If recycling becomes affordable, build it on the reserved parcel and verify collection, processing, storage trend, staffing and truck access. Confirm it can handle the city's waste stream, including treatment waste; assess whether the hazardous-waste upgrade is required instead of assuming it is or is not.
+4. Keep the landfill operating until replacement service is established. Inspect the game's emptying/transfer controls and destination capacity; complete the normal retirement process before removal. Do not treat demolition of stored waste as successful replacement. If this cannot finish within the hour, report the transition as incomplete and keep safe collection capacity.
+5. Reuse the old site only when its condition and the road plan permit. Leaving room for future industrial/service expansion is an acceptable fallback to a permanent utility site under the user's instruction.
+
 ## Alternatives considered
 
 | Layout | Advantage | Limitation |
@@ -56,6 +91,8 @@ For a smooth join at P, align P-C_previous with C_next-P in the same direction. 
 The next challenge's wall clock has not started. On user handoff, record the actual start and one-hour deadline, refresh finances and traffic, and verify a separately named checkpoint before substantial construction.
 
 - **Primary:** coherent westward freeway corridor, smooth connections, four usable interchange movements and room for extension. Inspect both overhead and driver-level views; watch trucks negotiate ramps and check lane continuity.
+- **Additional core objective:** commission wastewater treatment on a surveyed parcel reserved for its full upgrade envelope and future utility capacity; verify operation before retiring the old outlet.
+- **Conditional objective:** replace landfill service with recycling only when capital, staffed upkeep, waste capacity and a safe transition are affordable. Reserve the site even if construction is deferred.
 - **Secondary:** industrial and town collectors feed access without trapping local traffic at ramp mouths. Revalidate buses, service vehicles and utilities after road replacement.
 - **Economic guardrails:** aim to retain at least 500,000 cash, no debt and positive recurring balance; carry forward the 100,000/month surplus target if affordable. Starting values must be refreshed. Avoid growth zoning while evaluating the road experiment.
 - **Traffic evidence:** record comparable daytime observations of the original entrance, industrial collector and shopping spine, plus ramp volumes and queue heads. Where roads are replaced, map by position and role rather than assuming entity IDs persist. Target improvement in persistent queues and forced braking; 80% aggregate flow remains a secondary aspiration, not the sole pass condition.

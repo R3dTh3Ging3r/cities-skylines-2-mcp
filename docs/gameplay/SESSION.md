@@ -4,6 +4,8 @@ Third challenge completed October 9, 2026. The game is paused. Refresh these his
 
 ## Next challenge preparation
 
+Scope addition: wastewater treatment with full expansion room and a durable site, coordinated with the industrial collectors/freeway; recycling replaces the landfill only if affordable. Both base facilities were reported unlocked during read-only inspection. Costs: treatment 400,000, recycling 880,000, combined 1,280,000 before infrastructure/upkeep versus last verified cash 1,171,721. Reserve and budget checks make recycling conditional; reserve its land now. Full upgrade attachment layout, staffing costs and landfill emptying remain to inspect. See the utility section of [FREEWAY-PLAN.md](FREEWAY-PLAN.md). No facilities have been placed and the next hour remains unstarted.
+
 The user requested a road-focused hour after research: curve the incoming freeway west north of industry, extend toward the western owned boundary, improve ramp geometry and aesthetics, and apply feeder-road/collector thinking. Research and the recommended layout are in [FREEWAY-PLAN.md](FREEWAY-PLAN.md). The next hour has **not started**. Read-only inspection on October 9 confirmed the game still paused at frame 9462047. No city changes were made during research. Next action at handoff: refresh state, record the deadline and verify a new named checkpoint before reconstruction. The sharp-ramp braking report is user-observed; measure it during the next baseline.
 
 ## Objectives and clock
