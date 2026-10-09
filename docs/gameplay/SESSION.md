@@ -1,40 +1,53 @@
-# Current session
+# Current session — Ezra City
 
-Last written: October 8, 2026, America/Chicago. Readings below are historical; refresh the live game state before acting.
+Last updated October 8, 2026, America/Chicago. The game is paused. Refresh all historical readings before resuming.
 
-## Challenge brief
+## Challenge and timing
 
-The user is setting up the city and will provide objectives and a timetable. The challenge clock has **not been started by the agent**. The user has authorized researching strategies and maintaining Markdown learning records.
+The user requested 30 real minutes: recurring profitability first; pleasing aesthetics, realistic design and Big Town second. Start 10:59:16 PM CDT (03:59:16 UTC October 9); target end 11:29:16 PM. The deadline poll returned at 04:29:19 UTC, and pause plus final evidence collection completed by 04:29:52 UTC. Tool polling slightly overran the target; no construction was performed after the deadline.
 
-| Item | Current status |
-| --- | --- |
-| City and map | Awaiting confirmation from the loaded city |
-| Objectives and priority order | Awaiting the user's challenge |
-| Deadline and clock basis | Awaiting the user's timetable; distinguish wall time and game time |
-| Difficulty, unlocks, money settings, DLC and other mods | Read from the chosen setup before planning |
-| Budget/debt or demolition restrictions | Record with the challenge; do not invent constraints |
-| Starting metrics and checkpoint | Not yet captured |
-| Success criteria | Define measurable target, baseline, target value, and deadline for each objective |
+## Final measured result
 
-## Technical state
+| Metric | Result |
+| --- | ---: |
+| Population | 1,758 |
+| Including citizens moving in | 1,810 |
+| Treasury | 761,670 |
+| Monthly income | 167,734 |
+| Monthly operating costs | 150,952 |
+| Monthly surplus | 16,782 |
+| Loan principal | 0 |
+| Happiness / health | 52 / 56 |
+| Unemployment | 8.59% |
+| Homeless citizens | 0 |
+| Traffic flow | 79% |
+| XP | 6,133 |
 
-- Installed game: 1.6.2f1, Steam build 25127643.
-- Bridge: 0.9.0; C# build/install verified; Node protocol and tool discovery verified.
-- Native Codex bridge tools work. Last live observation was the main menu, no city loaded.
-- Initial active tools: ping, game state, overview, budget, city services, demand, camera inspection, screenshots, simulation control, timed runs.
-- Detailed labor, traffic, statistics, construction, and save tools require checking/enabling the relevant allowlist entries before use.
-- The user may be changing the setup now; do not treat this file as a live observation or start advancing time during setup.
+Current milestone: **Large Village (3)**, verified in the UI. **Big Town (8), requiring 46,700 XP, was not reached.** Profitability was positive on several updated late readings, including 29,158, 24,993, 7,271 and finally 16,782 per month. The shrinking margin and industry dependence warrant attention; this is not a guarantee of future profitability. Cash includes milestone rewards and is not the profit measure.
 
-## Next steps
+Final frame: 8,402,121. API date: 2026-01-08 04:16; UI calendar shows August 2026 because the bridge calendar output disagrees with the UI. Installed game 1.6.2f1, bridge 0.9.0.
 
-1. Receive the city-ready message and challenge objectives/timetable.
-2. Read game state, overview, budget, demand, and services; record baseline and check screenshot interpretation.
-3. Complete the approved pause/speed/timed-run checks in the disposable test city before relying on autonomous time advancement. Coordinate those checks with the challenge clock.
-4. Enable needed tools within the approved scope and verify a named checkpoint before construction.
-5. Select the smallest useful intervention, measure the result, and update the learning journal and this session record.
+## Built and configured
 
-## Progress record
+- Compact connected neighborhoods of detached homes and row houses; small shopping street and civic services near homes.
+- Industry to the northwest, with direct access toward the highway; landfill farther west. A second local connection links employment and the civic street.
+- Connected riverside walking loops and tree upgrades along seven residential road segments. Natural green space remains; formal parks have not been built.
+- Two wind turbines, water tower, sewage outlet, small cemetery, clinic, elementary school, landfill and firehouse. No police station or city transit system yet.
+- Taxes: residential 12%, industrial 12%, commercial 10%, office 10%.
+- Budgets: electricity, water/sewage, health/deathcare and garbage 75%; fire 50%; roads and education 100%. Reassess capacity before growth.
+- Electricity production 85200; consumption and fulfilled consumption both 38508. Water capacity 21300 vs consumption 9902; sewage capacity 71000. These are bridge raw units.
 
-No city-management actions, measured target progress, or completed saves are recorded yet. Research is ready in [PLAYBOOK.md](PLAYBOOK.md); initial bridge lessons are in [LEARNING.md](LEARNING.md).
+## Checkpoints and evidence
 
-At each meaningful checkpoint, replace this section with: wall-clock time, in-game time, objective progress, treasury and recurring balance, key shortages, last action/result, verified save, any uncertain dispatched action, and the next step. Keep experiment detail in the journal rather than duplicating it here.
+Separate saves: Ezra-Start, Ezra-Midpoint and Ezra-30min. Final save verified on disk at 24962648 bytes, exclusively readable after writing completed; SHA-256: A3BDB9136B88EBDEE65534FA0A40E9E45294421C43ED8B44FB3DBBD3A473D531. Raw final observations and screenshot are ignored under .local/final-*.json and .local/final.png. Starting cash was 1,000,000 with zero population and XP.
+
+## Resume priorities
+
+1. Keep the city paused until the user supplies the next instruction. Inspect the current budget and a few updated observations before making commitments.
+2. Diagnose the worker education mismatch: 310 vacant jobs coexist with 8.59% unemployment; four factories flag missing uneducated workers. Avoid blindly adding more industry.
+3. Investigate the main spine and highway approach. Overall flow fell from 85% to 79% as volume rose; no flagged bottleneck remained, but the worst main-street segment was 28% flow. The alternative link did not solve all congestion.
+4. Inspect the sewage pipe endpoint warning and pipe elevation/attachment; no household water/sewage warnings were present, but city capacity alone does not prove the endpoint is correct. The unused outside high-voltage line is also flagged.
+5. Review police and leisure provision when financially justified. Preserve the small positive margin before increasing recurring service costs.
+6. Patch the reproducible bridge issues from [BRIDGE-NOTES.md](BRIDGE-NOTES.md) in a separate development pass. No upstream comments or PRs were sent.
+
+Use [LEARNING.md](LEARNING.md) and [PLAYBOOK.md](PLAYBOOK.md) for evidence and decision rules.

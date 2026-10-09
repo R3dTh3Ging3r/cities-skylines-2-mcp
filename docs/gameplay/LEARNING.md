@@ -50,3 +50,31 @@ Use a short ID such as `L004`, followed by:
 **Observed:** C# compilation completed with zero warnings/errors, installed hashes matched, and native Codex ping returned bridge 0.9.0 at MainMenu. State correctly showed no city loaded; city overview rejected the request.
 
 **Conclusion:** Main-menu communication is verified. This does not yet establish save completion, placement, simulation controls, or city-management effectiveness. Keep those validation stages separate. No live city strategy experiments have been performed.
+## L004 First neighborhood reaches a positive recurring reading
+
+October 8, 2026, Ezra City, game 1.6.2f1 / bridge 0.9.0. Initial capital 1,000,000, no population. Connected street loop, wind turbine, water tower and remote sewage outlet; manufacturing separate from housing. Initial utility upkeep excessive relative to population. Reduced Electricity and Water & Sewage budgets from 100% to 50%; efficiency fell to 25%, but measured capacity remained sufficient. At API 13:33: population121, income21995/month, expenses17824/month, balance+4171/month, treasury898008. This is one positive recurring reading, not yet proven sustained. Treasury also includes milestone reward; it is not the profitability metric. Growth and zoning occurred alongside budget changes, so the effect is confounded. Follow-up: watch electricity margin and repeated budget updates.
+
+## L005 Bridge execution lessons
+
+See BRIDGE-NOTES.md for reproducible URL-encoding, construction-readiness, budget-sign and calendar issues. The 0.1-hour timed simulation test auto-paused exactly at frame7938010. A later long run was paused before its target, coincident with milestone progress; check actual state rather than assuming timed runs always finish uninterrupted. Separate save Ezra-Start.cok exists at23416990bytes. Pipe endpoint warning persists at sewage outlet; city-wide sewage capacity is nonzero and no household sewage warning observed, but aggregate capacity alone does not prove local connection.
+
+## L006 Growing services while preserving recurring profit
+
+At1,377 residents and4,218XP, monthly income210818, expenses122402, surplus88416; treasury798090. Added small cemetery, clinic, elementary school and landfill. Residential/industrial tax12%, others10%. Utility budgets stepped up as demand grew: electricity50->75->100%, water50->75%; health50%, garbage75%, education100%. A brief power shortage at consumption15777 versus15000 production was resolved by budget increase; later fulfilled consumption matched demand. Avoid keeping starter cuts after growth. Landfill UI confirmed stored garbage and151t capacity. City now has waterfront walking loops and one tree-lined road section. Industrial freight enters north, homes south/east, pollution-heavy landfill northwest.
+
+Traffic baseline85%flow;20queued vehicles on main spine near civic/commercial junction. Added diagonal local connection fromindustrial node(-1310,846) to civic node(-1370,646); connectivity verified both ends. Effect not yet measured. No deadlocks in baseline. A rejected road link atz446 was blocked byOverlapExisting nearclinic and did not mutate; kept clinic and used other connected routes.
+
+## L007 Costs, labor and final-stage restraint
+
+At1,519 residents the latest budget was59284/month surplus after a second wind turbine and healthcare budget75%. Happiness60, health55; later62/56. More industrial growth reduced measured unemployment from14.26% to2.82% while uneducated vacancies persisted. Do not infer that all vacant jobs mean general unemployment. Restoring health efficiency coincided with higher health; this is one observation with migration/time confounders.
+
+At1,564 residents the new firehouse was operationally budgeted at50%, with an updated monthly surplus29158. Its recurring cost is included in the budget, unlike the earlier62636reading. Defer police/transit and large parks until justified by need and margin. Big Town remainsunreached; actualmilestone3LargeVillage. Existing natural trees, street-tree upgrades, riverside paths and separation of industry/waste fromhomes provide the initial aesthetic structure; central reserved green space can become a formal park when unlocked.
+
+After the diagonal road link, the flagged intersection bottleneck cleared on a subsequent reading; city-wideflow remained85%. Growth and different time-of-dayconfound attribution. Original highway approach still has the poorest flow; do not claim the connection solved alltraffic.
+
+
+## L008 Final result and limits
+
+Final paused state: population 1758, money 761670, income 167734/month, operating costs 150952/month, surplus 16782/month, no debt, XP 6133. Large Village achieved; Big Town not achieved. Happiness 52, health 56, unemployment 8.59%, no homelessness. Traffic flow ended at 79% despite the intermediate bottleneck clearing: do not generalize that intermediate success.
+
+Late budget readings remained positive but varied from 29,158 to 7,271 before ending at 16,782. Industrial taxes declined, and staffing mismatch remained. The sustainable next step is diagnosis and consolidation, not more service commitments or indiscriminate industrial zoning. The next challenge should budget time for transport and economic stabilization. Deadline polling ran slightly past 30 real minutes; add an independent bridge-side real-time pause deadline in a future update.

@@ -13,3 +13,5 @@ The research baseline is October 8, 2026. The local game log reports **1.6.2f1**
 Use the playbook as a starting hypothesis where it gives strategy. Use current game data to decide whether it applies. Record the user's challenge before starting its clock. A later session can recover the reasoning from these files without relying on chat history.
 
 Detailed local evidence belongs under `.local/`, with short paths such as `.local/play/01/`. Name captures `view.png`, `before.json`, and `after.json`; put descriptive labels in the session record. Keep raw evidence out of Git. Summaries can be committed to the personal fork when useful.
+
+Gameplay bug evidence and proposed bridge additions are tracked in [BRIDGE-NOTES.md](BRIDGE-NOTES.md).

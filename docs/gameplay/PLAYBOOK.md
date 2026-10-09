@@ -84,7 +84,7 @@ The initial allowlist exposes inspection and simulation tools. Construction, lab
 Important source-verified details:
 
 - `cs2_demand` returns building-demand values on **0–255**, not the 0–100 stated in its tool description. Company counters can exceed 255. Demand refreshes while simulation runs. Use returned notes and raw units. [Handler](../../CS2MCP.Bridge/RequestHandlers.cs).
-- `cs2_budget` reports **monthly rates refreshed hourly**; expenses are positive costs. Do not treat adjacent reads as independent economic evidence. [Budget handler](../../CS2MCP.Bridge/RequestHandlers.Economy.cs).
+- `cs2_budget` reports **monthly rates refreshed hourly**. Expense breakdown entries are positive costs, but the observed `totalExpenses` aggregate is negative; use `balance` directly or add the signed aggregate to income (L005 / BRIDGE-NOTES B003). Do not treat adjacent reads as independent economic evidence. [Budget handler](../../CS2MCP.Bridge/RequestHandlers.Economy.cs).
 - The services response does not provide full education/health coverage or garbage-processing capacity. Seek statistics, inspections, or UI evidence rather than inventing absent metrics. [Service data](../../CS2MCP.Bridge/RequestHandlers.CityData.cs).
 - Timed runs return immediately and auto-pause later. Saves are asynchronous. Read back state and verify completed saves. [Simulation and save handlers](../../CS2MCP.Bridge/RequestHandlers.Meta.cs).
 - A timeout may leave an action queued. Inspect before retrying to avoid duplicate construction. [Request handling](../../CS2MCP.Bridge/BridgeRequest.cs).
@@ -97,4 +97,4 @@ Record targets, ranking, restrictions, starting save, and the meaning of the clo
 
 For a real-time challenge, provisionally budget 10% for baseline/checkpoint work, 70% for useful interventions, and 20% for observation, final evidence, and saving. Change those proportions if the task demands it. Near the deadline, finish and verify existing work before starting a large project. Report success only from measured targets and a verified save.
 
-Read [LEARNING.md](LEARNING.md) for corrections. No city-management strategy has yet been validated in our own play session.
+Read [LEARNING.md](LEARNING.md) for corrections. Our first live session is documented in L004–L006. Starter utility budget reductions helped retain cash, but growth required raising capacity; monitor fulfilled consumption and leave headroom. These observations come from one city and are not universal settings.
