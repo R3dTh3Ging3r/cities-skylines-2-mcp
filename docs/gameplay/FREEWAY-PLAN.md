@@ -1,4 +1,4 @@
-# Ezra northern freeway and utilities: next-run brief
+# Ezra northern freeway and utilities: design brief
 
 Prepared October 9, 2026. Research is outside the next one-hour gameplay challenge. No city construction or simulation advancement occurred during this preparation. The user wants the incoming freeway to curve west north of industry, continue toward the western owned boundary, and have attractive, efficient access for later expansion.
 
@@ -39,7 +39,7 @@ The result should read visually as one coherent corridor: parallel carriageways,
 
 ## Integrated industrial and utility layout
 
-The treatment plant is a core objective alongside the freeway. Recycling is conditional. Keep the industrial collector as the shared access route for factories and utility service roads, with a direct connection to the interchange. Large facility entrances belong on service streets set back from ramp terminals; do not put a queue-producing driveway at a merge. Keep residential through trips on the town collector.
+At the start handoff, the user made treatment and recycling secondary to the freeway. Recycling remains conditional on affordability. Keep the industrial collector as the shared access route for factories and utility service roads, with a direct connection to the interchange. Large facility entrances belong on service streets set back from ramp terminals; do not put a queue-producing driveway at a merge. Keep residential through trips on the town collector.
 
 Survey the industrial edge for a contiguous utility campus before fixing the interchange and collector alignment. Choose land outside the freeway widening/extension reserve, away from the intended town expansion and clean-water sources. Inspect terrain, pollution, groundwater and applicable wind direction. Neither treatment nor recycling should be assumed pollution-free. Preserve street connections through the industrial district so a utility parcel does not become a barrier to later expansion.
 
@@ -86,12 +86,12 @@ The first option is the working recommendation. If the available land cannot fit
 
 For a smooth join at P, align P-C_previous with C_next-P in the same direction. One quadratic cannot express every desirable ramp shape; split a compound curve into deliberately aligned pieces. Offset carriageways must be checked for a consistent gap through curves: copying coordinates with a fixed x/z shift is not a true constant-distance offset. Snapping can alter endpoints, and elevation at a snapped endpoint follows the joined network. Verify the built result, not just the requested coordinates.
 
-## Next hour: flexible priorities and acceptance
+## Challenge four: priorities and acceptance
 
-The next challenge's wall clock has not started. On user handoff, record the actual start and one-hour deadline, refresh finances and traffic, and verify a separately named checkpoint before substantial construction.
+Challenge four ran October 9, 2026, with the real-time window 15:24:25–16:24:25 UTC. The researched acceptance criteria below are preserved; see [SESSION.md](SESSION.md) for measured outcomes and limitations.
 
 - **Primary:** coherent westward freeway corridor, smooth connections, four usable interchange movements and room for extension. Inspect both overhead and driver-level views; watch trucks negotiate ramps and check lane continuity.
-- **Additional core objective:** commission wastewater treatment on a surveyed parcel reserved for its full upgrade envelope and future utility capacity; verify operation before retiring the old outlet.
+- **Secondary objective:** commission wastewater treatment on a surveyed parcel reserved for its full upgrade envelope and future utility capacity; verify operation before retiring the old outlet.
 - **Conditional objective:** replace landfill service with recycling only when capital, staffed upkeep, waste capacity and a safe transition are affordable. Reserve the site even if construction is deferred.
 - **Secondary:** industrial and town collectors feed access without trapping local traffic at ramp mouths. Revalidate buses, service vehicles and utilities after road replacement.
 - **Economic guardrails:** aim to retain at least 500,000 cash, no debt and positive recurring balance; carry forward the 100,000/month surplus target if affordable. Starting values must be refreshed. Avoid growth zoning while evaluating the road experiment.
@@ -100,3 +100,9 @@ The next challenge's wall clock has not started. On user handoff, record the act
 - **Finish:** leave time to observe and correct the completed layout, pause at the real deadline, verify the final save and record both successes and remaining defects. Allocate time by progress rather than rigid blocks.
 
 Short-term speed/queue improvement will remain a hypothesis until observed. Low current ramp usage cannot demonstrate high-volume capacity; future growth needs another check.
+
+## Current utility parcel reservation
+
+The built treatment plant is centered at(-1534,1200), facing its north-south access street atx=-1482. Keep the unzoned land west and south of it open for normal attached upgrades; no full attachment-envelope guarantee has been established. A provisional recycling parcel lies east of that street between roughlyx=-1470 and-1180,z=1080–1280. The base176x144m recycling footprint appears to fit with the road on its west side, but attachments, frontage, terrain and access must be validated before purchase. Do not fill this land with growable industry. Reuse of this service precinct for later industrial expansion remains the accepted fallback if much larger treatment needs eventually require relocation.
+
+The current landfill and treatment share the industrial street network. Do not confuse that arrangement with unlimited processing capacity: treatment raised the solid-waste stream. The user manually enlarged the landfill after automated area dragging failed. Capacity was verified at 353 tonnes, up from 151; the resulting tapered polygon differs from the initially proposed narrow 75 m extension. This is an interim storage measure, not a processing upgrade. Recycling remains the preferred funded replacement, subject to actual staffed costs and a normal landfill emptying transition.

@@ -1,68 +1,60 @@
 # Current session — Ezra City
 
-Third challenge completed October 9, 2026. The game is paused. Refresh these historical measurements before resuming. Earlier challenges: [30 minutes](SESSION-01.md), [35 minutes](SESSION-02.md).
-
-## Next challenge preparation
-
-Scope addition: wastewater treatment with full expansion room and a durable site, coordinated with the industrial collectors/freeway; recycling replaces the landfill only if affordable. Both base facilities were reported unlocked during read-only inspection. Costs: treatment 400,000, recycling 880,000, combined 1,280,000 before infrastructure/upkeep versus last verified cash 1,171,721. Reserve and budget checks make recycling conditional; reserve its land now. Full upgrade attachment layout, staffing costs and landfill emptying remain to inspect. See the utility section of [FREEWAY-PLAN.md](FREEWAY-PLAN.md). No facilities have been placed and the next hour remains unstarted.
-
-The user requested a road-focused hour after research: curve the incoming freeway west north of industry, extend toward the western owned boundary, improve ramp geometry and aesthetics, and apply feeder-road/collector thinking. Research and the recommended layout are in [FREEWAY-PLAN.md](FREEWAY-PLAN.md). The next hour has **not started**. Read-only inspection on October 9 confirmed the game still paused at frame 9462047. No city changes were made during research. Next action at handoff: refresh state, record the deadline and verify a new named checkpoint before reconstruction. The sharp-ramp braking report is user-observed; measure it during the next baseline.
+Fourth challenge completed October 9, 2026. Refresh these historical measurements through the bridge before resuming. Previous result: [SESSION-03.md](SESSION-03.md); design/research: [FREEWAY-PLAN.md](FREEWAY-PLAN.md).
 
 ## Objectives and clock
 
-The user approved one real hour, with flexible priorities: improve the entrance and prepare a future freeway corridor; maintain at least 100,000/month surplus over three separate hourly updates, at least 500,000 cash and no loans; target 80% city traffic flow (85% stretch), unemployment below 5% over three hourly updates, happiness 70, coherent development and walking routes, 3,500–4,000 residents and the next milestone. Big Town remained a stretch.
+One real hour: **15:24:25–16:24:25 UTC**, or **10:24:25–11:24:25 America/Chicago**. Paused construction time counts toward that hour. Primary: a coherent westbound freeway north of industry, expandable toward the western tile edge, with smoother ramps and deliberate industrial/town collector access. Secondary: wastewater treatment with future expansion space. Recycling only if affordable. Guardrails: practical 500,000 cash reserve, no loans, positive recurring balance, and a carried 100,000/month surplus target. No growth zoning during this experiment.
 
-Clock: 08:32:41–09:32:41 America/Chicago (13:32:41–14:32:41 UTC). A session-only helper requested pause at the deadline and recorded its receipt at 2026-10-09T14:32:41.174Z. No construction after the deadline. Final frame 9462047; paused=true. API date 2026-01-12 05:18; the game UI showed December 2026, a different calendar from the API (B004), so use frame and elapsed hours for comparisons.
+The bounded final observation auto-paused before the deadline at frame **9846473**, UI **16:30 January 2027**. No further construction or simulation was requested afterward. Final save **Ezra-Freeway** was verified complete by exclusive file open at 16:23:56 UTC: **26,720,580 bytes**, SHA-256 recorded locally in `.local/s4-save-verified.json`. The independent deadline guard confirmed paused at **16:24:25.166 UTC**; a fresh state read matched the saved frame. Leave the game paused until the user requests more play.
 
-## Final measurements
-
-| Metric | Start | End |
+| Measure | Start | Final paused state |
 | --- | ---: | ---: |
-| Population | 2,578 | 3,719 |
-| Including move-ins | 2,615 | 3,753 |
-| Treasury | 842,957 | 1,171,721 |
-| Loan principal | 0 | 0 |
-| Monthly income | 313,041 | 546,275 |
-| Monthly operating cost | 182,902 | 337,318 |
-| Monthly surplus | 130,139 | 208,957 |
-| Happiness | 64 | 71 |
-| Health | 56 | 59 |
-| Unemployment | 4.73% | 0.91% |
-| Homeless citizens | Not recorded at this start | 10 |
-| City traffic flow | 71% | 66% |
-| XP | 10,420 | 16,420 |
+| Population | 3,719 | 3,869 |
+| Cash | 1,171,721 | 966,413 |
+| Monthly income | 546,275 | 671,040 |
+| Monthly operating costs | 337,318 | 445,865 |
+| Monthly surplus | 208,957 | **225,175** |
+| Debt | 0 | **0** |
+| Happiness | 71 | 70 |
+| Health | 59 | 59 |
+| City traffic flow | 66% | **66%** |
+| Unemployment | 0.91% | 1.97% |
 
-Tiny Town (milestone 5) reached normally at 13,600 XP. Its 125,000 cash reward contributes to treasury growth and is not operating profit. Five development points were awarded and left unspent. Big Town was not reached.
+The city remained Tiny Town; Big Town was not this run's objective. Final XP was 20,118, with three homeless citizens. Population increased within existing zoning.
 
-Recurring profitability exceeded the target across distinct hourly updates, including after the last landfill-budget change: 190,615 at API 23:22, 182,406 at 00:21 and 178,904 at 02:10. These are monthly rates refreshed hourly. After the residential tax reduction, examples were 216,996 at API 14:47 and 224,250 at 17:47; subsequent and final measurements are preserved privately. Earlier separated readings were 177,667 at 07:55,193,319 at 10:34 and 200,797 at 12:41. Employment was volatile during move-ins (briefly about 12% and later 7.03%), then recovered. Late separated readings included 4.08% at 12:41,2.60% at 14:47 and 1.11% at 17:47. Report that recovery without treating it as a guarantee of future stability.
+Final utilities: electricity 85,200 production / 63,716 consumption, fully served; freshwater 31,772 capacity / 13,142 consumption; sewage 244,000 / 13,142. No utility imports were needed. Garbage generation ended at 150,528 kg/month. Final notifications included the two intended western dead ends, disabled outlet, a disconnected high-voltage endpoint, one upgrading building and a traffic accident at (-1732,452). The earlier fire notification cleared. The high-voltage endpoint needs inspection, although electricity demand was fully fulfilled.
 
-Traffic missed the 80% target. The original entrance road improved from about 65% to 73% in an afternoon observation, but shopping-street flow remained in the thirties. New roads changed the aggregate denominator from 52 to 93, and road splits changed entity identities. The gateway carried traffic but remained lightly used: inbound segment volume 15, bypass 16, outbound span 2 in an afternoon sample. Construction and expansion access are verified; citywide congestion relief is not.
+At final pause the interchange-area census had 52 vehicles, seven stopped: a four-vehicle queue on the eastern industrial road, another car at a signal, and a landfill work vehicle among the reported queue heads. No deadlock or game-flagged bottleneck was reported. This does not erase the lower morning queues, but it prevents claiming a universally queue-free network.
 
-## Built and configured
+## Freeway and collectors
 
-- Custom industrial gateway: a direct inbound highway ramp and a 12 m elevated outbound flyover looping onto the northbound highway. Existing entrance retained. Four-lane two-way western highway around the industrial/waste area, transitioning into a divided boulevard. Reserved west/south space for future extension; no map tiles bought. Initial gateway and bypass cost 15,116 while paused.
-- Compact western neighborhood with apartments, row houses, offices and local shops. Later added 91 cells of old-town mixed use and 60 apartment cells on vacant frontage, followed by 46 cells of retail. Residential zoning stopped after reaching the growth target.
-- Waterfront park and connecting path; a western neighborhood park; a connected civic footpath from Arborview Street at z=478 to Beech Street at z=420, routed around the clinic. Tree upgrades on five western street segments. Three CityPark01 buildings now exist, two added this hour.
-- Bus depot (150,000 construction), eight-stop Ezra Town Loop, six buses, fare 2. Normal route creation initially failed because default placeholder stops did not count toward unlock prerequisites. One normal NA bus stop resolved it without force; the route carries passengers. Length approximately 6.36 km merits optimization. Final line snapshot: Ezra Town Loop: 6 vehicles, 15 passengers aboard. These are simultaneous passengers, not unique daily riders.
-- Radio mast (25,000 construction), verified staffed cost 24,500/month:5,000 maintenance plus 19,500 wages. At inspection 10/10 employees,115% efficiency. Unreliable-internet penalty disappeared on a later happiness view.
-- Healthcare and fire budgets restored to 100%; transportation 75%. Electricity and water/sewage remain 75%; garbage raised to 125% after a capacity inspection; other service budgets 100%. Residential tax reduced 12% to 11%; industrial 12%, commercial/office 10%. No loan taken.
-- Shopping-street wide sidewalks on one segment; removed the signal at Beech/Fairview T-junction. Neither change establishes a citywide traffic improvement. Retain the junction test for further observation.
+Replaced the improvised entrance and sharp industrial ramp with a divided westward mainline, two through lanes each way, and a four-ramp service interchange. The crossroad bridges the freeway at x=-1950; the mainline ends at x=-2160, just inside the owned western boundary. The eastern ramps serve the existing outside connection. The western pair is future-facing: the western mainline stubs are not outside connections yet. Dead-end icons there are expected.
 
-## Capacity and warnings
+Compound ramp curves use aligned tangents, with auxiliary lanes on the active mainline approach. Native snapping changed some requested positions; verified the resulting graph and vehicle use. Converted the former western highway feeder to a four-lane city collector, removed its unused 46 m stub and redundant junction signal, and added street trees. Existing buildings were not intentionally demolished. The bus loop remained active with six vehicles and 83 passengers in an afternoon check; this is a snapshot, not daily ridership.
 
-Final electricity production 85,200, consumption 61,195, fulfilled 61,195. Freshwater capacity 31,950 versus consumption 13,253; sewage capacity 71,000 versus consumption 13,253. These aggregate values do not establish every local connection.
+An early post-construction morning check found 108 vehicles and 29 stopped within 600 m of (-1730,1280), including a 19-car signal queue. Removed the verified three-way industrial junction's light; the queue initially shifted onto Arborview before clearing. Later collector/stub changes also occurred. The following morning, the same survey showed 38 vehicles/0 stopped at 07:16, 93/2 at 08:26, and 52/1 at 09:44, without a persistent queue. These compare two mornings after replacement, not the original layout at a matching hour. Weather, month and multiple changes limit causal attribution.
 
-Late landfill inspection found 117/151 tonnes stored and 79 tonnes/month processing versus about 120 tonnes/month accumulation. Raising garbage funding 75% to 125% increased observed processing to 124 tonnes/month and storage fell to 116 tonnes on the next check. A later UI check at 02:31 in December showed storage rising again to 121/151 tonnes, with 129 tonnes/month processing, 30/30 employees and 66,375/month cost. The initial fall was not sustained; the cause of the increase is unconfirmed. Monitor storage and processing before further growth. Two final MissingUneducatedWorkers warnings also need business-level inspection; low overall unemployment does not guarantee every employer can recruit. Final notification counts: {"Powerline Not Connected":1,"MissingUneducatedWorkers":2,"Leveling Building":2,"Selected":1}. Informational leveling, park, selected and transport icons are not faults. The old unused high-voltage endpoint warning remains an investigation item. The earlier sewage endpoint warning was absent in late observations; its disappearance was not attributed to a verified repair.
+Original industrial segment 79135 improved from 34% baseline flow to 51% at the second morning check. Shopping segment 79130 remained 34%. A later reading flagged the new inbound auxiliary-lane segment 52211 at 30% despite no stopped vehicles in the contemporaneous area census. This deserves lane/merge and movement inspection next time. No quantitative individual truck-speed test established that all braking issues are fixed, and future high-volume capacity is untested.
 
-## Save and evidence
+The working overpass remains at 12 m elevation with approximately 9–10% approach grades. Automatic approval review rejected an optional eight-segment rebuild to lower it to 8 m because it could interrupt active city access. No rejected rebuild was performed; the functioning bridge was retained.
 
-Final save **Ezra-60min**, exclusively readable after completion: 26,386,526 bytes, SHA-256 CA54F26DB36CE9EBA8E618B304590D1FA2816715B54E47A460E9C1A90929836E. Checkpoints: Ezra-60min-Start, Ezra-60min-Gateway, Ezra-60min-StreetTest and Ezra-60min-Transit. Raw data and screenshots remain in ignored .local/s3-* files. No game or bridge code was changed during this challenge. No upstream message or PR was sent.
+## Treatment, waste and reserved land
 
-## Resume priorities
+Built WastewaterTreatmentPlant01 for 400,000 at (-1534,1200), on the former approach corridor, with service access on x=-1482. Surveyed cells had no groundwater or existing ground pollution before placement. At the late UI check it had 50/50 staff, 244,000 m³/month sewage capacity, 5% usage and 0% pollution in reclaimed water. The 50% purification figure describes water recovery separately from output pollution. At 65% Water & Sewage funding, full staffed cost was **103,675/month**: 39,000 maintenance plus 64,675 wages.
 
-1. Keep paused until the user requests more play. Refresh current state, taxes, budget, labor and traffic first.
-2. Diagnose shopping-street and main-spine delays with daytime queue evidence and a fixed road cohort. The freeway is ready for expansion but lightly used; do not widen more roads solely to improve an aggregate statistic.
-3. Optimize the 6.36 km bus loop and replace placeholder stop assets with normal player-facing stops in a controlled checkpointed pass. Preserve ordinary unlock rules.
-4. Observe hiring before further housing. Poorly educated and educated vacancies can be tight while uneducated jobs remain open.
-5. Monitor landfill storage first: the late reading was 121/151 tonnes despite higher processing. Check the two businesses missing uneducated workers. Monitor staffed service costs and utility margins. The radio-mast card excluded wages. Keep the current reserve and repeated operating-profit checks.
-6. In a development pass, prioritize default stop filtering, accurate prerequisite errors, progression/development spending, save completion and real-time deadlines. See [BRIDGE-NOTES.md](BRIDGE-NOTES.md), lessons L013–L018 in [LEARNING.md](LEARNING.md), and [PLAYBOOK.md](PLAYBOOK.md).
+After replacement operation was verified, the original sewage outlet was disabled normally and retained as standby at 750/month. Electricity remains 75%, Water & Sewage 65%, Garbage Management 150%, Transportation 75%; other settings were retained. Distinct hourly balances after the water adjustment were 103,688, 139,111, 183,829 and 221,860/month, supporting profitability after the new service commitment.
+
+Keep unzoned land west/south of treatment open for attached upgrades. Full legal attachment envelopes and maximum counts remain unverified, so full expansion fit is not guaranteed. A provisional recycling parcel lies east of the access street at x=-1470..-1180, z=1080..1280. Validate attachments, frontage and terrain before buying; do not fill it with industry. The service precinct can be reused for later industrial/service expansion if much larger future treatment needs require relocation.
+
+**The user enlarged the landfill manually** after native automated corner drags failed. Verified capacity rose **151 → 353 tonnes**, with 133 tonnes stored at 02:49 January 2027. The final shape tapers along the neighboring ramp rather than matching the originally proposed narrow rectangular extension. This bought storage time. It did not fix processing capacity: generation rose to roughly 148–152 tonnes/month after treatment, while observed landfill processing peaked around 137–138 tonnes/month at maximum funding; a post-edit reading was temporarily lower. Full landfill cost was 79,650/month. Continue measuring storage and processing.
+
+Recycling was deferred: its 880,000 base price would violate the 500,000 reserve before staffed operating costs. No landfill demolition or recycling add-on was purchased. The landfill's 56,000 pollution-reduction upgrade did not advertise additional processing and was not treated as a throughput fix.
+
+## Checkpoints, limitations and next step
+
+Verified intermediate checkpoints: Ezra-Freeway-Start, Ezra-Freeway-Connected, Ezra-Freeway-TreatmentStart, Ezra-Freeway-BeforeGrade and Ezra-Freeway-Utilities. Final save verification is recorded above. Raw evidence, screenshots and save metadata stay in ignored `.local/` files.
+
+Next session: refresh finances, landfill storage/throughput and active incidents first. Prioritize a funded waste-processing replacement and normal landfill retirement plan; inspect the inbound auxiliary-lane segment and shopping spine before more housing. Confirm treatment upgrade envelopes before neighboring development. Bridge work should add normal landfill polygon editing, capacity/processing readback, building activation and upgrade-envelope inspection, plus road snapping/lane/grade preflight. See [BRIDGE-NOTES.md](BRIDGE-NOTES.md) and [LEARNING.md](LEARNING.md).
+
+The API calendar previously disagreed with the UI (December 2026 appeared as 2026-01-12); January now displays 2027-01-01. Frame indices and real UTC establish the clock, not calendar labels alone. Earlier progress prose estimated construction at 15:52 UTC, but a recorded 15:49:16 check already showed treatment built; the independent deadline was unchanged.
