@@ -1,63 +1,62 @@
 # Current session — Ezra City
 
-Last updated October 9, 2026, America/Chicago. The game is paused. Refresh these historical measurements before resuming. The first challenge is archived in [SESSION-01.md](SESSION-01.md).
+Third challenge completed October 9, 2026. The game is paused. Refresh these historical measurements before resuming. Earlier challenges: [30 minutes](SESSION-01.md), [35 minutes](SESSION-02.md).
 
-## Challenge and timing
+## Objectives and clock
 
-The user approved 35 real minutes: October 8 at 11:38:18 PM CDT to October 9 at 12:13:18 AM CDT (04:38:18–05:13:18 UTC). A session-only deadline helper requested pause and recorded its response at 2026-10-09T05:13:18.150Z. Final observed frame: 8773076. No construction after the deadline. The API calendar says 2026-01-09 14:14; the UI shows September 2026, so the calendar mismatch remains open.
+The user approved one real hour, with flexible priorities: improve the entrance and prepare a future freeway corridor; maintain at least 100,000/month surplus over three separate hourly updates, at least 500,000 cash and no loans; target 80% city traffic flow (85% stretch), unemployment below 5% over three hourly updates, happiness 70, coherent development and walking routes, 3,500–4,000 residents and the next milestone. Big Town remained a stretch.
 
-Targets: at least 40,000/month surplus across three distinct hourly budget updates, no debt, unemployment below 6%, happiness toward 60, improve the worst main street and aim for 85% citywide traffic flow. Aesthetics and realistic design remain priorities; Big Town was a stretch goal.
+Clock: 08:32:41–09:32:41 America/Chicago (13:32:41–14:32:41 UTC). A session-only helper requested pause at the deadline and recorded its receipt at 2026-10-09T14:32:41.174Z. No construction after the deadline. Final frame 9462047; paused=true. API date 2026-01-12 05:18; the game UI showed December 2026, a different calendar from the API (B004), so use frame and elapsed hours for comparisons.
 
-## Final measured result
+## Final measurements
 
 | Metric | Start | End |
 | --- | ---: | ---: |
-| Population | 1,758 | 2,561 |
-| Including move-ins | 1,810 | 2,600 |
-| Treasury | 761,670 | 852,459 |
+| Population | 2,578 | 3,719 |
+| Including move-ins | 2,615 | 3,753 |
+| Treasury | 842,957 | 1,171,721 |
 | Loan principal | 0 | 0 |
-| Monthly income | 167,734 | 318,571 |
-| Monthly operating costs | 150,952 | 176,127 |
-| Monthly surplus | 16,782 | 142,444 |
-| Happiness | 52 | 64 |
-| Health | 56 | 56 |
-| Unemployment | 8.59% | 4.32% |
-| Homeless citizens | 0 | 0 |
-| Traffic flow | 79% | 75% |
-| XP | 6,133 | 10,058 |
+| Monthly income | 313,041 | 546,275 |
+| Monthly operating cost | 182,902 | 337,318 |
+| Monthly surplus | 130,139 | 208,957 |
+| Happiness | 64 | 71 |
+| Health | 56 | 59 |
+| Unemployment | 4.73% | 0.91% |
+| Homeless citizens | Not recorded at this start | 10 |
+| City traffic flow | 71% | 66% |
+| XP | 10,420 | 16,420 |
 
-Profitability exceeded the target over multiple separate hourly updates, including 83,508 at API05:41, 74,597 at06:45 and 114,677 at10:13 on the same API day. These are monthly operating rates, not treasury growth. Milestone cash rewards contribute to cash. Loan state is preserved in the final evidence; no loan was taken.
+Tiny Town (milestone 5) reached normally at 13,600 XP. Its 125,000 cash reward contributes to treasury growth and is not operating profit. Five development points were awarded and left unspent. Big Town was not reached.
 
-Employment was unstable: unemployment reached 3.03%, then 5.57% and 8.61% before the final 4.32%. The final reading meets the below-6% target, but the fluctuations do not establish durable employment stability. Total jobs recovered to 1,109 at the final observation. Citywide traffic missed 85%; the originally worst spine section improved from 28% into the forties, but shopping-street traffic grew. Multiple simultaneous changes and growth confound attribution.
+Recurring profitability exceeded the target across distinct hourly updates, including after the last landfill-budget change: 190,615 at API 23:22, 182,406 at 00:21 and 178,904 at 02:10. These are monthly rates refreshed hourly. After the residential tax reduction, examples were 216,996 at API 14:47 and 224,250 at 17:47; subsequent and final measurements are preserved privately. Earlier separated readings were 177,667 at 07:55,193,319 at 10:34 and 200,797 at 12:41. Employment was volatile during move-ins (briefly about 12% and later 7.03%), then recovered. Late separated readings included 4.08% at 12:41,2.60% at 14:47 and 1.11% at 17:47. Report that recovery without treating it as a guarantee of future stability.
 
-Milestone: **Grand Village (4)**, up from Large Village (3). Big Town (8; 46,700 XP) was not reached. Bought Advanced Road Services and Roundabouts for one point each through the normal UI. Eight points remained after the milestone awarded four more. The bridge still lacks a legitimate development purchase endpoint; the requested addition is in [BRIDGE-NOTES.md](BRIDGE-NOTES.md).
+Traffic missed the 80% target. The original entrance road improved from about 65% to 73% in an afternoon observation, but shopping-street flow remained in the thirties. New roads changed the aggregate denominator from 52 to 93, and road splits changed entity identities. The gateway carried traffic but remained lightly used: inbound segment volume 15, bypass 16, outbound span 2 in an afternoon sample. Construction and expansion access are verified; citywide congestion relief is not.
 
-## Built and configured this session
+## Built and configured
 
-- Connected northeast residential loop with row houses and detached housing, preserving the industrial area northwest and riverside walking routes east.
-- Small westward shopping street and a connected office loop near the school. Added a modest Office Low zone after unlocking Grand Village.
-- Small Police Station for 100,000. Budget initially 75%, then 100%; staffed cost 25,200/month. UI crime risk declined from 90% to 19% on later inspection, while other growth and time also contributed to happiness.
-- CityPark01 beside the school and offices: 10,000 construction, 2,000/month upkeep. Tree upgrades on three new road segments. Placed legitimately unlocked Rock Musician Mansion and Baltar Pines signature buildings on a short residential cul-de-sac.
-- Small tree roundabout at the northern entrance, verified in the road graph. Replaced two main-spine segments with same-width asymmetric roads, preserving adjacent buildings. Overall traffic improvement was not established.
-- Taxes unchanged: residential/industrial 12%, commercial/office 10%. Budgets: electricity, water/sewage, health/deathcare and garbage 75%; fire 50%; police, education, roads and parks 100%.
+- Custom industrial gateway: a direct inbound highway ramp and a 12 m elevated outbound flyover looping onto the northbound highway. Existing entrance retained. Four-lane two-way western highway around the industrial/waste area, transitioning into a divided boulevard. Reserved west/south space for future extension; no map tiles bought. Initial gateway and bypass cost 15,116 while paused.
+- Compact western neighborhood with apartments, row houses, offices and local shops. Later added 91 cells of old-town mixed use and 60 apartment cells on vacant frontage, followed by 46 cells of retail. Residential zoning stopped after reaching the growth target.
+- Waterfront park and connecting path; a western neighborhood park; a connected civic footpath from Arborview Street at z=478 to Beech Street at z=420, routed around the clinic. Tree upgrades on five western street segments. Three CityPark01 buildings now exist, two added this hour.
+- Bus depot (150,000 construction), eight-stop Ezra Town Loop, six buses, fare 2. Normal route creation initially failed because default placeholder stops did not count toward unlock prerequisites. One normal NA bus stop resolved it without force; the route carries passengers. Length approximately 6.36 km merits optimization. Final line snapshot: Ezra Town Loop: 6 vehicles, 15 passengers aboard. These are simultaneous passengers, not unique daily riders.
+- Radio mast (25,000 construction), verified staffed cost 24,500/month:5,000 maintenance plus 19,500 wages. At inspection 10/10 employees,115% efficiency. Unreliable-internet penalty disappeared on a later happiness view.
+- Healthcare and fire budgets restored to 100%; transportation 75%. Electricity and water/sewage remain 75%; garbage raised to 125% after a capacity inspection; other service budgets 100%. Residential tax reduced 12% to 11%; industrial 12%, commercial/office 10%. No loan taken.
+- Shopping-street wide sidewalks on one segment; removed the signal at Beech/Fairview T-junction. Neither change establishes a citywide traffic improvement. Retain the junction test for further observation.
 
-## Warnings and service checks
+## Capacity and warnings
 
-Final notification counts: {"Powerline Not Connected":1,"Pipeline Not Connected":1,"Leveling Building":4}. Informational leveling/happiness events are not faults. The sewage outlet showed 16% utilization of 71,000 m3/month capacity in its UI, despite a pipeline endpoint warning. The pipe corridor appears on the surface; attachment/channel and elevation diagnosis remain open. The unused outside powerline also retains its endpoint warning. Do not equate these with demonstrated household service failure.
+Final electricity production 85,200, consumption 61,195, fulfilled 61,195. Freshwater capacity 31,950 versus consumption 13,253; sewage capacity 71,000 versus consumption 13,253. These aggregate values do not establish every local connection.
 
-The school had 44/400 students and 101% efficiency on inspection, so no additional school was built. Final utility telemetry is retained privately with the rest of the evidence.
+Late landfill inspection found 117/151 tonnes stored and 79 tonnes/month processing versus about 120 tonnes/month accumulation. Raising garbage funding 75% to 125% increased observed processing to 124 tonnes/month and storage fell to 116 tonnes on the next check. A later UI check at 02:31 in December showed storage rising again to 121/151 tonnes, with 129 tonnes/month processing, 30/30 employees and 66,375/month cost. The initial fall was not sustained; the cause of the increase is unconfirmed. Monitor storage and processing before further growth. Two final MissingUneducatedWorkers warnings also need business-level inspection; low overall unemployment does not guarantee every employer can recruit. Final notification counts: {"Powerline Not Connected":1,"MissingUneducatedWorkers":2,"Leveling Building":2,"Selected":1}. Informational leveling, park, selected and transport icons are not faults. The old unused high-voltage endpoint warning remains an investigation item. The earlier sewage endpoint warning was absent in late observations; its disappearance was not attributed to a verified repair.
 
-## Saves and evidence
+## Save and evidence
 
-Checkpoints: Ezra-35min-Start, Ezra-35min-RoadCheck and **Ezra-35min**. The final save was exclusively readable after writing completed: 25,764,798 bytes; SHA-256 9C5282CBCD253AA6C4974132570967C11B0EA0B9EC2192EF20C051F7E991A635. Final observations are in ignored .local/s2-final-*.json; deadline receipt and save verification are also private. Game 1.6.2f1, bridge 0.9.0.
+Final save **Ezra-60min**, exclusively readable after completion: 26,386,526 bytes, SHA-256 CA54F26DB36CE9EBA8E618B304590D1FA2816715B54E47A460E9C1A90929836E. Checkpoints: Ezra-60min-Start, Ezra-60min-Gateway, Ezra-60min-StreetTest and Ezra-60min-Transit. Raw data and screenshots remain in ignored .local/s3-* files. No game or bridge code was changed during this challenge. No upstream message or PR was sent.
 
 ## Resume priorities
 
-1. Keep paused until the user requests another session. Refresh budget, labor, warning and traffic readings before changing anything.
-2. Stabilize jobs before further residential expansion. Compare vacancies by education and inspect company closures or staffing changes; job totals briefly fell while new adults arrived, then recovered before the deadline.
-3. Diagnose the shopping-street/spine junction with directional vehicle evidence. Existing roundabout and asymmetric lanes did not meet the citywide flow target; avoid blind widening.
-4. Preserve the current recurring margin. Recheck healthcare reliability, service staffing and fulfilled utility demand before adding recurring commitments.
-5. Review the eight available development points against an actual need and affordable operating costs. Big Town remains a future target.
-6. In a development pass, prioritize progression/spending, blocking-dialog handling, structured happiness factors, roundabouts, save completion and deadline control. Keep reproducible bugs separate from feature requests; no upstream messages or PRs were sent.
-
-Use [LEARNING.md](LEARNING.md) and [PLAYBOOK.md](PLAYBOOK.md) for evidence and decision rules.
+1. Keep paused until the user requests more play. Refresh current state, taxes, budget, labor and traffic first.
+2. Diagnose shopping-street and main-spine delays with daytime queue evidence and a fixed road cohort. The freeway is ready for expansion but lightly used; do not widen more roads solely to improve an aggregate statistic.
+3. Optimize the 6.36 km bus loop and replace placeholder stop assets with normal player-facing stops in a controlled checkpointed pass. Preserve ordinary unlock rules.
+4. Observe hiring before further housing. Poorly educated and educated vacancies can be tight while uneducated jobs remain open.
+5. Monitor landfill storage first: the late reading was 121/151 tonnes despite higher processing. Check the two businesses missing uneducated workers. Monitor staffed service costs and utility margins. The radio-mast card excluded wages. Keep the current reserve and repeated operating-profit checks.
+6. In a development pass, prioritize default stop filtering, accurate prerequisite errors, progression/development spending, save completion and real-time deadlines. See [BRIDGE-NOTES.md](BRIDGE-NOTES.md), lessons L013–L018 in [LEARNING.md](LEARNING.md), and [PLAYBOOK.md](PLAYBOOK.md).

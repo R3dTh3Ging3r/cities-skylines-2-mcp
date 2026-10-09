@@ -107,3 +107,14 @@ Read [LEARNING.md](LEARNING.md) for corrections. Our first live session is docum
 - A locally verified utilization reading is stronger evidence of service operation than aggregate capacity; retain unexplained endpoint warnings for investigation (L011).
 
 - Employment and traffic need repeated observations after growth. In session two, unemployment temporarily rebounded above target before recovering; report both the final result and volatility. A better individual road does not establish better citywide flow (L012).
+
+## Lessons from the third challenge
+
+- Track a fixed set of existing road segments and actual use of new routes alongside aggregate traffic flow. Adding unused roads changes the average ([L013](LEARNING.md#l013-traffic-expansion-needs-a-fixed-comparison-cohort)).
+- Verify the complete transit dependency chain with fresh unlock data after construction. Default placeholder stops may not satisfy the game's prerequisites; choose normal named assets explicitly ([L014](LEARNING.md#l014-verify-transit-prerequisites-before-committing-the-depot-budget), [B008](BRIDGE-NOTES.md#b008--default-bus-stop-can-be-a-placeholder-lock-error-hides-prerequisites)).
+- Include staffed recurring cost in transit decisions. A depot can consume a large share of a small town's surplus even before a useful line operates ([L014](LEARNING.md#l014-verify-transit-prerequisites-before-committing-the-depot-budget)).
+- After a large housing influx, pause further zoning until hiring catches up. Resume with modest infill on verified vacant frontage; repeated employment readings matter more than a single favorable sample ([L015](LEARNING.md#l015-services-and-modest-infill-after-a-growth-surge)).
+
+- Purchase cards can exclude wages: the radio mast listed 5,000/month but cost 24,500/month when staffed. Verify total operating cost after staffing, and budget an explicit wage allowance before construction ([L016](LEARNING.md#l016-building-card-upkeep-excludes-wages)).
+
+- Check landfill storage and processing after significant growth, even without warning icons. Compare throughput with current accumulation and leave headroom; track storage trend after funding changes ([L017](LEARNING.md#l017-inspect-storage-before-a-warning-appears)).

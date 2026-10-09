@@ -96,3 +96,32 @@ Traffic: entrance signal removal, northeast loop, a small tree roundabout and sa
 ## L012 Late observation changes the outcome
 
 October 9, 2026, second challenge. Surplus exceeded 40,000/month over distinct hourly updates (83,508; 74,597; 114,677), ending at 142,444. Happiness ended at 64. However unemployment rebounded from 3.03% to 8.61% and finally 4.32%; total jobs fell from 1,047 to 965 between late samples while the adult population grew. Jobs recovered to 1,109 and unemployment ended below the target at 4.32%. The cause of the temporary job decline was not isolated. Treat office zoning as a promising intervention, not a demonstrated lasting fix. Final city traffic was 75%, below both the 85% goal and 79% baseline despite an improved original spine segment. Reserve observation time, stop residential growth when hiring falls behind, and report final values alongside intermediate improvements.
+
+## L013 Traffic expansion needs a fixed comparison cohort
+
+October 9, 2026, third challenge. Added a custom industrial highway gateway, outbound flyover and western bypass. New routes were graph-connected and later carried vehicles, but use was light: an observed inbound segment volume9, bypass6 and outbound span1. Aggregate roads averaged increased52->80->91. City flow initially71->78%, then declined to69% as measurements settled; the original shopping street remained near30%. New, lightly used roads confound the average, and new housing increased trips. Conclusion: construction and future expansion access succeeded; a citywide congestion improvement has not been established. Compare the original street cohort and direct route usage before claiming success (B007).
+
+## L014 Verify transit prerequisites before committing the depot budget
+
+Third challenge. Bus depot cost150000 construction and93000/month estimated upkeep at100% funding. Eight-stop line eventually created normally, with six buses and90 passengers aboard on an early check. Default placeholder stops failed to satisfy the game's stop-count prerequisite; one explicit NA_BusStop01 resolved normal line unlock (B008). Transportation budget reduced to75%, fare set to2. Whole-city surplus remained above100000/month in early subsequent readings, but staffing/tax trends still require observation. Conclusion: query fresh prerequisites after each dependency and inspect full operating costs before placing transit. One operational route does not yet prove congestion reduction or good route design; its6.36km length merits later optimization.
+
+## L015 Services and modest infill after a growth surge
+
+Third challenge. Initial western apartments/row houses helped grow population2578->over3200 but temporarily drove unemployment toabout12%. Additional office/commercial zoning and time coincided with recovery to2.05%,1.29%,1.30% and1.71% over later checks. Radio mast added after Tiny Town unlocked communications and the UI identified unreliable internet-2; cost25000 andlisted5000/month upkeep. Healthcare funding75->100 coincided with health56->59 and disappearance of the unreliable-healthcare penalty. Park/leisure and wealth changes also confound happiness. Added only151 further residential/mixed-use cells after the hiring recovery, on verified vacant frontage. Continue observing before further housing expansion.
+
+## L016 Building-card upkeep excludes wages
+
+Third challenge correction: the radio-mast construction card listed5000/month upkeep. Inspecting the operating building later showed5000 maintenance plus19500 wages =24500/month total,10/10 employees and115% efficiency. The full city budget already included the staffed cost and still showed216996/month surplus. Treat purchase-menu upkeep as maintenance unless wages are explicitly included; use the operating building or settled service-budget total to verify the actual commitment. This also reinforces the prefab-info request for both base upkeep and staffing estimates.
+
+## L017 Inspect storage before a warning appears
+
+Third challenge near its end, population about 3,680. No garbage warning was active, but the landfill UI showed 117/151 tonnes stored and 79 tonnes/month processing at 75% budget, against approximately 120 tonnes/month city accumulation. Raised Garbage Management to 125%. The operating building then showed 124% efficiency, 124 tonnes/month processing, 28/30 employees, and storage 116/151 tonnes. Its displayed cost was 63,000/month at that staffing; the city budget's first refreshed surplus remained 190,615/month. This is an early response, not proof of a permanently balanced waste system. Monitor storage trend and staffing; processing headroom is modest. Absence of a warning is weaker evidence than measured remaining storage and throughput.
+
+
+L017 follow-up, same session: at UI 02:31 in December, landfill storage had risen again to 121/151 tonnes despite 129 tonnes/month processing, 30/30 staff and 66,375/month cost. This corrects any inference of a sustained decline from the first 116-tonne observation. Delivery timing or backlog is a hypothesis, not an established explanation. Continue monitoring before more growth.
+
+## L018 One-hour result and remaining constraints
+
+October 9, 2026. Independent helper paused at 14:32:41 UTC, the real one-hour deadline; bridge state confirmed paused at frame 9462047. Verified final save Ezra-60min. Population 2,578 -> 3,719; recurring surplus 130,139 -> 208,957/month; cash 842,957 -> 1,171,721; debt zero. Tiny Town reached and paid a one-time 125,000 reward. Happiness 64 -> 71, health 56 -> 59, unemployment 4.73% -> 0.91%. Final settings passed three separate hourly profitability checks of 190,615, 182,406 and 178,904/month before ending higher. This supports the challenge's profitability result, not unlimited growth.
+
+City traffic ended 66%, down from 71% and below the 80% goal. A better individual entrance observation and connected new roads did not establish congestion relief. Final bus snapshot had six vehicles and 15 passengers aboard at API 05:18, versus 65–90 aboard in earlier daytime observations; do not compare time-of-day occupancy as a controlled experiment. Landfill storage and two MissingUneducatedWorkers warnings remain open constraints. Only one educated job vacancy remained despite 199 total vacancies. Further housing should wait for capacity and workforce diagnosis. Ten homeless citizens were recorded at the end.
