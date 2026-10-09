@@ -73,4 +73,6 @@ To disable the connection, set `enabled=false` in the `mcp_servers.cs2` table an
 
 Node compilation, MCP initialization, discovery of 65 tools, and the structured error for an unavailable game bridge were verified on Node 24.15.0. All 22 tool names used in the setup and construction checklist were present. A clean locked install and build passed after refreshing dependencies; `npm audit` reported zero vulnerabilities. NuGet dependency restore also passed.
 
-The Steam game libraries were not yet installed during setup. C# compilation, mod deployment, live Codex-to-game calls, saving, simulation control, and construction remain unverified. Update this status after performing those checks; the offline MCP check is not evidence of gameplay compatibility.
+After Steam finished installing build 25127643, the C# Release build passed with zero warnings and errors. The mod was installed with the game closed and both copied files matched their build hashes. Native Codex calls then verified bridge 0.9.0 responding at the main menu, no city loaded, and a clear rejection of city queries. Player.log identifies the game as 1.6.2f1.
+
+Loaded-city inspection, saving, simulation control, and construction remain unverified. Main-menu communication is not evidence that all gameplay actions work. See [the session record](gameplay/SESSION.md) for the next live checks and [the playbook](gameplay/PLAYBOOK.md) for strategy research.
