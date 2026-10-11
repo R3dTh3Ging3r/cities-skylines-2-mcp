@@ -230,3 +230,11 @@ loaded disposable city, including paused behavior. That native check is
 save completion or compatibility. No deployment is part of this task.
 F6 budget/calendar/service-count and route panel comparisons also remain
 `notRun` for F4. Cargo amount units need the later T1 native verification.
+
+F6 adds a registered read-only `contracts` runner and a schema-1 evidence
+validator. See [testing and release gates](testing.md) and the [native evidence
+procedure](validation/contracts.md). Offline validation never contacts the
+bridge. Required failed/notRun observations return incomplete evidence, and
+unknown game/build/world identity cannot claim compatibility. Current loaded
+module hash and WorldRef are unavailable, so automatic collection leaves native
+identity/panel checks notRun. No existing endpoint or nativeSupport claim changes.

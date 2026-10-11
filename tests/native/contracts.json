@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "fixture": "contracts",
+  "fixtureVersion": 1,
+  "access": "read",
+  "operations": [
+    { "method": "GET", "path": "/capabilities" },
+    { "method": "GET", "path": "/ping" },
+    { "method": "GET", "path": "/state" },
+    { "method": "GET", "path": "/city/overview" },
+    { "method": "GET", "path": "/city/budget" },
+    { "method": "GET", "path": "/city/services" },
+    { "method": "GET", "path": "/city/service-budgets" },
+    { "method": "GET", "path": "/city/taxes" },
+    { "method": "GET", "path": "/city/fees" },
+    { "method": "GET", "path": "/city/loan" },
+    { "method": "GET", "path": "/transit/stops" },
+    { "method": "GET", "path": "/transit/lines" },
+    { "method": "GET", "path": "/state" }
+  ],
+  "requiredChecks": [
+    "catalogReadOnly", "capabilityExposure", "buildIdentity", "worldIdentity",
+    "budgetPanel", "calendarPanel", "serviceCountsPanel", "stopRolesPanel", "sliderBoundsPanel"
+  ],
+  "panelProbes": {
+    "budgetPanel": ["incomeSign", "expenseSign", "balance", "monthlyPeriod", "hourlyRefresh"],
+    "calendarPanel": ["rawDate", "displayDate", "monthBoundary", "yearBoundary"],
+    "serviceCountsPanel": ["ordinaryBuildings", "extensions", "aggregation"],
+    "stopRolesPanel": ["ordinaryBus", "ordinaryTram", "placeableRole", "placeholderExclusion", "integratedExclusion"],
+    "sliderBoundsPanel": ["warmedState", "taxBoundsAndStep", "feeBoundsAndStep", "serviceBoundsAndStep", "policyBoundsAndStep"]
+  }
+}

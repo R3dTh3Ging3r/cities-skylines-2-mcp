@@ -196,3 +196,12 @@ Start the game, load a save, then ask Claude: "How are my city's finances?", "Zo
 ## License
 
 [Apache-2.0](LICENSE)
+
+## Contract validation
+
+The personal fork's [testing procedure](docs/testing.md) preserves Node18 and
+net472 regression suites, builds with `SkipDeploy=true`, and separates candidate
+hashes from the installed mod. The [read-only contracts fixture](docs/validation/contracts.md)
+records versioned evidence and validates required checks without claiming native
+parity from offline tests. Disposable-city panels and unavailable loaded/world
+identity remain incomplete until a separately authorized testing session.

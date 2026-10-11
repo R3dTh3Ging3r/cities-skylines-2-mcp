@@ -1,0 +1,171 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
+import { createServer } from 'node:http';
+import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
+import { resolve, dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+const script = join(root, 'scripts/Test-NativeFixture.ps1');
+const required = ['catalogReadOnly', 'capabilityExposure', 'buildIdentity', 'worldIdentity',
+  'budgetPanel', 'calendarPanel', 'serviceCountsPanel', 'stopRolesPanel', 'sliderBoundsPanel'];
+const stamp = '2026-10-11T12:00:00.000Z';
+const hash = 'a'.repeat(64);
+const panelProbes = {
+  budgetPanel: ['incomeSign', 'expenseSign', 'balance', 'monthlyPeriod', 'hourlyRefresh'],
+  calendarPanel: ['rawDate', 'displayDate', 'monthBoundary', 'yearBoundary'],
+  serviceCountsPanel: ['ordinaryBuildings', 'extensions', 'aggregation'],
+  stopRolesPanel: ['ordinaryBus', 'ordinaryTram', 'placeableRole', 'placeholderExclusion', 'integratedExclusion'],
+  sliderBoundsPanel: ['warmedState', 'taxBoundsAndStep', 'feeBoundsAndStep', 'serviceBoundsAndStep', 'policyBoundsAndStep'],
+};
+
+async function run(args) {
+  return await new Promise((done, reject) => {
+    const child = spawn('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', script, ...args],
+      { cwd: root, windowsHide: true, env: { ...process.env, CS2_BRIDGE_URL: 'http://invalid.example' } });
+    let stdout = '', stderr = '';
+    child.stdout.on('data', chunk => { stdout += chunk; });
+    child.stderr.on('data', chunk => { stderr += chunk; });
+    const timer = setTimeout(() => { child.kill(); reject(new Error('PowerShell fixture timed out')); }, 25000);
+    child.once('error', error => { clearTimeout(timer); reject(error); });
+    child.once('close', code => { clearTimeout(timer); done({ code, stdout, stderr }); });
+  });
+}
+
+async function workspace(fn) {
+  const parent = join(root, '.local/v01');
+  await mkdir(parent, { recursive: true });
+  const directory = await mkdtemp(join(parent, 'ev-'));
+  try { await fn(directory); } finally { await rm(directory, { recursive: true, force: true }); }
+}
+
+// Synthetic *input* to the real validator, never recorded as native release evidence.
+function report(artifact) {
+  const binding = { fixture: 'contracts', buildIdentity: 'candidate+revision', bootId: 'disposable-boot', epoch: 1 };
+  return {
+    schemaVersion: 1, fixture: 'contracts', fixtureVersion: 1, provenance: 'native',
+    startedAtUtc: stamp, finishedAtUtc: stamp, limitations: ['synthetic validator test input'],
+    build: { identity: { assemblyVersion: '0.4.0', modVersion: '0.9.0', buildIdentity: binding.buildIdentity,
+      sourceRevision: 'b'.repeat(40), gameVersion: 'fixture-game' }, identityReasons: {},
+      sourceRevision: 'b'.repeat(40), sourceDirty: false, installedSha256: hash,
+      candidateSha256: hash, loadedModuleSha256: hash, hashReasons: {} },
+    world: { bootId: binding.bootId, epoch: 1, reason: null, startContext: {}, endContext: {} },
+    checks: required.map(id => ({ id, status: 'passed',
+      expected: Object.fromEntries((panelProbes[id] ?? ['probe']).map(key => [key, 'synthetic matching observation'])),
+      actual: Object.fromEntries((panelProbes[id] ?? ['probe']).map(key => [key, 'synthetic matching observation'])),
+      observedAtUtc: stamp, provenance: id.endsWith('Panel') ? 'manualPanel' : 'native',
+      binding, artifacts: [artifact], reason: null })),
+    artifacts: [artifact], validated: true, compatibilityVerified: true,
+  };
+}
+
+test('actual PowerShell validator gates required evidence and rejects malformed reports', async () => {
+  await workspace(async directory => {
+    const artifact = join(directory, 'observation.json');
+    await writeFile(artifact, '{}');
+    const cases = [
+      ['complete', () => {}, 0],
+      ['failed required', r => { r.checks[4].status = 'failed'; r.checks[4].reason = 'mismatch'; r.validated = r.compatibilityVerified = false; }, 2],
+      ['notRun required', r => { r.checks[4].status = 'notRun'; r.checks[4].reason = 'no panel'; r.validated = r.compatibilityVerified = false; }, 2],
+      ['unknown version', r => { r.build.identity.gameVersion = null; r.build.identityReasons.gameVersion = 'notObserved'; r.checks[2].status = 'notRun'; r.checks[2].reason = 'unknown game'; r.validated = r.compatibilityVerified = false; }, 2],
+      ['false validation claim', r => { r.checks[4].status = 'notRun'; r.checks[4].reason = 'no panel'; }, 1],
+      ['invalid fixture', r => { r.fixture = '../contracts'; }, 1],
+      ['long artifact', r => { r.artifacts = ['x'.repeat(241)]; }, 1],
+      ['artifact traversal', r => { r.artifacts = [join(directory, '../outside.json')]; }, 1],
+      ['missing check', r => { r.checks.pop(); }, 1],
+      ['duplicate check', r => { r.checks[1] = r.checks[0]; }, 1],
+      ['unknown check', r => { r.checks[0].id = 'optionalSuccess'; }, 1],
+      ['wrong enum case', r => { r.checks[0].status = 'Passed'; }, 1],
+      ['boolean string', r => { r.validated = 'true'; }, 1],
+      ['invalid hash', r => { r.build.candidateSha256 = 'bad'; }, 1],
+      ['impossible timestamp', r => { r.finishedAtUtc = '2020-01-01T00:00:00Z'; }, 1],
+      ['panel mismatch', r => { r.checks[4].actual = { probes: 'different' }; }, 1],
+      ['missing panel probe', r => { delete r.checks[4].expected.hourlyRefresh; delete r.checks[4].actual.hourlyRefresh; }, 1],
+      ['panel wrong world', r => { r.checks[4].binding = { ...r.checks[4].binding, epoch: 2 }; }, 1],
+      ['panel epoch string', r => { r.checks[4].binding.epoch = '1'; }, 1],
+      ['synthetic native claim', r => { r.provenance = 'offline'; }, 1],
+      ['missing passed artifact', r => { r.checks[4].artifacts = []; }, 1],
+    ];
+    for (const [name, mutate, expected] of cases) {
+      const value = report(artifact);
+      mutate(value);
+      const path = join(directory, 'report.json');
+      await writeFile(path, JSON.stringify(value));
+      const result = await run(['-ValidateEvidence', path]);
+      assert.equal(result.code, expected, `${name}: ${result.stdout}\n${result.stderr}`);
+    }
+  });
+});
+
+test('registered read fixture collects explicit fake loopback evidence without native parity', async () => {
+  const definition = JSON.parse(await readFile(join(root, 'tests/native/contracts.json'), 'utf8'));
+  const source = await readFile(join(root, 'CS2MCP.Bridge/EndpointCatalog.cs'), 'utf8');
+  const endpoints = [...source.matchAll(/new EndpointDescriptor\("([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)"\)/g)]
+    .map(([, path, access, capability, completionMechanism]) => ({ path, access, capability, completionMechanism, legacyHttpVerbs: ['GET'] }));
+  assert.ok(endpoints.length > 0);
+  for (const operation of definition.operations) {
+    assert.equal(endpoints.find(e => e.path === operation.path)?.access, 'read');
+    assert.equal(operation.method, 'GET');
+  }
+  const requests = [];
+  let redirect = false;
+  let missingManifest = false;
+  let malformedRuntime = false;
+  const sockets = new Set();
+  const server = createServer((req, res) => {
+    requests.push(req.url);
+    if (redirect) { res.writeHead(302, { Location: 'http://invalid.example/' }); res.end(); return; }
+    const response = req.url === '/capabilities' ? {
+      protocolVersion: 1, schemaVersion: 1, endpoints: missingManifest ? [] : endpoints,
+      identity: { assemblyVersion: '0.4.0', modVersion: '0.9.0', buildIdentity: 'fake', sourceRevision: null, gameVersion: null },
+      runtime: { observedAtUtc: new Date().toISOString(), ageMilliseconds: malformedRuntime ? true : 0, cityLoaded: true, isLoading: false },
+    } : { fixture: true, cityName: 'Fake disposable', frame: 1 };
+    res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(response));
+  });
+  server.on('connection', s => { sockets.add(s); s.on('close', () => sockets.delete(s)); });
+  await new Promise(done => server.listen(0, '127.0.0.1', done));
+  const url = `http://127.0.0.1:${server.address().port}`;
+  try {
+    await workspace(async directory => {
+      let result = await run(['-Fixture', 'contracts', '-EvidenceDir', directory, '-BaseUrl', url, '-Offline']);
+      assert.equal(result.code, 2, result.stdout + result.stderr);
+      const value = JSON.parse(await readFile(join(directory, 'report.json'), 'utf8'));
+      assert.equal(value.validated, false);
+      assert.equal(value.compatibilityVerified, false);
+      assert.equal(value.provenance, 'offline');
+      assert.ok(value.checks.filter(c => c.id.endsWith('Panel')).every(c => c.status === 'notRun'));
+      assert.equal(value.world.bootId, null);
+      assert.deepEqual(requests, ['/capabilities', ...definition.operations.filter(o => o.path !== '/capabilities').map(o => o.path)]);
+      result = await run(['-ValidateEvidence', join(directory, 'report.json')]);
+      assert.equal(result.code, 2, result.stdout + result.stderr);
+      requests.length = 0;
+      malformedRuntime = true;
+      result = await run(['-Fixture', 'contracts', '-EvidenceDir', directory, '-BaseUrl', url, '-Offline']);
+      assert.equal(result.code, 2, result.stdout + result.stderr);
+      assert.deepEqual(requests, ['/capabilities']);
+      requests.length = 0;
+      malformedRuntime = false;
+      missingManifest = true;
+      result = await run(['-Fixture', 'contracts', '-EvidenceDir', directory, '-BaseUrl', url, '-Offline']);
+      assert.equal(result.code, 2, result.stdout + result.stderr);
+      assert.deepEqual(requests, ['/capabilities']);
+      requests.length = 0;
+      redirect = true;
+      result = await run(['-Fixture', 'contracts', '-EvidenceDir', directory, '-BaseUrl', url, '-Offline']);
+      assert.equal(result.code, 2, result.stdout + result.stderr);
+      assert.deepEqual(requests, ['/capabilities']);
+      requests.length = 0;
+      for (const args of [
+        ['-Fixture', 'mutation', '-EvidenceDir', directory, '-BaseUrl', url],
+        ['-Fixture', 'contracts', '-EvidenceDir', directory, '-BaseUrl', 'https://example.com'],
+        ['-Fixture', 'contracts', '-EvidenceDir', directory, '-BaseUrl', url + '/escape'],
+        ['-Fixture', 'contracts', '-EvidenceDir', root, '-BaseUrl', url],
+      ]) assert.equal((await run(args)).code, 1);
+      assert.deepEqual(requests, []);
+    });
+  } finally {
+    for (const socket of sockets) socket.destroy();
+    await new Promise(done => server.close(done));
+  }
+});

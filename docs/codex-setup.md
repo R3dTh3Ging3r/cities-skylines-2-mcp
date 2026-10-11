@@ -76,3 +76,15 @@ Node compilation, MCP initialization, discovery of 65 tools, and the structured 
 After Steam finished installing build 25127643, the C# Release build passed with zero warnings and errors. The mod was installed with the game closed and both copied files matched their build hashes. Native Codex calls then verified bridge 0.9.0 responding at the main menu, no city loaded, and a clear rejection of city queries. Player.log identifies the game as 1.6.2f1.
 
 Loaded-city inspection, saving, simulation control, and construction remain unverified. Main-menu communication is not evidence that all gameplay actions work. See [the session record](gameplay/SESSION.md) for the next live checks and [the playbook](gameplay/PLAYBOOK.md) for strategy research.
+
+## Contract release evidence
+
+For current offline checks use [testing and release gates](testing.md), including
+all four pure core suites and the explicit Node18 test list. Record installed DLL
+hashes before/after the exact `SkipDeploy=true` build and hash its candidate output
+separately. The [contracts evidence procedure](validation/contracts.md) provides
+the read-only fixture, offline validator exit codes, manual native probes and
+rollback gates. Fixture checks remain incomplete when panels, game version,
+loaded-module linkage or WorldRef are unavailable; a build or historical gameplay
+record cannot fill those gaps. This procedure does not authorize deployment or
+inspection of an active gameplay city.
