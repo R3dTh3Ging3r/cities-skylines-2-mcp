@@ -112,8 +112,8 @@ namespace CS2MCP
             }
             if (request.Path == "/capabilities")
             {
-                return BridgeResponse.Json(EndpointCatalog.CreateManifest(Mod.Identity,
-                    Mod.RuntimeSnapshots.Read(DateTime.UtcNow)));
+                return BridgeResponse.Json(EndpointCatalog.CreateValidationManifest(Mod.Identity,
+                    Mod.RuntimeSnapshots.Read(DateTime.UtcNow), Mod.NativeValidation));
             }
 
             m_EnqueueToMainThread(request);

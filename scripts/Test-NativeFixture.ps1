@@ -5,11 +5,14 @@ param(
     [Parameter(Mandatory = $true, ParameterSetName = 'Collect')][string]$EvidenceDir,
     [Parameter(ParameterSetName = 'Collect')][string]$BaseUrl = 'http://127.0.0.1:8642',
     [Parameter(ParameterSetName = 'Collect')][switch]$Offline,
+    [Parameter(ParameterSetName = 'Collect')][switch]$AllowMutation,
+    [Parameter(ParameterSetName = 'Collect')][string]$EvidenceRoot,
     [Parameter(Mandatory = $true, ParameterSetName = 'Validate')][string]$ValidateEvidence
 )
 $ErrorActionPreference = 'Stop'
 $RepoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$EvidenceRoot = [IO.Path]::GetFullPath((Join-Path $RepoRoot '.local/v01'))
+$LocalRoot = [IO.Path]::GetFullPath((Join-Path $RepoRoot '.local'))
+if ([string]::IsNullOrWhiteSpace($EvidenceRoot)) { $EvidenceRoot = $LocalRoot }
 
 function Require($Condition, [string]$Message) {
     if (-not $Condition) { throw $Message }
@@ -56,6 +59,23 @@ function Stamp($Value) {
     Require ([DateTimeOffset]::TryParse($Value, [ref]$Parsed)) 'Invalid timestamp'
     return $Parsed
 }
+function ConfinedPath([string]$Value, [string]$Root) {
+    Require ((Nonempty $Value) -and $Value.Length -le 240) 'Path missing or exceeds 240 characters'
+    Require ($Value -notmatch '(^|[\\/])\.\.([\\/]|$)') 'Path traversal rejected'
+    $Absolute = [IO.Path]::GetFullPath($Value).TrimEnd('\', '/')
+    Require ($Absolute.Length -le 240) 'Resolved path exceeds 240 characters'
+    Require ($Absolute.Equals($Root, [StringComparison]::OrdinalIgnoreCase) -or $Absolute.StartsWith($Root + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) 'Path outside supplied workspace evidence root'
+    # Lexical normalization alone would allow junction/symlink escape. Refuse existing reparse ancestors.
+    $Current = $Absolute
+    while ($Current.Length -ge $RepoRoot.Length) {
+        if (Test-Path -LiteralPath $Current) {
+            Require (((Get-Item -Force -LiteralPath $Current).Attributes -band [IO.FileAttributes]::ReparsePoint) -eq 0) 'Evidence reparse point refused'
+        }
+        if ($Current.Equals($RepoRoot, [StringComparison]::OrdinalIgnoreCase)) { break }
+        $Current = [IO.Path]::GetDirectoryName($Current)
+    }
+    return $Absolute
+}
 function ArtifactPath($Value, [string]$Directory, [switch]$MustExist) {
     Require (Nonempty $Value) 'Artifact path must be a string'
     Require ($Value.Length -le 240) 'Artifact path exceeds 240 characters'
@@ -63,16 +83,27 @@ function ArtifactPath($Value, [string]$Directory, [switch]$MustExist) {
     $Absolute = if ([IO.Path]::IsPathRooted($Value)) { [IO.Path]::GetFullPath($Value) } else { [IO.Path]::GetFullPath((Join-Path $Directory $Value)) }
     Require ($Absolute.Length -le 240) 'Resolved artifact path exceeds 240 characters'
     Require ($Absolute.StartsWith($Directory.TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) 'Artifact outside report directory'
-    Require ($Absolute.StartsWith($EvidenceRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) 'Artifact outside .local/v01'
+    $null = ConfinedPath $Absolute $EvidenceRoot
     if ($MustExist) { Require (Test-Path -LiteralPath $Absolute -PathType Leaf) 'Missing evidence artifact' }
     return $Absolute
 }
-function Definition {
-    $Data = Get-Content -Raw -LiteralPath (Join-Path $RepoRoot 'tests/native/contracts.json') | ConvertFrom-Json
-    Require ($Data.schemaVersion -ceq 1 -and $Data.fixture -ceq 'contracts' -and $Data.fixtureVersion -ceq 1 -and $Data.access -ceq 'read') 'Invalid registered fixture'
+function Definition([string]$ID) {
+    Require ($ID -ceq 'contracts' -or $ID -ceq 'lifecycle') 'Unknown registered fixture'
+    $Data = Get-Content -Raw -LiteralPath (Join-Path $RepoRoot ('tests/native/' + $ID + '.json')) | ConvertFrom-Json
+    Require ($Data.schemaVersion -ceq 1 -and $Data.fixture -ceq $ID -and $Data.fixtureVersion -ceq 1 -and $Data.access -ceq 'read') 'Invalid registered fixture'
     Require ((ArrayValue $Data.operations) -and $Data.operations.Count -gt 0) 'Empty fixture operations'
     Require ((ArrayValue $Data.requiredChecks) -and $Data.requiredChecks.Count -gt 0) 'Empty required checks'
     Require (@($Data.requiredChecks | Select-Object -Unique).Count -eq $Data.requiredChecks.Count) 'Duplicate required checks'
+    if ($ID -ceq 'lifecycle') {
+        Require ($Data.requiresMutation -is [bool] -and $Data.requiresMutation) 'Lifecycle must require mutation'
+        Require ((ArrayValue $Data.syntheticSetupInstructions) -and $Data.syntheticSetupInstructions.Count -gt 0 -and (ArrayValue $Data.steps) -and $Data.steps.Count -eq 5) 'Missing bounded lifecycle setup/steps'
+        Require ((ArrayValue $Data.requiredCapabilities) -and $Data.requiredCapabilities.Count -eq $Data.steps.Count) 'Invalid probe capabilities'
+        foreach ($Step in $Data.steps) {
+            Require ((Nonempty $Step.id) -and @($Data.requiredChecks | Where-Object { $_ -ceq $Step.id }).Count -eq 1 -and @($Data.requiredCapabilities | Where-Object { $_ -ceq $Step.id }).Count -eq 1) 'Invalid lifecycle step ID'
+            Require ($Step.requiresMutation -is [bool] -and $Step.requiresMutation -and $Step.maxObservations -is [int] -and $Step.maxObservations -gt 0 -and $Step.maxObservations -le 32) 'Unbounded lifecycle step'
+            Require ((ArrayValue $Step.expectedAssertions) -and $Step.expectedAssertions.Count -gt 0) 'Missing expected assertions'
+        }
+    }
     $Source = Get-Content -Raw -LiteralPath (Join-Path $RepoRoot 'CS2MCP.Bridge/EndpointCatalog.cs')
     $Pattern = 'new EndpointDescriptor\("([^"\r\n]+)", "([^"\r\n]+)", "([^"\r\n]+)", "([^"\r\n]+)"\)'
     $Matches = [regex]::Matches($Source, $Pattern)
@@ -124,6 +155,18 @@ function ValidateManifestMetadata($Manifest, $Definition) {
     Require ($Manifest.protocolVersion -is [int] -and $Manifest.protocolVersion -eq 1 -and $Manifest.schemaVersion -is [int] -and $Manifest.schemaVersion -eq 1) 'Unsupported or malformed protocol/schema version'
     ValidateEndpoints $Manifest.endpoints $Definition
 }
+function ValidateProbeMetadata($Metadata, $Definition) {
+    RequireFields $Metadata @('enabled','dispatchAvailable','reason','probes')
+    Require ($Metadata.enabled -is [bool] -and $Metadata.dispatchAvailable -is [bool] -and -not $Metadata.dispatchAvailable -and $Metadata.reason -ceq 'operationGuardsNotImplemented') 'Probe metadata cannot grant dispatch'
+    Require ((ArrayValue $Metadata.probes) -and $Metadata.probes.Count -eq $Definition.fixture.steps.Count) 'Probe metadata count mismatch'
+    $Seen = @{}
+    foreach ($Probe in $Metadata.probes) {
+        RequireFields $Probe @('id','fixture','validationOnly','support','dispatchAvailable')
+        Require ((Nonempty $Probe.id) -and -not $Seen.ContainsKey($Probe.id) -and @($Definition.fixture.requiredCapabilities | Where-Object { $_ -ceq $Probe.id }).Count -eq 1) 'Unknown/duplicate probe metadata'
+        $Seen[$Probe.id] = $true
+        Require ($Probe.fixture -ceq 'lifecycle' -and $Probe.validationOnly -is [bool] -and $Probe.validationOnly -and $Probe.support -ceq 'unverified' -and $Probe.dispatchAvailable -is [bool] -and -not $Probe.dispatchAvailable) 'Probe metadata falsely claims authority/support'
+    }
+}
 function ValidateManifest($Manifest, $Definition, $Observed) {
     ValidateManifestMetadata $Manifest $Definition
     RequireFields $Manifest @('identity','runtime')
@@ -165,7 +208,7 @@ function ReportBinding($Report) {
 }
 function ValidateReport($Report, [string]$Directory, $Definition) {
     RequireFields $Report @('schemaVersion','fixture','fixtureVersion','provenance','startedAtUtc','finishedAtUtc','build','world','checks','limitations','artifacts','validated','compatibilityVerified')
-    Require ($Report.schemaVersion -is [int] -and $Report.schemaVersion -eq 1 -and $Report.fixture -ceq 'contracts' -and $Report.fixtureVersion -is [int] -and $Report.fixtureVersion -eq 1) 'Invalid report version or fixture'
+    Require ($Report.schemaVersion -is [int] -and $Report.schemaVersion -eq 1 -and $Report.fixture -ceq $Definition.fixture.fixture -and $Report.fixtureVersion -is [int] -and $Report.fixtureVersion -eq $Definition.fixture.fixtureVersion) 'Invalid report version or fixture'
     Require ($Report.provenance -ceq 'native' -or $Report.provenance -ceq 'offline') 'Invalid report provenance'
     Require ($Report.validated -is [bool] -and $Report.compatibilityVerified -is [bool]) 'Flags must be booleans'
     $Start = Stamp $Report.startedAtUtc
@@ -174,6 +217,7 @@ function ValidateReport($Report, [string]$Directory, $Definition) {
     Require ((ArrayValue $Report.limitations) -and (ArrayValue $Report.artifacts) -and (ArrayValue $Report.checks)) 'Arrays required'
     foreach ($Limitation in $Report.limitations) { Require (Nonempty $Limitation) 'Invalid limitation' }
     foreach ($Artifact in $Report.artifacts) { $null = ArtifactPath $Artifact $Directory -MustExist }
+    if ($Report.fixture -ceq 'lifecycle') { ValidateLifecycleReport $Report $Directory $Definition }
     $Build = $Report.build
     RequireFields $Build @('identity','identityReasons','sourceRevision','sourceDirty','installedSha256','candidateSha256','loadedModuleSha256','hashReasons')
     Require ($null -eq $Build.sourceDirty -or $Build.sourceDirty -is [bool]) 'Invalid source dirty flag'
@@ -225,6 +269,7 @@ function ValidateReport($Report, [string]$Directory, $Definition) {
             ValidateManifestMetadata $Check.expected $Definition
             ValidateManifest $Check.actual $Definition $Observed
             ValidateIdentityObservation $Check.actual.identity $Build.identity
+            if ($Report.fixture -ceq 'lifecycle' -and (Has $Check.actual 'nativeValidation')) { ValidateProbeMetadata $Check.actual.nativeValidation $Definition }
         }
         if ($Check.id -ceq 'buildIdentity') {
             Require ($KnownBuild -and $Report.provenance -ceq 'native' -and $Check.provenance -ceq 'native') 'Unknown or offline build cannot pass'
@@ -254,6 +299,59 @@ function ValidateReport($Report, [string]$Directory, $Definition) {
     Require ($Report.compatibilityVerified -ceq $Compatibility) 'Contradictory compatibility flag'
     if ($AllPassed) { return 0 }; return 2
 }
+function ValidateLifecycleReport($Report, [string]$Directory, $Definition) {
+    RequireFields $Report @('nativeOutcome','preparation','fixtureContext','contextArtifact','receipts')
+    Require ($Report.nativeOutcome -ceq 'notRun') 'O1 cannot certify a native outcome'
+    Require ((ArrayValue $Report.receipts) -and $Report.receipts.Count -eq 0) 'O1 has no probe receipts; never invent or discard native outcomes'
+    RequireFields $Report.preparation @('status','allowMutation','dispatchAvailable','refusalReasons','readFailure')
+    Require ($Report.preparation.status -ceq 'failed' -and $Report.preparation.allowMutation -is [bool] -and $Report.preparation.dispatchAvailable -is [bool] -and -not $Report.preparation.dispatchAvailable) 'Preparation cannot enable native dispatch'
+    $Refusals = $Report.preparation.refusalReasons
+    Require ((ArrayValue $Refusals) -and $Refusals.Count -gt 0 -and @($Refusals | Select-Object -Unique).Count -eq $Refusals.Count) 'Refusals missing or duplicated'
+    foreach ($Reason in $Refusals) { Require (Nonempty $Reason) 'Invalid refusal reason' }
+    Require (@($Refusals | Where-Object { $_ -ceq 'operationGuardsNotImplemented' }).Count -eq 1 -and @($Refusals | Where-Object { $_ -ceq 'freshWorldLeaseCheckpointEvidenceUnavailable' }).Count -eq 1) 'O1 producer dependency refusal missing'
+    if (-not $Report.preparation.allowMutation) { Require (@($Refusals | Where-Object { $_ -ceq 'mutationOptInRequired' }).Count -eq 1) 'Missing opt-in refusal' }
+    if ($null -ne $Report.preparation.readFailure) {
+        Require (Nonempty $Report.preparation.readFailure) 'Invalid read failure'
+        Require (@($Refusals | Where-Object { $_ -ceq 'readOutcomeUnknown' }).Count -eq 1) 'Read failure cannot imply cancellation'
+    }
+    $RefusalPath = ArtifactPath 'refusal.json' $Directory -MustExist
+    Require (@($Report.artifacts | Where-Object { $_ -ceq $RefusalPath }).Count -eq 1) 'Refusal artifact not registered'
+    $Recorded = Get-Content -Raw -LiteralPath $RefusalPath | ConvertFrom-Json
+    Require (JsonEqual $Recorded $Report.preparation) 'Refusal artifact contradicts report'
+    if ($null -eq $Report.contextArtifact) { Require ($null -eq $Report.fixtureContext) 'Context has no snapshot' }
+    else {
+        $ContextPath = ArtifactPath $Report.contextArtifact $Directory -MustExist
+        Require (@($Report.artifacts | Where-Object { $_ -ceq $Report.contextArtifact }).Count -eq 1) 'Context artifact not registered'
+        $RecordedContext = Get-Content -Raw -LiteralPath $ContextPath | ConvertFrom-Json
+        Require (JsonEqual $RecordedContext $Report.fixtureContext) 'Context snapshot contradicts report'
+    }
+    foreach ($Step in $Definition.fixture.steps) {
+        $Check = @($Report.checks | Where-Object { $_.id -ceq $Step.id })
+        Require ($Check.Count -eq 1 -and $Check[0].status -ceq 'notRun' -and $Check[0].reason -ceq 'operationGuardsNotImplemented') 'O1 native probe cannot be passed or failed without execution'
+        Require ($null -eq $Check[0].actual -and (ArrayValue $Check[0].artifacts) -and $Check[0].artifacts.Count -eq 0 -and $Check[0].provenance -ceq $Report.provenance) 'Unexecuted probe cannot claim observations'
+        Require (JsonEqual $Check[0].expected $Step.expectedAssertions) 'Probe expectations differ from registered fixture'
+    }
+}
+function ContextRefusals($Context, $State) {
+    $Reasons = @()
+    if ($null -eq $Context) { return @('fixtureContextMissing') }
+    if ($Context.schemaVersion -isnot [int] -or $Context.schemaVersion -ne 1 -or $Context.fixture -cne 'lifecycle') { $Reasons += 'fixtureContextMalformed' }
+    if ($Context.disposableCityConfirmed -isnot [bool] -or -not $Context.disposableCityConfirmed) { $Reasons += 'disposableCityNotConfirmed' }
+    if (-not (ArrayValue $Context.permittedFixtureScope) -or @($Context.permittedFixtureScope | Where-Object { $_ -ceq 'lifecycle' }).Count -ne 1) { $Reasons += 'fixtureScopeMismatch' }
+    if (-not (Nonempty $Context.world.bootId) -or ($Context.world.epoch -isnot [int] -and $Context.world.epoch -isnot [long]) -or $Context.world.epoch -lt 0 -or -not (Nonempty $Context.city.identity)) { $Reasons += 'fixtureContextIdentityMissing' }
+    # Supplied claims and optional read observations detect contradictions only. Neither grants authority.
+    if ($null -ne $State) {
+        if ($null -eq $State.world -or $null -eq $State.city) { $Reasons += 'fixtureStateIdentityUnavailable' }
+        else {
+            if (-not (JsonEqual $Context.world $State.world)) { $Reasons += 'fixtureWorldMismatch' }
+            if (-not (JsonEqual $Context.city $State.city)) { $Reasons += 'fixtureCityMismatch' }
+        }
+    }
+    if ($Context.checkpoint.verified -isnot [bool] -or -not $Context.checkpoint.verified -or -not (Nonempty $Context.checkpoint.assetIdentity)) { $Reasons += 'checkpointNotVerified' }
+    if ($Context.checkpoint.separatelyNamed -isnot [bool] -or -not $Context.checkpoint.separatelyNamed -or -not (Nonempty $Context.checkpoint.name)) { $Reasons += 'checkpointNotSeparatelyNamed' }
+    if ($Context.checkpoint.cityIdentity -cne $Context.city.identity -or -not (JsonEqual $Context.checkpoint.world $Context.world)) { $Reasons += 'checkpointContextMismatch' }
+    return $Reasons
+}
 function ReadJson([string]$Url) {
     $Request = [Net.HttpWebRequest]::Create($Url)
     $Request.Method = 'GET'; $Request.AllowAutoRedirect = $false
@@ -280,49 +378,85 @@ function WriteJson($Value, [string]$Path) {
 }
 
 try {
-    $Registered = Definition
+    $EvidenceRoot = ConfinedPath $EvidenceRoot $LocalRoot
     if ($PSCmdlet.ParameterSetName -ceq 'Validate') {
-        $ReportPath = [IO.Path]::GetFullPath($ValidateEvidence)
+        $ReportPath = ConfinedPath $ValidateEvidence $LocalRoot
         $Report = Get-Content -Raw -LiteralPath $ReportPath | ConvertFrom-Json
+        $Registered = Definition $Report.fixture
         $Code = ValidateReport $Report ([IO.Path]::GetDirectoryName($ReportPath)) $Registered
         Write-Output "Evidence structurally valid; validated=$($Report.validated); compatibilityVerified=$($Report.compatibilityVerified)"
         exit $Code
     }
-    Require ($Fixture -ceq 'contracts') 'Only registered read-only contracts fixture supported'
+    $Registered = Definition $Fixture
     $Origin = $null
     Require ([Uri]::TryCreate($BaseUrl, [UriKind]::Absolute, [ref]$Origin)) 'Invalid BaseUrl'
     $Address = $null
     Require ($Origin.Scheme -ceq 'http' -and [Net.IPAddress]::TryParse($Origin.Host.Trim('[', ']'), [ref]$Address) -and [Net.IPAddress]::IsLoopback($Address)) 'BaseUrl must use a loopback HTTP IP literal'
     Require ($Origin.UserInfo -eq '' -and $Origin.Query -eq '' -and $Origin.Fragment -eq '' -and $Origin.AbsolutePath -eq '/') 'BaseUrl must be an origin without credentials or path'
-    $Directory = [IO.Path]::GetFullPath($EvidenceDir)
-    Require ($Directory.StartsWith($EvidenceRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or $Directory.Equals($EvidenceRoot, [StringComparison]::OrdinalIgnoreCase)) 'EvidenceDir must be below .local/v01'
-    Require ($EvidenceDir -notmatch '(^|[\\/])\.\.([\\/]|$)') 'EvidenceDir traversal rejected'
+    $Directory = ConfinedPath $EvidenceDir $EvidenceRoot
     $Names = @('report.json','catalog.json') + @(0..($Registered.fixture.operations.Count - 1) | ForEach-Object { 'read-{0:d2}.json' -f $_ })
+    if ($Fixture -ceq 'lifecycle') {
+        $Names += @('fixture-context.json','fixture-context-snapshot.json','refusal.json','run-start.json')
+        if (Test-Path -LiteralPath $Directory) {
+            $Existing = @(Get-ChildItem -Force -LiteralPath $Directory)
+            Require (@($Existing | Where-Object { $_.Name -cne 'fixture-context.json' -or $_.PSIsContainer }).Count -eq 0) 'Lifecycle collection requires a fresh EvidenceDir; existing evidence must be preserved'
+        }
+    }
     foreach ($Name in $Names) { $null = ArtifactPath $Name $Directory }
     $null = New-Item -ItemType Directory -Force -Path $Directory
     $Started = [DateTime]::UtcNow.ToString('o')
     $Provenance = if ($Offline) { 'offline' } else { 'native' }
     $Artifacts = @()
+    if ($Fixture -ceq 'lifecycle') {
+        # CreateNew also prevents two collectors racing after the initial freshness check.
+        $RunStart = Join-Path $Directory 'run-start.json'
+        $Marker = [IO.File]::Open($RunStart, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
+        $Marker.Dispose()
+        WriteJson @{ fixture = $Fixture; startedAtUtc = $Started; provenance = $Provenance } $RunStart
+        $Artifacts += $RunStart
+    }
+    $Context = $null; $ContextArtifact = $null
+    $Preparation = @{ status = 'failed'; allowMutation = [bool]$AllowMutation; dispatchAvailable = $false; refusalReasons = @(); readFailure = $null }
+    if ($Fixture -ceq 'lifecycle') {
+        $Preparation.refusalReasons = @('operationGuardsNotImplemented','freshWorldLeaseCheckpointEvidenceUnavailable')
+        if (-not $AllowMutation) { $Preparation.refusalReasons += 'mutationOptInRequired' }
+        $InputPath = Join-Path $Directory 'fixture-context.json'
+        if (Test-Path -LiteralPath $InputPath -PathType Leaf) {
+            # Preserve input verbatim; no in-place reset or overwrite of operator context.
+            $ContextArtifact = Join-Path $Directory 'fixture-context-snapshot.json'
+            [IO.File]::Copy($InputPath, $ContextArtifact, $false)
+            $Artifacts += @($InputPath, $ContextArtifact)
+            try { $Context = Get-Content -Raw -LiteralPath $ContextArtifact | ConvertFrom-Json }
+            catch { $Preparation.refusalReasons += 'fixtureContextMalformed'; $ContextArtifact = $null }
+        }
+    }
     $CatalogPath = Join-Path $Directory 'catalog.json'
     $CatalogObservation = @{ operations = $Registered.fixture.operations; endpoints = @($Registered.catalog.Values) }
     WriteJson $CatalogObservation $CatalogPath
     $Artifacts += $CatalogPath
-    $Checks = @()
+    $Checks = @(); $CheckByID = @{}
     foreach ($ID in $Registered.fixture.requiredChecks) {
-        $Checks += [pscustomobject]@{ id = $ID; status = 'notRun'; expected = @{ fixture = 'contracts'; check = $ID }; actual = $null; observedAtUtc = $Started; provenance = $Provenance; binding = $null; artifacts = @(); reason = 'nativeObservationNotRun' }
+        $CheckByID[$ID] = [pscustomobject]@{ id = $ID; status = 'notRun'; expected = @{ fixture = $Fixture; check = $ID }; actual = $null; observedAtUtc = $Started; provenance = $Provenance; binding = $null; artifacts = @(); reason = 'nativeObservationNotRun' }
+        $Checks += $CheckByID[$ID]
     }
-    $Checks[0].status = 'passed'; $Checks[0].provenance = 'source'; $Checks[0].expected = $CatalogObservation; $Checks[0].actual = $CatalogObservation; $Checks[0].artifacts = @($CatalogPath); $Checks[0].reason = $null
-    $Checks[0].binding = @{ fixture = 'contracts'; fixtureVersion = 1; catalogSha256 = $Registered.catalogSha256 }
+    $CheckByID.catalogReadOnly.status = 'passed'; $CheckByID.catalogReadOnly.provenance = 'source'; $CheckByID.catalogReadOnly.expected = $CatalogObservation; $CheckByID.catalogReadOnly.actual = $CatalogObservation; $CheckByID.catalogReadOnly.artifacts = @($CatalogPath); $CheckByID.catalogReadOnly.reason = $null
+    $CheckByID.catalogReadOnly.binding = @{ fixture = $Fixture; fixtureVersion = 1; catalogSha256 = $Registered.catalogSha256 }
     $Manifest = $null; $StartContext = $null; $EndContext = $null
     try {
         $Manifest = ReadJson ($Origin.GetLeftPart([UriPartial]::Authority) + '/capabilities')
         $ManifestPath = Join-Path $Directory 'read-00.json'
         WriteJson $Manifest $ManifestPath
         $Artifacts += $ManifestPath
-        $Checks[1].observedAtUtc = [DateTime]::UtcNow.ToString('o')
-        ValidateManifest $Manifest $Registered (Stamp $Checks[1].observedAtUtc)
-        $Checks[1].expected = @{ protocolVersion = 1; schemaVersion = 1; endpoints = @($Registered.catalog.Values) }
-        $Checks[1].status = 'passed'; $Checks[1].actual = $Manifest; $Checks[1].artifacts = @($ManifestPath); $Checks[1].reason = $null
+        $CheckByID.capabilityExposure.observedAtUtc = [DateTime]::UtcNow.ToString('o')
+        ValidateManifest $Manifest $Registered (Stamp $CheckByID.capabilityExposure.observedAtUtc)
+        if ($Fixture -ceq 'lifecycle') {
+            if (Has $Manifest 'nativeValidation') {
+                ValidateProbeMetadata $Manifest.nativeValidation $Registered
+                if (-not $Manifest.nativeValidation.enabled) { $Preparation.refusalReasons += 'validationModeDisabled' }
+            } else { $Preparation.refusalReasons += 'validationModeUnavailable' }
+        }
+        $CheckByID.capabilityExposure.expected = @{ protocolVersion = 1; schemaVersion = 1; endpoints = @($Registered.catalog.Values) }
+        $CheckByID.capabilityExposure.status = 'passed'; $CheckByID.capabilityExposure.actual = $Manifest; $CheckByID.capabilityExposure.artifacts = @($ManifestPath); $CheckByID.capabilityExposure.reason = $null
         for ($Index = 1; $Index -lt $Registered.fixture.operations.Count; $Index++) {
             $Operation = $Registered.fixture.operations[$Index]
             $Value = ReadJson ($Origin.GetLeftPart([UriPartial]::Authority) + $Operation.path)
@@ -332,7 +466,11 @@ try {
             if ($Operation.path -ceq '/state') { if ($null -eq $StartContext) { $StartContext = $Value }; $EndContext = $Value }
         }
     } catch {
-        $Checks[1].status = 'failed'; $Checks[1].reason = $_.Exception.Message
+        $CheckByID.capabilityExposure.status = 'failed'; $CheckByID.capabilityExposure.reason = $_.Exception.Message
+        if ($Fixture -ceq 'lifecycle') {
+            $Preparation.readFailure = $_.Exception.Message
+            $Preparation.refusalReasons += 'readOutcomeUnknown'
+        }
     }
     $Identity = @{ assemblyVersion = $null; modVersion = $null; buildIdentity = $null; sourceRevision = $null; gameVersion = $null }
     $Reasons = @{}
@@ -348,18 +486,36 @@ try {
     $Revision = (& git -C $RepoRoot rev-parse HEAD 2>$null | Out-String).Trim()
     if ($LASTEXITCODE -ne 0) { $Revision = $null }
     $Dirty = (& git -C $RepoRoot status --porcelain 2>$null | Out-String).Trim().Length -gt 0
-    $Checks[2].reason = 'loadedModuleHashNotExposed; gameVersion may be unknown; installed file is not loaded identity'
-    $Checks[3].reason = 'WorldRef bootId/epoch not exposed by current bridge'
+    $CheckByID.buildIdentity.reason = 'loadedModuleHashNotExposed; gameVersion may be unknown; installed file is not loaded identity'
+    $CheckByID.worldIdentity.reason = 'WorldRef bootId/epoch not exposed by current bridge'
     $Finished = [DateTime]::UtcNow.ToString('o')
     $Report = [pscustomobject]@{
-        schemaVersion = 1; fixture = 'contracts'; fixtureVersion = 1; provenance = $Provenance
+        schemaVersion = 1; fixture = $Fixture; fixtureVersion = 1; provenance = $Provenance
         startedAtUtc = $Started; finishedAtUtc = $Finished
         build = @{ identity = $Identity; identityReasons = $Reasons; sourceRevision = $Revision; sourceDirty = $Dirty; installedSha256 = $Installed; candidateSha256 = $Candidate; loadedModuleSha256 = $null; hashReasons = $HashReasons }
         world = @{ bootId = $null; epoch = $null; reason = 'worldRefNotExposed'; startContext = $StartContext; endContext = $EndContext }
         checks = $Checks; artifacts = $Artifacts; validated = $false; compatibilityVerified = $false
         limitations = @('Read sequence is not atomic; city name/frame is not WorldRef', 'Capability runtime snapshot freshness is bounded to 5000ms at observation, not the whole collection', 'No panels observed automatically; native parity remains notRun', 'Installed and candidate file hashes do not identify the loaded module', 'Setter/deferred completion and cargo units require later fixtures')
     }
-    $Checks[1].binding = ReportBinding $Report
+    if ($Fixture -ceq 'lifecycle') {
+        if ($AllowMutation -or $null -ne $Context) { $Preparation.refusalReasons += @(ContextRefusals $Context $EndContext) }
+        $Preparation.refusalReasons = @($Preparation.refusalReasons | Select-Object -Unique)
+        foreach ($Step in $Registered.fixture.steps) {
+            $Check = $Checks | Where-Object { $_.id -ceq $Step.id }
+            $Check.expected = $Step.expectedAssertions; $Check.reason = 'operationGuardsNotImplemented'
+        }
+        $RefusalPath = Join-Path $Directory 'refusal.json'
+        WriteJson $Preparation $RefusalPath
+        $Artifacts += $RefusalPath
+        $Report.artifacts = $Artifacts
+        $Report | Add-Member -NotePropertyName nativeOutcome -NotePropertyValue 'notRun'
+        $Report | Add-Member -NotePropertyName preparation -NotePropertyValue $Preparation
+        $Report | Add-Member -NotePropertyName fixtureContext -NotePropertyValue $Context
+        $Report | Add-Member -NotePropertyName contextArtifact -NotePropertyValue $ContextArtifact
+        $Report | Add-Member -NotePropertyName receipts -NotePropertyValue @()
+        $Report.limitations += @('O1 collects only read-only preparation/refusal evidence; no native probes dispatched', 'Fixture context is operator evidence, never fresh world/lease/checkpoint authority', 'O2/O3/O5 must supply normal guards and probe producers before any mutation group can run')
+    }
+    $CheckByID.capabilityExposure.binding = ReportBinding $Report
     $ReportPath = Join-Path $Directory 'report.json'
     WriteJson $Report $ReportPath
     $Code = ValidateReport ($Report | ConvertTo-Json -Depth 60 | ConvertFrom-Json) $Directory $Registered

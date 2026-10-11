@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "fixture": "lifecycle",
+  "fixtureVersion": 1,
+  "access": "read",
+  "requiresMutation": true,
+  "syntheticSetupInstructions": [
+    "Operator prepares a disposable city and a separately named, verified checkpoint.",
+    "Operator supplies fixture-context.json and performs any manual checkpoint reset.",
+    "Do not use the developed city; never automatically load or restore a save."
+  ],
+  "requiredCapabilities": ["preloadOrder", "toolApplyFinish", "manualToolSwitch", "saveIdentity", "previewOwnership"],
+  "operations": [
+    { "method": "GET", "path": "/capabilities" },
+    { "method": "GET", "path": "/state" }
+  ],
+  "requiredChecks": ["catalogReadOnly", "capabilityExposure", "buildIdentity", "worldIdentity", "preloadOrder", "toolApplyFinish", "manualToolSwitch", "saveIdentity", "previewOwnership"],
+  "steps": [
+    { "id": "preloadOrder", "requiresMutation": true, "maxObservations": 32, "expectedAssertions": ["preload fences prior work", "same-save reload advances epoch", "load completion precedes first safe update"] },
+    { "id": "toolApplyFinish", "requiresMutation": true, "maxObservations": 32, "expectedAssertions": ["apply and finish are distinguished", "committed entities are read back"] },
+    { "id": "manualToolSwitch", "requiresMutation": true, "maxObservations": 32, "expectedAssertions": ["takeover and stop callback order observed", "already applied effects remain unknown until readback"] },
+    { "id": "saveIdentity", "requiresMutation": true, "maxObservations": 32, "expectedAssertions": ["separately named save", "task result and saveSuccess distinguished", "destination package identity verified"] },
+    { "id": "previewOwnership", "requiresMutation": true, "maxObservations": 32, "expectedAssertions": ["GPU readback and byte lifetime observed", "texture ownership demonstrated before cleanup changes"] }
+  ],
+  "panelProbes": {}
+}

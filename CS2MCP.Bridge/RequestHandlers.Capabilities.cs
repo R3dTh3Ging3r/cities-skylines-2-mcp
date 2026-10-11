@@ -6,8 +6,8 @@ namespace CS2MCP
     {
         public BridgeResponse GetCapabilities(BridgeRequest request)
         {
-            return BridgeResponse.Json(EndpointCatalog.CreateManifest(Mod.Identity,
-                Mod.RuntimeSnapshots.Read(DateTime.UtcNow)));
+            return BridgeResponse.Json(EndpointCatalog.CreateValidationManifest(Mod.Identity,
+                Mod.RuntimeSnapshots.Read(DateTime.UtcNow), Mod.NativeValidation));
         }
     }
 }

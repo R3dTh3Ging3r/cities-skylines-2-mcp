@@ -12,6 +12,12 @@ namespace CS2MCP
         public const string Version = "0.9.0";
         public static readonly RuntimeSnapshotStore RuntimeSnapshots = new RuntimeSnapshotStore();
         public static readonly BuildIdentity Identity = ReadBuildIdentity();
+        // Read once with mod startup; later environment changes cannot enable probe dispatch.
+        public static readonly NativeValidationMetadata NativeValidation = new NativeValidationMetadata(
+            System.Environment.GetEnvironmentVariable("CS2MCP_NATIVE_VALIDATION"));
+
+        // Force initialization when the loader constructs the mod, rather than beforefieldinit timing.
+        static Mod() { }
 
         private static BuildIdentity ReadBuildIdentity()
         {

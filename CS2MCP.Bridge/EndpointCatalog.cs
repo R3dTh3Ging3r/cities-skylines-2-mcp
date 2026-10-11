@@ -23,6 +23,30 @@ namespace CS2MCP
         }
     }
 
+    /// <summary>Investigation metadata only. It grants neither command admission nor native support.</summary>
+    public sealed class NativeValidationProbe
+    {
+        public string id { get; }
+        public string fixture => "lifecycle";
+        public bool validationOnly => true;
+        public string support => "unverified";
+        public bool dispatchAvailable => false;
+        internal NativeValidationProbe(string id) { this.id = id; }
+    }
+
+    public sealed class NativeValidationMetadata
+    {
+        public bool enabled { get; }
+        public bool dispatchAvailable => false;
+        public string reason => "operationGuardsNotImplemented";
+        public IReadOnlyList<NativeValidationProbe> probes { get; } = Array.AsReadOnly(new[] {
+            new NativeValidationProbe("preloadOrder"), new NativeValidationProbe("toolApplyFinish"),
+            new NativeValidationProbe("manualToolSwitch"), new NativeValidationProbe("saveIdentity"),
+            new NativeValidationProbe("previewOwnership")
+        });
+        public NativeValidationMetadata(string startupValue) { enabled = startupValue == "true"; }
+    }
+
     public sealed class CapabilityManifest
     {
         public int protocolVersion => 1;
@@ -33,11 +57,13 @@ namespace CS2MCP
         public IReadOnlyList<Capability> capabilities { get; }
         public IReadOnlyList<Capability> nativeSupport { get; }
         public IReadOnlyList<string> degradedReasons { get; }
+        public NativeValidationMetadata nativeValidation { get; }
 
-        internal CapabilityManifest(BuildIdentity identity, RuntimeEvidence runtime)
+        internal CapabilityManifest(BuildIdentity identity, RuntimeEvidence runtime, NativeValidationMetadata validation)
         {
             this.identity = identity;
             this.runtime = runtime;
+            nativeValidation = validation;
             capabilities = Array.AsReadOnly(EndpointCatalog.All.Select(endpoint => new Capability {
                 name = endpoint.capability, support = "supported"
             }).ToArray());
@@ -135,7 +161,16 @@ namespace CS2MCP
         {
             if (identity == null) throw new ArgumentNullException(nameof(identity));
             if (runtime == null) throw new ArgumentNullException(nameof(runtime));
-            return new CapabilityManifest(identity, runtime);
+            return CreateValidationManifest(identity, runtime, new NativeValidationMetadata(null));
+        }
+
+        public static CapabilityManifest CreateValidationManifest(BuildIdentity identity, RuntimeEvidence runtime,
+            NativeValidationMetadata validation)
+        {
+            if (identity == null) throw new ArgumentNullException(nameof(identity));
+            if (runtime == null) throw new ArgumentNullException(nameof(runtime));
+            if (validation == null) throw new ArgumentNullException(nameof(validation));
+            return new CapabilityManifest(identity, runtime, validation);
         }
     }
 }

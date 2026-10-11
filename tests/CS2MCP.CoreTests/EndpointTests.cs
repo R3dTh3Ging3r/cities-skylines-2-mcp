@@ -16,6 +16,39 @@ namespace CS2MCP.CoreTests
 
         public static void Run()
         {
+            Program.Check("release validation metadata defaults disabled and never enables dispatch", () =>
+            {
+                var manifest = EndpointCatalog.CreateManifest(new BuildIdentity("0.4.0", "0.9.0", null, null),
+                    new RuntimeSnapshotStore().Read(DateTime.UtcNow));
+                var validation = Property(manifest, "nativeValidation");
+                Program.Equal(false, Property(validation, "enabled"));
+                Program.Equal(false, Property(validation, "dispatchAvailable"));
+            });
+            Program.Check("startup opt-in advertises fixed unverified validation-only probes without authority", () =>
+            {
+                var type = typeof(EndpointCatalog).Assembly.GetType("CS2MCP.NativeValidationMetadata")
+                    ?? throw new Exception("startup validation metadata missing");
+                foreach (string input in new string[] { null, "false", "1", "TRUE", "true" })
+                {
+                    var validation = Activator.CreateInstance(type, new object[] { input });
+                    Program.Equal(input == "true", Property(validation, "enabled"));
+                    Program.Equal(false, Property(validation, "dispatchAvailable"));
+                    var probes = ((IEnumerable)Property(validation, "probes")).Cast<object>().ToArray();
+                    Program.Equal("preloadOrder,toolApplyFinish,manualToolSwitch,saveIdentity,previewOwnership",
+                        string.Join(",", probes.Select(p => Property(p, "id"))));
+                    foreach (object probe in probes)
+                    {
+                        Program.Equal("lifecycle", Property(probe, "fixture"));
+                        Program.Equal(true, Property(probe, "validationOnly"));
+                        Program.Equal("unverified", Property(probe, "support"));
+                        Program.Equal(false, Property(probe, "dispatchAvailable"));
+                    }
+                    var manifest = typeof(EndpointCatalog).GetMethod("CreateValidationManifest").Invoke(null,
+                        new object[] { new BuildIdentity("0.4.0", "0.9.0", null, null),
+                            new RuntimeSnapshotStore().Read(DateTime.UtcNow), validation });
+                    Program.Equal(validation, Property(manifest, "nativeValidation"));
+                }
+            });
             Program.Check("embedded build revision is available without reading the checkout", () =>
             {
                 const string revision = "0123456789abcdef0123456789abcdef01234567";
