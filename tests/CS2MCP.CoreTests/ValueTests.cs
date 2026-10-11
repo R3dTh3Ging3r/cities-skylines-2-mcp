@@ -35,6 +35,27 @@ namespace CS2MCP.CoreTests
                 Program.Equal(false, ValueValidation.Check(0.31, 0, 1, 0.1).accepted);
                 Program.Equal(true, ValueValidation.Check(15, 10, 100, 5).accepted);
             });
+            Program.Check("native float grid accepts large step counts without snapping", () => {
+                foreach (float requested in new[] { 0.9f, 50.1f, 99.9f, 5000.1f, 9999.9f })
+                {
+                    var check = ValueValidation.Check((double)requested, 0, 10000, (double)0.1f);
+                    Program.Equal(true, check.accepted);
+                    Program.Equal((double?)requested, check.effectiveCandidate);
+                }
+                Program.Equal(true, ValueValidation.Check((double)60.2f, (double)10.1f, 100, (double)0.1f).accepted);
+                Program.Equal(true, ValueValidation.Check((double)49.9f, (double)(-50.1f), 100, (double)0.1f).accepted);
+            });
+            Program.Check("native float precision allowance rejects genuinely off-grid values", () => {
+                foreach (float requested in new[] { 0.31f, 50.11f, 99.91f, 5000.11f, 9999.91f })
+                {
+                    var check = ValueValidation.Check((double)requested, 0, 10000, (double)0.1f);
+                    Program.Equal(false, check.accepted);
+                    Program.Equal("offStep", check.reason);
+                    Program.Equal((double?)null, check.effectiveCandidate);
+                }
+                Program.Equal(false, ValueValidation.Check((double)50.10001f, 0, 100, (double)0.1f).accepted);
+                Program.Equal(false, ValueValidation.Check(50.10000001, 0, 100, 0.1).accepted);
+            });
             Program.Check("unknown step checks bounds only", () => {
                 Program.Equal(true, ValueValidation.Check(26, 0, 100, 0).accepted);
             });

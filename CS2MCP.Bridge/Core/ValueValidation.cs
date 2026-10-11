@@ -17,11 +17,32 @@ namespace CS2MCP.Core
             {
                 double units = (requested - min) / step;
                 if (!IsFinite(units)) return new ValueCheck(requested, null, "invalidConstraints");
-                // Native policy inputs are floats. Allow representation noise, never snap the input.
-                if (Math.Abs(units - Math.Round(units)) > 0.00001)
+                double count = Math.Round(units);
+                double gridValue = min + count * step;
+                // Compare in value units. Bound double arithmetic rounding using machine epsilon.
+                double tolerance = 4 * 2.2204460492503131e-16 *
+                    Math.Max(Math.Abs(requested), Math.Max(Math.Abs(min), Math.Abs(count * step)));
+                if (IsExactSingle(requested) && IsExactSingle(min) && IsExactSingle(step))
+                {
+                    // The native policy caller promotes binary32 inputs. Each rounded operand
+                    // can differ by half an ULP; step error accumulates once per grid interval.
+                    // Keep this allowance separate from double inputs, and at most a quarter step
+                    // so representational uncertainty cannot cover genuinely off-grid intervals.
+                    tolerance += SingleHalfUlp(requested) + SingleHalfUlp(min) + Math.Abs(count) * SingleHalfUlp(step);
+                }
+                tolerance = Math.Min(step * 0.25, tolerance);
+                if (!IsFinite(gridValue) || Math.Abs(requested - gridValue) > tolerance)
                     return new ValueCheck(requested, null, "offStep");
             }
             return new ValueCheck(requested, requested, null);
+        }
+
+        private static bool IsExactSingle(double value) => value == (double)(float)value;
+
+        private static double SingleHalfUlp(double value)
+        {
+            int exponent = (BitConverter.ToInt32(BitConverter.GetBytes((float)value), 0) >> 23) & 255;
+            return Math.Pow(2, exponent == 0 ? -150 : exponent - 151);
         }
 
         public static ValueCheck LegacyClamp(double requested, double min, double max)
