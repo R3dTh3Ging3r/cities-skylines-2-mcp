@@ -1,0 +1,287 @@
+{
+  "baselineCommit": "8f1d4325a2b65d58fff9ddb984c22eb78f897ca6",
+  "auditedToolCount": 65,
+  "requiredNames": [
+    "cs2_ping",
+    "cs2_game_state",
+    "cs2_city_overview",
+    "cs2_demand",
+    "cs2_set_simulation",
+    "cs2_screenshot",
+    "cs2_budget",
+    "cs2_city_services",
+    "cs2_labor",
+    "cs2_statistics",
+    "cs2_get_taxes",
+    "cs2_set_tax",
+    "cs2_policies",
+    "cs2_set_policy",
+    "cs2_service_budgets",
+    "cs2_set_service_budget",
+    "cs2_find_prefabs",
+    "cs2_place_building",
+    "cs2_build_road",
+    "cs2_list_buildings",
+    "cs2_list_zones",
+    "cs2_zone_area",
+    "cs2_upgrade_road",
+    "cs2_list_roads",
+    "cs2_demolish",
+    "cs2_get_camera",
+    "cs2_set_camera",
+    "cs2_terrain",
+    "cs2_gridmap",
+    "cs2_zoning",
+    "cs2_notifications",
+    "cs2_inspect",
+    "cs2_get_loan",
+    "cs2_set_loan",
+    "cs2_get_fees",
+    "cs2_set_fee",
+    "cs2_list_objects",
+    "cs2_run_simulation",
+    "cs2_save_game",
+    "cs2_tiles_info",
+    "cs2_list_districts",
+    "cs2_create_district",
+    "cs2_district_policies",
+    "cs2_set_district_policy",
+    "cs2_list_transit_stops",
+    "cs2_place_transit_stop",
+    "cs2_create_transit_line",
+    "cs2_list_transit_lines",
+    "cs2_delete_transit_line",
+    "cs2_list_map_tiles",
+    "cs2_buy_map_tiles",
+    "cs2_traffic",
+    "cs2_vehicles",
+    "cs2_road_graph",
+    "cs2_connect_road",
+    "cs2_prefab_info",
+    "cs2_buildings_near",
+    "cs2_place_roadside",
+    "cs2_place_shoreline",
+    "cs2_replace_road",
+    "cs2_line_policies",
+    "cs2_set_line_policy",
+    "cs2_set_junction_control",
+    "cs2_line_vehicles",
+    "cs2_set_line_vehicles"
+  ],
+  "representativeSchemas": {
+    "cs2_set_simulation": {
+      "type": "object",
+      "properties": {
+        "paused": {
+          "type": "boolean",
+          "description": "true to pause, false to resume"
+        },
+        "speed": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 8,
+          "description": "simulation speed multiplier (0-8)"
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "cs2_screenshot": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 64,
+          "maximum": 3840,
+          "description": "Downscale the image to this width in pixels (default 1280, keeps aspect ratio)"
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "cs2_place_building": {
+      "type": "object",
+      "properties": {
+        "prefab": {
+          "type": "string",
+          "description": "Exact prefab name from cs2_find_prefabs"
+        },
+        "x": {
+          "type": "number",
+          "description": "World X coordinate (meters)"
+        },
+        "z": {
+          "type": "number",
+          "description": "World Z coordinate (meters)"
+        },
+        "rotation": {
+          "type": "number",
+          "description": "Rotation around Y axis in degrees (default 0)"
+        },
+        "force": {
+          "type": "boolean",
+          "description": "Place even if the prefab is milestone-locked"
+        }
+      },
+      "required": [
+        "prefab",
+        "x",
+        "z"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "cs2_terrain": {
+      "type": "object",
+      "properties": {
+        "resolution": {
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 256,
+          "description": "Grid resolution per axis (default 64)"
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "cs2_save_game": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Save name (default: timestamped)"
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "cs2_create_transit_line": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "bus",
+            "tram",
+            "metro",
+            "train"
+          ],
+          "description": "Transport type"
+        },
+        "stops": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer"
+                  },
+                  "version": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "index",
+                  "version"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "z": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "x",
+                  "z"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "minItems": 2,
+          "maxItems": 100,
+          "description": "Ordered stops (at least 2 different ones)"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Custom line name (default: the game's 'Bus Line N')"
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#?[0-9a-fA-F]{6}$",
+          "description": "Line color as #RRGGBB (default: the game's color for this line type)"
+        },
+        "snapRadius": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 300,
+          "description": "Max distance for {x, z} stops to snap (default 60m)"
+        },
+        "force": {
+          "type": "boolean",
+          "description": "Create even if this line type is milestone-locked"
+        }
+      },
+      "required": [
+        "type",
+        "stops"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "cs2_replace_road": {
+      "type": "object",
+      "properties": {
+        "roads": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "index",
+              "version"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 50,
+          "description": "Road segments to replace (from cs2_list_roads or cs2_traffic)"
+        },
+        "prefab": {
+          "type": "string",
+          "description": "New road prefab name (cs2_find_prefabs category road)"
+        },
+        "invert": {
+          "type": "boolean",
+          "description": "Flip the drawing direction (one-way roads then run the other way)"
+        },
+        "force": {
+          "type": "boolean",
+          "description": "Use the prefab even if it is milestone-locked"
+        }
+      },
+      "required": [
+        "roads",
+        "prefab"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  }
+}

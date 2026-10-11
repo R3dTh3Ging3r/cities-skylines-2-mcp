@@ -10,37 +10,13 @@ import "dotenv/config";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { BridgeError, createBridgeClient } from "./bridge-client.js";
 
 const BRIDGE_URL = (process.env.CS2_BRIDGE_URL ?? "http://127.0.0.1:8642").replace(/\/+$/, "");
 
-class BridgeError extends Error {}
-
-async function bridgeFetch(path: string, timeoutMs: number): Promise<Response> {
-  try {
-    return await fetch(`${BRIDGE_URL}${path}`, { signal: AbortSignal.timeout(timeoutMs) });
-  } catch (err) {
-    throw new BridgeError(
-      `Cannot reach the CS2 bridge at ${BRIDGE_URL} (${(err as Error).message}). ` +
-        `Make sure Cities: Skylines II is running and the CS2MCP mod is enabled.`,
-    );
-  }
-}
-
-async function bridgeJson(path: string, timeoutMs = 12_000): Promise<unknown> {
-  const res = await bridgeFetch(path, timeoutMs);
-  const text = await res.text();
-  let payload: unknown;
-  try {
-    payload = JSON.parse(text);
-  } catch {
-    payload = { raw: text };
-  }
-  if (!res.ok) {
-    const message = (payload as { error?: string })?.error ?? `bridge returned HTTP ${res.status}`;
-    throw new BridgeError(String(message));
-  }
-  return payload;
-}
+const bridgeClient = createBridgeClient({ baseUrl: BRIDGE_URL });
+const bridgeFetch = bridgeClient.getResponse;
+const bridgeJson = bridgeClient.getJson;
 
 function jsonResult(payload: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(payload, null, 2) }] };
@@ -65,7 +41,7 @@ server.registerTool(
   },
   async () => {
     try {
-      return jsonResult(await bridgeJson("/ping", 3_000));
+      return jsonResult(await bridgeJson("/ping", undefined, 3_000));
     } catch (err) {
       return errorResult(err);
     }
@@ -150,7 +126,7 @@ server.registerTool(
     if (speed !== undefined) params.set("speed", String(speed));
     if (paused !== undefined) params.set("paused", String(paused));
     try {
-      return jsonResult(await bridgeJson(`/sim/control?${params.toString()}`));
+      return jsonResult(await bridgeJson("/sim/control", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -178,7 +154,7 @@ server.registerTool(
   async ({ width }) => {
     const w = width ?? 1280;
     try {
-      const res = await bridgeFetch(`/screenshot?width=${w}`, 30_000);
+      const res = await bridgeFetch("/screenshot", new URLSearchParams({ width: String(w) }), 30_000);
       if (!res.ok) {
         const text = await res.text();
         let message = `bridge returned HTTP ${res.status}`;
@@ -258,7 +234,7 @@ server.registerTool(
     if (parameter !== undefined) params.set("parameter", String(parameter));
     if (samples !== undefined) params.set("samples", String(samples));
     try {
-      return jsonResult(await bridgeJson(`/city/statistics?${params.toString()}`));
+      return jsonResult(await bridgeJson("/city/statistics", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -286,7 +262,7 @@ server.registerTool(
   },
   async ({ area, rate }) => {
     try {
-      return jsonResult(await bridgeJson(`/city/taxes/set?area=${area}&rate=${rate}`));
+      return jsonResult(await bridgeJson("/city/taxes/set", new URLSearchParams({ area: String(area), rate: String(rate) })));
     } catch (err) {
       return errorResult(err);
     }
@@ -318,7 +294,7 @@ server.registerTool(
     const params = new URLSearchParams({ name, active: String(active) });
     if (adjustment !== undefined) params.set("adjustment", String(adjustment));
     try {
-      return jsonResult(await bridgeJson(`/city/policies/set?${params.toString()}`));
+      return jsonResult(await bridgeJson("/city/policies/set", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -348,7 +324,7 @@ server.registerTool(
   async ({ service, percentage }) => {
     const params = new URLSearchParams({ service, percentage: String(percentage) });
     try {
-      return jsonResult(await bridgeJson(`/city/service-budgets/set?${params.toString()}`));
+      return jsonResult(await bridgeJson("/city/service-budgets/set", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -378,7 +354,7 @@ server.registerTool(
     if (query) params.set("query", query);
     if (limit) params.set("limit", String(limit));
     try {
-      return jsonResult(await bridgeJson(`/prefabs?${params.toString()}`));
+      return jsonResult(await bridgeJson("/prefabs", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -408,7 +384,7 @@ server.registerTool(
     if (rotation !== undefined) params.set("rotation", String(rotation));
     if (force) params.set("force", "true");
     try {
-      return jsonResult(await bridgeJson(`/build/place?${params.toString()}`, 15_000));
+      return jsonResult(await bridgeJson("/build/place", params, 15_000));
     } catch (err) {
       return errorResult(err);
     }
@@ -451,7 +427,7 @@ server.registerTool(
     if (e2 !== undefined) params.set("e2", String(e2));
     if (force) params.set("force", "true");
     try {
-      return jsonResult(await bridgeJson(`/build/road?${params.toString()}`, 15_000));
+      return jsonResult(await bridgeJson("/build/road", params, 15_000));
     } catch (err) {
       return errorResult(err);
     }
@@ -475,7 +451,7 @@ server.registerTool(
     if (query) params.set("query", query);
     if (limit) params.set("limit", String(limit));
     try {
-      return jsonResult(await bridgeJson(`/city/buildings?${params.toString()}`));
+      return jsonResult(await bridgeJson("/city/buildings", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -511,7 +487,7 @@ server.registerTool(
     if (radius !== undefined) params.set("radius", String(radius));
     if (force) params.set("force", "true");
     try {
-      return jsonResult(await bridgeJson(`/build/zone?${params.toString()}`));
+      return jsonResult(await bridgeJson("/build/zone", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -537,7 +513,7 @@ server.registerTool(
     const params = new URLSearchParams({ index: String(index), version: String(version), upgrades });
     if (side) params.set("side", side);
     try {
-      return jsonResult(await bridgeJson(`/build/upgrade?${params.toString()}`, 15_000));
+      return jsonResult(await bridgeJson("/build/upgrade", params, 15_000));
     } catch (err) {
       return errorResult(err);
     }
@@ -567,7 +543,7 @@ server.registerTool(
     if (radius !== undefined) params.set("radius", String(radius));
     if (limit) params.set("limit", String(limit));
     try {
-      return jsonResult(await bridgeJson(`/city/roads?${params.toString()}`));
+      return jsonResult(await bridgeJson("/city/roads", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -588,7 +564,7 @@ server.registerTool(
   },
   async ({ index, version }) => {
     try {
-      return jsonResult(await bridgeJson(`/build/demolish?index=${index}&version=${version}`));
+      return jsonResult(await bridgeJson("/build/demolish", new URLSearchParams({ index: String(index), version: String(version) })));
     } catch (err) {
       return errorResult(err);
     }
@@ -628,7 +604,7 @@ server.registerTool(
     if (angleY !== undefined) params.set("angleY", String(angleY));
     if (zoom !== undefined) params.set("zoom", String(zoom));
     try {
-      return jsonResult(await bridgeJson(`/camera/set?${params.toString()}`));
+      return jsonResult(await bridgeJson("/camera/set", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -650,7 +626,7 @@ server.registerTool(
     const params = new URLSearchParams();
     if (resolution) params.set("resolution", String(resolution));
     try {
-      return jsonResult(await bridgeJson(`/city/terrain?${params.toString()}`, 30_000));
+      return jsonResult(await bridgeJson("/city/terrain", params, 30_000));
     } catch (err) {
       return errorResult(err);
     }
@@ -673,7 +649,7 @@ server.registerTool(
   },
   async ({ layer }) => {
     try {
-      return jsonResult(await bridgeJson(`/city/gridmap?layer=${layer}`, 30_000));
+      return jsonResult(await bridgeJson("/city/gridmap", new URLSearchParams({ layer: String(layer) }), 30_000));
     } catch (err) {
       return errorResult(err);
     }
@@ -699,7 +675,7 @@ server.registerTool(
     if (zCoord !== undefined) params.set("z", String(zCoord));
     if (radius !== undefined) params.set("radius", String(radius));
     try {
-      return jsonResult(await bridgeJson(`/city/zoning?${params.toString()}`, 20_000));
+      return jsonResult(await bridgeJson("/city/zoning", params, 20_000));
     } catch (err) {
       return errorResult(err);
     }
@@ -721,7 +697,7 @@ server.registerTool(
     const params = new URLSearchParams();
     if (limit) params.set("limit", String(limit));
     try {
-      return jsonResult(await bridgeJson(`/city/notifications?${params.toString()}`));
+      return jsonResult(await bridgeJson("/city/notifications", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -742,7 +718,7 @@ server.registerTool(
   },
   async ({ index, version }) => {
     try {
-      return jsonResult(await bridgeJson(`/entity/inspect?index=${index}&version=${version}`));
+      return jsonResult(await bridgeJson("/entity/inspect", new URLSearchParams({ index: String(index), version: String(version) })));
     } catch (err) {
       return errorResult(err);
     }
@@ -769,7 +745,7 @@ server.registerTool(
   },
   async ({ amount }) => {
     try {
-      return jsonResult(await bridgeJson(`/city/loan/set?amount=${amount}`));
+      return jsonResult(await bridgeJson("/city/loan/set", new URLSearchParams({ amount: String(amount) })));
     } catch (err) {
       return errorResult(err);
     }
@@ -799,7 +775,7 @@ server.registerTool(
   async ({ resource, fee }) => {
     const params = new URLSearchParams({ resource, fee: String(fee) });
     try {
-      return jsonResult(await bridgeJson(`/city/fees/set?${params.toString()}`));
+      return jsonResult(await bridgeJson("/city/fees/set", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -829,7 +805,7 @@ server.registerTool(
     if (radius !== undefined) params.set("radius", String(radius));
     if (limit) params.set("limit", String(limit));
     try {
-      return jsonResult(await bridgeJson(`/city/objects?${params.toString()}`));
+      return jsonResult(await bridgeJson("/city/objects", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -857,7 +833,7 @@ server.registerTool(
     if (hours !== undefined) params.set("hours", String(hours));
     if (speed !== undefined) params.set("speed", String(speed));
     try {
-      return jsonResult(await bridgeJson(`/sim/run?${params.toString()}`));
+      return jsonResult(await bridgeJson("/sim/run", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -879,7 +855,7 @@ server.registerTool(
     const params = new URLSearchParams();
     if (name) params.set("name", name);
     try {
-      return jsonResult(await bridgeJson(`/game/save?${params.toString()}`));
+      return jsonResult(await bridgeJson("/game/save", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -916,7 +892,7 @@ server.registerTool(
     const params = new URLSearchParams({ nodes });
     if (prefab) params.set("prefab", prefab);
     try {
-      return jsonResult(await bridgeJson(`/build/district?${params.toString()}`, 15_000));
+      return jsonResult(await bridgeJson("/build/district", params, 15_000));
     } catch (err) {
       return errorResult(err);
     }
@@ -937,7 +913,7 @@ server.registerTool(
   },
   async ({ index, version }) => {
     try {
-      return jsonResult(await bridgeJson(`/district/policies?index=${index}&version=${version}`));
+      return jsonResult(await bridgeJson("/district/policies", new URLSearchParams({ index: String(index), version: String(version) })));
     } catch (err) {
       return errorResult(err);
     }
@@ -966,7 +942,7 @@ server.registerTool(
     });
     if (adjustment !== undefined) params.set("adjustment", String(adjustment));
     try {
-      return jsonResult(await bridgeJson(`/district/policies/set?${params.toString()}`));
+      return jsonResult(await bridgeJson("/district/policies/set", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -983,15 +959,6 @@ const entityOrPoint = z.union([
 
 function joinEntityOrPoints(items: z.infer<typeof entityOrPoint>[]): string {
   return items.map((item) => ("index" in item ? `${item.index}:${item.version}` : `${item.x},${item.z}`)).join(";");
-}
-
-/**
- * The bridge decodes query values with Uri.UnescapeDataString, which keeps '+'
- * literal, so spaces must go out as %20 (URLSearchParams writes '+'; a real '+'
- * is already %2B).
- */
-function bridgeQueryString(params: URLSearchParams): string {
-  return params.toString().replace(/\+/g, "%20");
 }
 
 server.registerTool(
@@ -1021,7 +988,7 @@ server.registerTool(
     if (limit) params.set("limit", String(limit));
     if (prefabs) params.set("prefabs", "true");
     try {
-      return jsonResult(await bridgeJson(`/transit/stops?${bridgeQueryString(params)}`));
+      return jsonResult(await bridgeJson("/transit/stops", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -1058,7 +1025,7 @@ server.registerTool(
     if (prefab) params.set("prefab", prefab);
     if (force) params.set("force", "true");
     try {
-      return jsonResult(await bridgeJson(`/transit/stops/place?${bridgeQueryString(params)}`, 15_000));
+      return jsonResult(await bridgeJson("/transit/stops/place", params, 15_000));
     } catch (err) {
       return errorResult(err);
     }
@@ -1095,7 +1062,7 @@ server.registerTool(
     if (snapRadius !== undefined) params.set("snapRadius", String(snapRadius));
     if (force) params.set("force", "true");
     try {
-      return jsonResult(await bridgeJson(`/transit/lines/create?${bridgeQueryString(params)}`, 15_000));
+      return jsonResult(await bridgeJson("/transit/lines/create", params, 15_000));
     } catch (err) {
       return errorResult(err);
     }
@@ -1125,7 +1092,7 @@ server.registerTool(
     if (includeStops) params.set("includeStops", "true");
     if (limit) params.set("limit", String(limit));
     try {
-      return jsonResult(await bridgeJson(`/transit/lines?${bridgeQueryString(params)}`));
+      return jsonResult(await bridgeJson("/transit/lines", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -1146,7 +1113,7 @@ server.registerTool(
   },
   async ({ index, version }) => {
     try {
-      return jsonResult(await bridgeJson(`/transit/lines/delete?index=${index}&version=${version}`));
+      return jsonResult(await bridgeJson("/transit/lines/delete", new URLSearchParams({ index: String(index), version: String(version) })));
     } catch (err) {
       return errorResult(err);
     }
@@ -1179,7 +1146,7 @@ server.registerTool(
     if (features !== undefined) params.set("features", String(features));
     if (limit) params.set("limit", String(limit));
     try {
-      return jsonResult(await bridgeJson(`/city/tiles/list?${bridgeQueryString(params)}`));
+      return jsonResult(await bridgeJson("/city/tiles/list", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -1202,7 +1169,7 @@ server.registerTool(
   async ({ tiles }) => {
     const params = new URLSearchParams({ tiles: joinEntityOrPoints(tiles) });
     try {
-      return jsonResult(await bridgeJson(`/city/tiles/buy?${bridgeQueryString(params)}`));
+      return jsonResult(await bridgeJson("/city/tiles/buy", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -1235,7 +1202,7 @@ server.registerTool(
     if (limit) params.set("limit", String(limit));
     if (minVolume !== undefined) params.set("minVolume", String(minVolume));
     try {
-      return jsonResult(await bridgeJson(`/city/traffic?${bridgeQueryString(params)}`));
+      return jsonResult(await bridgeJson("/city/traffic", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -1267,7 +1234,7 @@ server.registerTool(
     if (radius !== undefined) params.set("radius", String(radius));
     if (limit) params.set("limit", String(limit));
     try {
-      return jsonResult(await bridgeJson(`/city/vehicles?${bridgeQueryString(params)}`));
+      return jsonResult(await bridgeJson("/city/vehicles", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -1302,7 +1269,7 @@ server.registerTool(
     if (query) params.set("query", query);
     if (allNets) params.set("nets", "all");
     try {
-      return jsonResult(await bridgeJson(`/city/road-graph?${bridgeQueryString(params)}`));
+      return jsonResult(await bridgeJson("/city/road-graph", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -1349,7 +1316,7 @@ server.registerTool(
     if (e2 !== undefined) params.set("e2", String(e2));
     if (force) params.set("force", "true");
     try {
-      return jsonResult(await bridgeJson(`/build/road/connect?${bridgeQueryString(params)}`, 15_000));
+      return jsonResult(await bridgeJson("/build/road/connect", params, 15_000));
     } catch (err) {
       return errorResult(err);
     }
@@ -1371,7 +1338,7 @@ server.registerTool(
   async ({ name }) => {
     const params = new URLSearchParams({ name });
     try {
-      return jsonResult(await bridgeJson(`/prefabs/info?${bridgeQueryString(params)}`));
+      return jsonResult(await bridgeJson("/prefabs/info", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -1400,7 +1367,7 @@ server.registerTool(
     if (limit) params.set("limit", String(limit));
     if (query) params.set("query", query);
     try {
-      return jsonResult(await bridgeJson(`/city/buildings/near?${bridgeQueryString(params)}`));
+      return jsonResult(await bridgeJson("/city/buildings/near", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -1433,7 +1400,7 @@ server.registerTool(
     if (dryRun) params.set("dryRun", "true");
     if (force) params.set("force", "true");
     try {
-      return jsonResult(await bridgeJson(`/build/place/roadside?${bridgeQueryString(params)}`, 15_000));
+      return jsonResult(await bridgeJson("/build/place/roadside", params, 15_000));
     } catch (err) {
       return errorResult(err);
     }
@@ -1462,7 +1429,7 @@ server.registerTool(
     if (dryRun) params.set("dryRun", "true");
     if (force) params.set("force", "true");
     try {
-      return jsonResult(await bridgeJson(`/build/place/shoreline?${bridgeQueryString(params)}`, 15_000));
+      return jsonResult(await bridgeJson("/build/place/shoreline", params, 15_000));
     } catch (err) {
       return errorResult(err);
     }
@@ -1498,7 +1465,7 @@ server.registerTool(
     if (invert !== undefined) params.set("invert", String(invert));
     if (force) params.set("force", "true");
     try {
-      return jsonResult(await bridgeJson(`/build/road/replace?${bridgeQueryString(params)}`, 15_000));
+      return jsonResult(await bridgeJson("/build/road/replace", params, 15_000));
     } catch (err) {
       return errorResult(err);
     }
@@ -1520,7 +1487,7 @@ server.registerTool(
   async ({ index, version }) => {
     const params = new URLSearchParams({ index: String(index), version: String(version) });
     try {
-      return jsonResult(await bridgeJson(`/transit/lines/policies?${bridgeQueryString(params)}`));
+      return jsonResult(await bridgeJson("/transit/lines/policies", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -1551,7 +1518,7 @@ server.registerTool(
     });
     if (adjustment !== undefined) params.set("adjustment", String(adjustment));
     try {
-      return jsonResult(await bridgeJson(`/transit/lines/policies/set?${bridgeQueryString(params)}`));
+      return jsonResult(await bridgeJson("/transit/lines/policies/set", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -1575,7 +1542,7 @@ server.registerTool(
   async ({ index, version, mode }) => {
     const params = new URLSearchParams({ index: String(index), version: String(version), mode });
     try {
-      return jsonResult(await bridgeJson(`/build/junction?${bridgeQueryString(params)}`, 15_000));
+      return jsonResult(await bridgeJson("/build/junction", params, 15_000));
     } catch (err) {
       return errorResult(err);
     }
@@ -1598,7 +1565,7 @@ server.registerTool(
   async ({ index, version }) => {
     const params = new URLSearchParams({ index: String(index), version: String(version) });
     try {
-      return jsonResult(await bridgeJson(`/transit/lines/vehicles?${bridgeQueryString(params)}`));
+      return jsonResult(await bridgeJson("/transit/lines/vehicles", params));
     } catch (err) {
       return errorResult(err);
     }
@@ -1629,7 +1596,7 @@ server.registerTool(
     if (clear !== undefined) params.set("clear", String(clear));
     if (force !== undefined) params.set("force", String(force));
     try {
-      return jsonResult(await bridgeJson(`/transit/lines/vehicles/set?${bridgeQueryString(params)}`));
+      return jsonResult(await bridgeJson("/transit/lines/vehicles/set", params));
     } catch (err) {
       return errorResult(err);
     }
