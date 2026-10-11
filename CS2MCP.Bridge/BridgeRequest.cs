@@ -72,8 +72,9 @@ namespace CS2MCP
 
         public static BridgeResponse Error(int status, string message)
         {
-            // A generic server failure may follow native changes; status alone cannot prove no effects.
-            return Error(status, message, ErrorCodes.FromStatus(status), outcome: status >= 500 ? "unknown" : "notApplied");
+            // Any generic error may follow dispatch/Apply; status alone cannot prove no effects.
+            // Known pre-apply rejections use the typed overload with explicit notApplied evidence.
+            return Error(status, message, ErrorCodes.FromStatus(status), outcome: "unknown");
         }
 
         public static BridgeResponse Error(int status, string message, string code, bool retryable = false,

@@ -12,7 +12,7 @@ export interface BridgeErrorData {
 export interface Capability {
   name: string;
   support: "supported" | "degraded" | "unsupported" | "unverified";
-  reason?: string;
+  reason?: string | null;
 }
 
 export interface EndpointDescriptor {

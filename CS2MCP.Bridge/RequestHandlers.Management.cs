@@ -87,7 +87,8 @@ namespace CS2MCP
             }
             if (!request.TryGetInt("amount", out int amount))
             {
-                return BridgeResponse.Error(400, "provide ?amount=<int> (new loan principal; 0 repays fully)");
+                return BridgeResponse.Error(400, "provide ?amount=<int> (new loan principal; 0 requests treasury-limited repayment; changes are queued, observe principal later)",
+                    ErrorCodes.InvalidArgument, outcome: "notApplied");
             }
             LoanSystem loans = World.GetOrCreateSystemManaged<LoanSystem>();
             int applied = math.clamp(amount, 0, loans.Creditworthiness);

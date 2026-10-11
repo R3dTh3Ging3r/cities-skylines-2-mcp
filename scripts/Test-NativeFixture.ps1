@@ -22,6 +22,34 @@ function RequireFields($Object, $Fields) {
 }
 function Nonempty($Value) { return $Value -is [string] -and -not [string]::IsNullOrWhiteSpace($Value) }
 function ArrayValue($Value) { return $Value -is [Array] }
+function JsonEqual($Left, $Right) {
+    if ($null -eq $Left -or $null -eq $Right) { return $null -eq $Left -and $null -eq $Right }
+    if ($Left -is [Array] -or $Right -is [Array]) {
+        if ($Left -isnot [Array] -or $Right -isnot [Array] -or $Left.Count -ne $Right.Count) { return $false }
+        for ($Index = 0; $Index -lt $Left.Count; $Index++) {
+            if (-not (JsonEqual $Left[$Index] $Right[$Index])) { return $false }
+        }
+        return $true
+    }
+    if ($Left -is [pscustomobject] -or $Right -is [pscustomobject]) {
+        if ($Left -isnot [pscustomobject] -or $Right -isnot [pscustomobject]) { return $false }
+        $LeftKeys = @($Left.PSObject.Properties.Name)
+        $RightKeys = @($Right.PSObject.Properties.Name)
+        if ($LeftKeys.Count -ne $RightKeys.Count) { return $false }
+        foreach ($Key in $LeftKeys) {
+            if (@($RightKeys | Where-Object { $_ -ceq $Key }).Count -ne 1) { return $false }
+            if (-not (JsonEqual $Left.$Key $Right.$Key)) { return $false }
+        }
+        return $true
+    }
+    # JSON numbers share one type, even when ConvertFrom-Json chooses int/long/double.
+    $LeftNumber = $Left -is [int] -or $Left -is [long] -or $Left -is [double] -or $Left -is [decimal]
+    $RightNumber = $Right -is [int] -or $Right -is [long] -or $Right -is [double] -or $Right -is [decimal]
+    if ($LeftNumber -or $RightNumber) { return $LeftNumber -and $RightNumber -and $Left -ceq $Right }
+    if ($Left -is [string] -or $Right -is [string]) { return $Left -is [string] -and $Right -is [string] -and $Left -ceq $Right }
+    if ($Left -is [bool] -or $Right -is [bool]) { return $Left -is [bool] -and $Right -is [bool] -and $Left -ceq $Right }
+    return $false
+}
 function Stamp($Value) {
     Require ($Value -is [string] -and $Value -cmatch '^\d{4}-\d{2}-\d{2}T.*Z$') 'UTC timestamp required'
     $Parsed = [DateTimeOffset]::MinValue
@@ -218,7 +246,7 @@ function ValidateReport($Report, [string]$Directory, $Definition) {
             foreach ($Probe in $Definition.fixture.panelProbes.($Check.id)) {
                 Require ((Has $Check.expected $Probe) -and (Has $Check.actual $Probe) -and $null -ne $Check.expected.$Probe -and $null -ne $Check.actual.$Probe) 'Missing panel probe'
             }
-            Require (($Check.expected | ConvertTo-Json -Depth 40 -Compress) -ceq ($Check.actual | ConvertTo-Json -Depth 40 -Compress)) 'Passed panel values differ'
+            Require (JsonEqual $Check.expected $Check.actual) 'Passed panel values differ'
         }
     }
     Require ($Report.validated -ceq $AllPassed) 'Contradictory validated flag'

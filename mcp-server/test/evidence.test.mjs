@@ -83,11 +83,11 @@ async function casesAgainstValidator(cases) {
   await workspace(async directory => {
     const artifact = join(directory, 'observation.json');
     await writeFile(artifact, '{}');
-    for (const [name, mutate, expected] of cases) {
+    for (const [name, mutate, expected, encode = JSON.stringify] of cases) {
       const value = report(artifact);
       mutate(value);
       const path = join(directory, 'report.json');
-      await writeFile(path, JSON.stringify(value));
+      await writeFile(path, encode(value));
       const result = await run(['-ValidateEvidence', path]);
       assert.equal(result.code, expected, `${name}: ${result.stdout}\n${result.stderr}`);
     }
@@ -172,6 +172,43 @@ test('actual PowerShell validator gates required evidence and rejects malformed 
       assert.equal(result.code, expected, `${name}: ${result.stdout}\n${result.stderr}`);
     }
   });
+});
+
+test('actual panel comparison ignores nested object key order and preserves JSON types and array order', async () => {
+  const nested = { amount: 25, enabled: true, note: null, items: [{ x: 1, y: 'two' }, 3] };
+  const set = (r, actual) => {
+    r.checks[4].expected.balance = structuredClone(nested);
+    r.checks[4].actual.balance = actual;
+  };
+  await casesAgainstValidator([
+    ['nested keys reordered', r => {
+      set(r, { items: [{ y: 'two', x: 1 }, 3], note: null, enabled: true, amount: 25 });
+      r.checks[4].actual = Object.fromEntries(Object.entries(r.checks[4].actual).reverse());
+    }, 0],
+    ['equivalent numeric CLR representations', r => set(r, structuredClone(nested)), 0,
+      r => JSON.stringify(r).replace('"amount":25', '"amount":25.0')],
+    ['distinct large double and integer', r => set(r, { ...nested, amount: 'largeIntegerFixture' }), 1,
+      r => JSON.stringify(r).replace('"amount":25', '"amount":9007199254740992.0')
+        .replace('"largeIntegerFixture"', '9007199254740993')],
+    ['empty nested objects and arrays', r => set(r, { ...nested, items: [[], {}] }), 1],
+    ['equal empty nested containers', r => {
+      r.checks[4].expected.balance = { object: {}, array: [] };
+      r.checks[4].actual.balance = { array: [], object: {} };
+    }, 0],
+    ['nested number changed', r => set(r, { ...nested, amount: 26 }), 1],
+    ['number becomes string', r => set(r, { ...nested, amount: '25' }), 1],
+    ['boolean becomes number', r => set(r, { ...nested, enabled: 1 }), 1],
+    ['null becomes empty string', r => set(r, { ...nested, note: '' }), 1],
+    ['string case differs', r => set(r, { ...nested, items: [{ x: 1, y: 'Two' }, 3] }), 1],
+    ['object key case differs', r => set(r, { ...nested, items: [{ X: 1, y: 'two' }, 3] }), 1],
+    ['array order differs', r => set(r, { ...nested, items: [3, { x: 1, y: 'two' }] }), 1],
+    ['extra nested key', r => set(r, { ...nested, extra: 1 }), 1],
+    ['object becomes array', r => set(r, Object.values(nested)), 1],
+    ['empty object differs from empty array', r => {
+      r.checks[4].expected.balance = {};
+      r.checks[4].actual.balance = [];
+    }, 1],
+  ]);
 });
 
 test('registered read fixture collects explicit fake loopback evidence without native parity', async () => {

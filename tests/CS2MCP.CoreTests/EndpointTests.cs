@@ -125,7 +125,7 @@ namespace CS2MCP.CoreTests
                     if (string.IsNullOrEmpty((string)Property(endpoint, "completionMechanism"))) throw new Exception("missing completion: " + path);
                 }
                 foreach (var expected in new[] {
-                    new[] { "/city/loan/set", "cityWrite", "sync-set" },
+                    new[] { "/city/loan/set", "cityWrite", "loan-action-queued-ack; pending" },
                     new[] { "/camera/set", "uiWrite", "sync-set" },
                     new[] { "/game/save", "cityWrite", "save-started" },
                     new[] { "/transit/lines/policies/set", "cityWrite", "end-frame-ack" },

@@ -59,12 +59,12 @@ test("aborted write has unknown outcome and is never automatically retried", asy
   assert.equal(fixture.calls(), 1);
 });
 
-test("legacy HTTP rejection remains readable and is known not applied", async () => {
+test("legacy HTTP rejection remains readable without claiming no effects", async () => {
   const fixture = clientFor(new Response('{"error":"bad tax category"}', { status: 400 }));
   await assert.rejects(fixture.client.getJson("/city/taxes/set"), (error) => {
     assert.equal(error.message, "bad tax category");
     assert.equal(error.details.code, "INVALID_ARGUMENT");
-    assert.equal(error.details.outcome, "notApplied");
+    assert.equal(error.details.outcome, "unknown");
     return true;
   });
 });
@@ -106,7 +106,9 @@ test("response-body transport failures are typed and preserve uncertainty", asyn
 
 test("MCP errors carry typed data in readable JSON with isError", async () => {
   const { errorResult, jsonResult } = await import("../dist/tool-results.js");
-  const fixture = clientFor(new Response('{"error":"blocked by native validation"}', { status: 422 }));
+  const fixture = clientFor(new Response(JSON.stringify({ error: "blocked by native validation", errorData: {
+    code: "NATIVE_REJECTED", message: "blocked by native validation", retryable: false, outcome: "notApplied",
+  } }), { status: 422 }));
   try { await fixture.client.getJson("/build/place"); assert.fail("expected rejection"); }
   catch (error) {
     const result = errorResult(error);
@@ -120,6 +122,21 @@ test("MCP errors carry typed data in readable JSON with isError", async () => {
   assert.deepEqual(JSON.parse(jsonResult({ ok: true }).content[0].text), { ok: true });
   const unknown = JSON.parse(errorResult(new Error("unexpected local failure")).content[0].text);
   assert.equal(unknown.errorData.outcome, "unknown");
+});
+
+test("upgraded and old-server road interruptions at HTTP409 remain unknown and non-retryable", async () => {
+  const message = "road replacement interrupted because another tool became active; check cs2_list_roads before retrying";
+  for (const payload of [{ error: message }, { error: message, errorData: {
+    code: "BRIDGE_BUSY", message, retryable: false, outcome: "unknown", httpStatus: 409,
+  } }]) {
+    const fixture = clientFor(new Response(JSON.stringify(payload), { status: 409 }));
+    await assert.rejects(fixture.client.getJson("/roads/replace"), (error) => {
+      assert.deepEqual(error.details, { code: "BRIDGE_BUSY", message, retryable: false,
+        outcome: "unknown", httpStatus: 409 });
+      return true;
+    });
+    assert.equal(fixture.calls(), 1);
+  }
 });
 
 test("legacy server exceptions and malformed typed errors never claim no effects", async () => {

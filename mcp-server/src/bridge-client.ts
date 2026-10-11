@@ -49,7 +49,7 @@ function httpError(status: number, text: string): BridgeClientError {
   const excerpt = text.slice(0, 512).replace(/\s+/g, " ").trim();
   return new BridgeClientError({ code: codeFromStatus(status),
     message: legacyMessage ?? `bridge returned HTTP ${status}${excerpt ? `: ${excerpt}` : ""}`,
-    retryable: false, outcome: status >= 500 || details != null ? "unknown" : "notApplied", httpStatus: status,
+    retryable: false, outcome: "unknown", httpStatus: status,
   });
 }
 

@@ -107,6 +107,7 @@ routes.
 | `off-thread-snapshot` | Managed manifest/snapshot serialized without a native-thread wait. |
 | `sync-read` | Handler built an observation; freshness/native parity are separate. |
 | `sync-set` | Setter/buffer write returned; some routes read back, others echo input. Native downstream effects may follow. |
+| `loan-action-queued-ack; pending` | `/city/loan/set` queued a LoanAction; effective principal remains pending until a later observation. Zero requests treasury-limited repayment and does not establish full repayment. |
 | `end-frame-ack` | UI/barrier work queued; barrier playback and downstream work are later. |
 | `tool-apply-ack` | Generic tool selected Apply; commit/tool restoration are not independently verified. Placement dry runs instead return calculated geometry. |
 | `tool-finish-readback` | Road Finish performed spatial result matching, without exact identity/preservation proof. |
@@ -121,6 +122,11 @@ The catalog describes existing boundaries; it does not upgrade acknowledgments
 to verified completion. Always reconcile uncertain outcomes before retrying.
 Errors retain the legacy `error` string plus F2 `errorData` with code, message,
 retryability, outcome and available status/native/operation details.
+Generic errors and old-server untyped errors retain `outcome: unknown` and
+`retryable: false`, including HTTP 409 interruptions or uncommitted result
+readbacks after possible Apply. HTTP status alone never proves no effects.
+Only explicit known pre-apply rejections carry `notApplied`; reconcile uncertain
+outcomes against city observations before retrying.
 
 ## Metric contracts and legacy fields
 

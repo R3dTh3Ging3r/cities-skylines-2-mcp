@@ -13,6 +13,10 @@ dotnet build tests/CS2MCP.CoreTests/CS2MCP.CoreTests.csproj -c Release
 & tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite endpoints
 & tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite metrics
 & tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite values
+# Serializer integration runner: links production BridgeResponse, using only the
+# already-installed Newtonsoft runtime assembly (no Game/Unity/ECS references).
+dotnet build tests/CS2MCP.ResponseTests/CS2MCP.ResponseTests.csproj -c Release '-p:GamePath=E:/SteamLibrary/steamapps/common/Cities Skylines II'
+& tests/CS2MCP.ResponseTests/bin/Release/net472/CS2MCP.ResponseTests.exe
 dotnet build CS2MCP.Bridge/CS2MCP.Bridge.csproj -c Release -p:SkipDeploy=true '-p:GamePath=E:/SteamLibrary/steamapps/common/Cities Skylines II'
 ```
 
@@ -23,6 +27,12 @@ fake loopback URLs; they never fall back to the real bridge or import its execut
 entry point. The evidence suite invokes the actual PowerShell script with an
 asynchronous child process so its fake server can answer. Child processes and
 listeners are closed, and temporary evidence stays below ignored `.local/v01/`.
+The separate response runner preserves the BCL-only core runner and existing
+reference-assembly version 1.0.3. Supply `GamePath`, `CS2_PATH` or
+`CSII_INSTALLATIONPATH`, or pass `-p:NewtonsoftPath=<existing DLL path>` directly;
+a missing serializer path fails before compilation. Its tests exercise actual
+production serialization of ambiguous errors, explicit no-effect validation
+rejections, queued timeouts and null success properties without native calls.
 
 Evidence tests use `powershell -NoProfile -ExecutionPolicy Bypass -File` for this
 locally authored script. This affects only that child process. Check

@@ -88,7 +88,7 @@ namespace CS2MCP
             new EndpointDescriptor("/city/buildings", "read", "cs2_list_buildings", "sync-read"),
             new EndpointDescriptor("/city/roads", "read", "cs2_list_roads", "sync-read"),
             new EndpointDescriptor("/city/loan", "read", "cs2_get_loan", "sync-read"),
-            new EndpointDescriptor("/city/loan/set", "cityWrite", "cs2_set_loan", "sync-set"),
+            new EndpointDescriptor("/city/loan/set", "cityWrite", "cs2_set_loan", "loan-action-queued-ack; pending"),
             new EndpointDescriptor("/city/fees", "read", "cs2_get_fees", "sync-read"),
             new EndpointDescriptor("/city/fees/set", "cityWrite", "cs2_set_fee", "sync-set"),
             new EndpointDescriptor("/city/objects", "read", "cs2_list_objects", "sync-read"),

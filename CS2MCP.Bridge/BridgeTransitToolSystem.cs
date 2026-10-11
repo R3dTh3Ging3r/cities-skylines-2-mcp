@@ -17,6 +17,7 @@ using Unity.Mathematics;
 using UnityEngine.Scripting;
 using AgeMask = Game.Tools.AgeMask;
 using Transform = Game.Objects.Transform;
+using CS2MCP.Core;
 
 namespace CS2MCP
 {
@@ -303,7 +304,7 @@ namespace CS2MCP
                 {
                     string reason = DescribeLineFailure(tempRoute);
                     applyMode = ApplyMode.Clear;
-                    CompletePending(BridgeResponse.Error(409, reason));
+                    CompletePending(BridgeResponse.Error(409, reason, ErrorCodes.NativeRejected, outcome: "notApplied"));
                 }
                 m_Stage = Stage.Finish;
                 return;
@@ -315,7 +316,8 @@ namespace CS2MCP
                 applyMode = ApplyMode.Clear;
                 CompletePending(BridgeResponse.Error(409,
                     $"the game did not finish pathfinding the line within {kPathfindTimeoutSeconds}s " +
-                    $"({m_DefinitionRounds} definition rounds); nothing was created. Retry, or use fewer/closer stops."));
+                    $"({m_DefinitionRounds} definition rounds); nothing was created. Retry, or use fewer/closer stops.",
+                    ErrorCodes.NativeRejected, outcome: "notApplied"));
                 m_Stage = Stage.Finish;
             }
         }
@@ -339,7 +341,8 @@ namespace CS2MCP
                         ? "the game generated no stop at that spot"
                         : "overlap, unsuitable road, missing sidewalk, not enough money...";
                 CompletePending(BridgeResponse.Error(409,
-                    $"stop placement blocked by game validation ({detail}); try another spot or road segment"));
+                    $"stop placement blocked by game validation ({detail}); try another spot or road segment",
+                    ErrorCodes.NativeRejected, outcome: "notApplied"));
             }
             m_Stage = Stage.Finish;
         }

@@ -10,6 +10,7 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine.Scripting;
+using CS2MCP.Core;
 
 namespace CS2MCP
 {
@@ -193,7 +194,7 @@ namespace CS2MCP
                             CompletePending(BridgeResponse.Error(409,
                                 OperationName + " blocked by game validation (" +
                                 (errors.Count > 0 ? string.Join(", ", errors) : "overlap, unsupported road type, protected segment...") +
-                                "); nothing was changed"));
+                                "); nothing was changed", ErrorCodes.NativeRejected, outcome: "notApplied"));
                         }
                         m_Stage = Stage.Finish;
                         break;
