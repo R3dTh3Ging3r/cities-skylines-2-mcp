@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <Compile Include="Program.cs" />
+    <Compile Include="ContractTests.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/Contracts.cs" Link="Core/Contracts.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/ErrorCodes.cs" Link="Core/ErrorCodes.cs" />
+  </ItemGroup>
+</Project>

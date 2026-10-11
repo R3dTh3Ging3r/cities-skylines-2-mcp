@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using Game.SceneFlow;
+using CS2MCP.Core;
 
 namespace CS2MCP
 {
@@ -114,7 +115,8 @@ namespace CS2MCP
             m_EnqueueToMainThread(request);
             BridgeResponse response = request.WaitForResponse(MainThreadTimeoutMs);
             return response ?? BridgeResponse.Error(503,
-                "simulation thread did not respond within 10s (game still loading, or bridge system disabled)");
+                "simulation thread did not respond within 10s (game still loading, or bridge system disabled)",
+                ErrorCodes.OutcomeUnknown, retryable: false, outcome: "unknown");
         }
 
         private static BridgeResponse HandlePing()

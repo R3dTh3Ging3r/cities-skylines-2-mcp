@@ -8,6 +8,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
 using UnityEngine;
+using CS2MCP.Core;
 
 namespace CS2MCP
 {
@@ -48,6 +49,18 @@ namespace CS2MCP
         }
 
         public BridgeResponse Handle(BridgeRequest request)
+        {
+            try { return HandleCore(request); }
+            catch (Exception error)
+            {
+                Mod.Log.Warn($"error handling {request.Method} {request.Path}: {error}");
+                // Handler execution may already have changed native state before throwing.
+                return BridgeResponse.Error(500, $"{error.GetType().Name}: {error.Message}",
+                    ErrorCodes.OutcomeUnknown, retryable: false, outcome: "unknown");
+            }
+        }
+
+        private BridgeResponse HandleCore(BridgeRequest request)
         {
             switch (request.Path)
             {
@@ -376,14 +389,14 @@ namespace CS2MCP
             GameManager manager = GameManager.instance;
             if (manager == null || manager.gameMode != GameMode.Game)
             {
-                error = BridgeResponse.Error(409, "no city loaded (in main menu or editor); load a save first");
+                error = BridgeResponse.Error(409, "no city loaded (in main menu or editor); load a save first", ErrorCodes.NotReady);
                 return false;
             }
 
             city = World.GetOrCreateSystemManaged<CitySystem>().City;
             if (city == Entity.Null)
             {
-                error = BridgeResponse.Error(409, "city entity not initialized yet, try again shortly");
+                error = BridgeResponse.Error(409, "city entity not initialized yet, try again shortly", ErrorCodes.NotReady, retryable: true);
                 return false;
             }
             return true;

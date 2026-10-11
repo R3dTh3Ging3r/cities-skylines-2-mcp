@@ -38,17 +38,17 @@ test("old and newer stdio adapters preserve names, arrays, negatives and optiona
   }
 });
 
-test("JSON client handles encoded queries, trailing base slashes and raw legacy payloads", async () => {
+test("JSON client handles encoded queries, trailing base slashes and rejects malformed payloads", async () => {
   const { createBridgeClient } = await import("../dist/bridge-client.js");
   const bridge = await startFakeBridge();
   try {
     const client = createBridgeClient({ baseUrl: `${bridge.url}///` });
     const result = await client.getJson("/echo", new URLSearchParams({ name, x: "-1.25" }));
     assert.deepEqual(result.query, { name, x: "-1.25" });
-    assert.deepEqual(await client.getJson("/test/raw"), { raw: "not JSON" });
+    await assert.rejects(client.getJson("/test/raw"), (error) => error.details.code === "PROTOCOL_ERROR");
     assert.equal(bridge.requests[1].rawQuery, "");
     await assert.rejects(client.getJson("/test/http-error"), { message: "fixture conflict" });
-    await assert.rejects(client.getJson("/test/http-error-raw"), { message: "bridge returned HTTP 503" });
+    await assert.rejects(client.getJson("/test/http-error-raw"), { message: "bridge returned HTTP 503: unavailable" });
   } finally {
     await bridge.close();
   }

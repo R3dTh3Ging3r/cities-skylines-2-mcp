@@ -10,22 +10,14 @@ import "dotenv/config";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { BridgeError, createBridgeClient } from "./bridge-client.js";
+import { createBridgeClient } from "./bridge-client.js";
+import { errorResult, jsonResult } from "./tool-results.js";
 
 const BRIDGE_URL = (process.env.CS2_BRIDGE_URL ?? "http://127.0.0.1:8642").replace(/\/+$/, "");
 
 const bridgeClient = createBridgeClient({ baseUrl: BRIDGE_URL });
 const bridgeFetch = bridgeClient.getResponse;
 const bridgeJson = bridgeClient.getJson;
-
-function jsonResult(payload: unknown) {
-  return { content: [{ type: "text" as const, text: JSON.stringify(payload, null, 2) }] };
-}
-
-function errorResult(err: unknown) {
-  const message = err instanceof Error ? err.message : String(err);
-  return { content: [{ type: "text" as const, text: message }], isError: true };
-}
 
 const server = new McpServer({ name: "cs2-mcp", version: "0.8.0" });
 
@@ -155,16 +147,6 @@ server.registerTool(
     const w = width ?? 1280;
     try {
       const res = await bridgeFetch("/screenshot", new URLSearchParams({ width: String(w) }), 30_000);
-      if (!res.ok) {
-        const text = await res.text();
-        let message = `bridge returned HTTP ${res.status}`;
-        try {
-          message = (JSON.parse(text) as { error?: string })?.error ?? message;
-        } catch {
-          // keep default message
-        }
-        return errorResult(new BridgeError(message));
-      }
       const buffer = Buffer.from(await res.arrayBuffer());
       return {
         content: [

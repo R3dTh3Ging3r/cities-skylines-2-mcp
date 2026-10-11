@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using CS2MCP.Core;
 
 namespace CS2MCP
 {
@@ -71,7 +72,21 @@ namespace CS2MCP
 
         public static BridgeResponse Error(int status, string message)
         {
-            return Json(new { error = message }, status);
+            // A generic server failure may follow native changes; status alone cannot prove no effects.
+            return Error(status, message, ErrorCodes.FromStatus(status), outcome: status >= 500 ? "unknown" : "notApplied");
+        }
+
+        public static BridgeResponse Error(int status, string message, string code, bool retryable = false,
+            string outcome = "notApplied", string operationId = null, string[] nativeErrors = null)
+        {
+            var details = new BridgeErrorData(code, message, retryable, outcome, status, operationId, nativeErrors);
+            return new BridgeResponse
+            {
+                Status = status,
+                // Omit absent optional error fields without changing legacy success/null semantics.
+                Body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { error = message, errorData = details },
+                    Formatting.None, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })),
+            };
         }
 
         public static BridgeResponse Png(byte[] png)
