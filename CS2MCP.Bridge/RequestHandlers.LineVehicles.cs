@@ -4,6 +4,7 @@ using Game.Prefabs;
 using Game.Routes;
 using Unity.Collections;
 using Unity.Entities;
+using CS2MCP.Core;
 
 namespace CS2MCP
 {
@@ -169,12 +170,22 @@ namespace CS2MCP
                 models.Add(new VehicleModel { m_PrimaryPrefab = primary, m_SecondaryPrefab = secondary });
             }
             PrefabSystem prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
+            // Read the stored buffer again; resolved input names alone are not readback.
+            DynamicBuffer<VehicleModel> observedModels = EntityManager.GetBuffer<VehicleModel>(line, isReadOnly: true);
+            var observed = new List<object>();
+            for (int i = 0; i < observedModels.Length; i++)
+                observed.Add(new {
+                    primary = VehiclePrefabName(prefabSystem, observedModels[i].m_PrimaryPrefab),
+                    secondary = VehiclePrefabName(prefabSystem, observedModels[i].m_SecondaryPrefab),
+                });
             return BridgeResponse.Json(new
             {
                 line = new { index = line.Index, version = line.Version },
                 primary = VehiclePrefabName(prefabSystem, primary),
                 secondary = VehiclePrefabName(prefabSystem, secondary),
                 cleared = clear,
+                setterReadback = SetterReadback.Observed(new { primary = VehiclePrefabName(prefabSystem, primary), secondary = VehiclePrefabName(prefabSystem, secondary), clear },
+                    observed, null, null, "VehicleModel buffer readback", "verifies stored selection only; running vehicles and dispatch are not verified"),
                 note = "vehicles already running keep their model; new vehicles from the depot use this one",
             });
         }

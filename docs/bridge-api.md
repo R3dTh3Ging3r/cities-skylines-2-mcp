@@ -153,10 +153,64 @@ the city to refresh their measurements.
 Road and connected-road `(cx, cz)` arguments are quadratic curve **control
 points**, not through-points; a curve need not pass through that coordinate.
 
+## Setter values and normal stop discovery
+
+F5 adds `setterReadback` with `schemaVersion: 1`, `requested`, nullable
+`effective`, nullable `range` (`min`, `max`, `source`), nullable `step`,
+`verification` (`pending`, `verified`, `unsupported`), `mechanism`, `warning`
+and `nativeParityStatus: notRun`. Unknown steps are null, not invented UI
+increments. `verified` means the named getter or stored buffer was observed;
+it does not prove every gameplay effect completed or native mutation parity.
+A getter can observe a different value from the candidate. A missing/nonfinite
+getter result leaves `effective: null` and `verification: pending`.
+
+| Setter | Constraints and readback boundary |
+|---|---|
+| `/city/taxes/set` | Keeps the legacy clamp to loaded `m_TotalTaxLimits`; `appliedRate` is its candidate and `newRate`/readback use `GetTaxRate`. Step 1 describes integer representability; native UI step is unverified. `/city/taxes.constraints` reports its source. Invalid tax areas reject before calling the native setter. |
+| `/city/service-budgets/set` | Keeps the legacy 50–150 clamp; native UI bounds and step are unverified. `appliedPercent` and `efficiencyPercent` describe the candidate. Readback uses `GetServiceBudget`, which can return a different value when the native system ignores an uncollected service. `/city/service-budgets.constraints` reports the bridge range and null step. MCP still requires an integer within 50–150. |
+| `/city/loan/set` | Keeps the legacy bridge clamp to 0–creditworthiness. Native quote candidate is `effectiveCandidate`; the native lower principal bound depends on treasury cash, and `/city/loan.constraints` exposes that bound. `ChangeLoan` queues a `LoanAction`: readback stays pending with null effective. `currentLoan` and `observedPrincipal` are immediate observations, never completed application evidence. Read `/city/loan` later to reconcile. |
+| `/city/fees/set` | Strict finite, adjustable-resource, loaded UI range validation: minimum 0, maximum `FeeParameters.m_Max`. Step is unknown; no synthetic 0–100/5 game range is asserted. `newFee` remains the legacy candidate; actual readback uses `TryGetFee`. Parking is excluded by the native service-fee UI. A missing parameter singleton returns `NOT_READY` before mutation. |
+| `/transit/lines/policies/set` | Checks finite adjustment against loaded `PolicySliderData.m_Range` and positive `m_Step` before queuing; omitted adjustment retains legacy 0 and must satisfy the same constraints. Step 0 means unknown/no grid. `SetPolicy` queues through `EndFrameBarrier`: active/adjustment remain legacy request fields and readback is pending. Read the policy buffer through `/transit/lines/policies` later. |
+| `/transit/lines/vehicles/set` | Existing transport type, purpose, primary/carriage roles and locks still apply. Readback rereads `VehicleModel`; it verifies the stored selection, not dispatch or changes to running vehicles. Numeric range/step do not apply. |
+
+`/city/fees.fees.*.sliderRange` is a **deprecated, incorrectly named raw
+alias**, preserved unchanged: min is internal income, max is export income,
+defaultValue is raw signed imports. `financialRates` supplies correctly named
+`incomeInternal`, `incomeExports`, and native UI `expenseImports` (negated raw
+imports); its period and refresh timing remain unknown pending verification.
+`constraints` comes from loaded `ServiceFeeParameterData.GetFeeParameters`
+and includes the real default, maximum, adjustability and null step. This
+does not silently reinterpret the old fields. Numeric Parking=12 was resolved
+from installed assembly enum metadata; native UI `SetServiceFee` excludes it.
+Static metadata is evidence of API structure, not live accepted-value parity.
+
+Normal roadside prefab listing and resolution share the same predicate:
+passenger bus/tram, native `PlaceableObjectData` role, and neither native
+`PlaceholderObjectData` nor `PlaceholderObjectElement` roles. Internal or
+localized name matching does not define placeability. Existing route-stop and
+station/platform discovery keep their existing path. The prefab-instance
+coverage of this role predicate remains unverified until F6 observes it.
+
+`/transit/stops.prerequisites` and each normal prefab's prerequisites use
+schema 1. A loaded city that has not ticked reports `freshness: warming` and
+unknown unlock state. Warmed prefab lock observations are separated from
+`unlockNodes: unknown`, observed depot count, observed stop count and
+`dispatchReadiness: unknown`. Listing counts describe the requested filter;
+they do not prove spacing or valid route construction. Depot absence does
+not prevent line creation, and a depot count does not prove activation,
+road/track connectivity or vehicle availability. Lock rejections report
+`NOT_READY` while warming and `LOCKED` otherwise, without assuming a missing
+milestone caused the lock. Discovery performs no simulation control call.
+
+F5 read-only native prerequisite/range observations in F6 and disposable
+setter mutation fixtures in O3 remain **notRun**. City/district policy,
+camera, junction and simulation writers retain the existing F3 completion
+boundaries; this slice does not claim to verify every writer.
+
 ## Offline validation and native handoff
 
 Run `npm --prefix mcp-server test`, then build the core test runner and execute
-its `contracts`, `endpoints` and `metrics` suites from the repository root. Tests use
+its `contracts`, `endpoints`, `metrics` and `values` suites from the repository root. Tests use
 explicit ephemeral fake bridge URLs and never import the executable MCP entry
 point. The endpoint suite compares the catalog against dispatcher cases and
 listener routes, and exercises runtime/identity/manifest contracts without game
@@ -165,6 +219,10 @@ The metric suite links the pure `MetricContracts.cs` source and checks demand
 scale, budget conventions, invalid/valid route length, cargo units, and qualified
 calendar/count evidence. `tests/contracts/metrics.json` supplies demand 0/255,
 signed budget and cargo/negative-length fixtures to real MCP transport tests.
+The values suite checks strict bounds/steps, finite values, explicit legacy
+clamping, pending/observed readback and synthetic stop roles/prerequisites.
+`tests/contracts/setters.json` supplies explicitly synthetic deferred/warming
+responses to the real MCP adapter; it does not emulate or prove native setters.
 
 F6 must read `/ping` and `/capabilities` at main menu, during loading and in a
 loaded disposable city, including paused behavior. That native check is

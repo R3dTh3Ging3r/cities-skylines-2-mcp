@@ -31,6 +31,7 @@ namespace CS2MCP.CoreTests
             if (suite == "contracts") ContractTests.Run();
             else if (suite == "endpoints") EndpointTests.Run();
             else if (suite == "metrics") MetricTests.Run();
+            else if (suite == "values") ValueTests.Run();
             else { failed++; Console.WriteLine("FAIL unknown or missing suite: " + (suite ?? "<missing>")); }
             if (passed + failed == 0) { failed++; Console.WriteLine("FAIL zero assertions"); }
             Console.WriteLine($"Suite {suite ?? "<missing>"}: {passed + failed} assertions, {passed} passed, {failed} failed");

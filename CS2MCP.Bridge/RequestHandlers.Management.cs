@@ -7,6 +7,7 @@ using Game.Tools;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using CS2MCP.Core;
 
 namespace CS2MCP
 {
@@ -55,7 +56,7 @@ namespace CS2MCP
 
         private BridgeResponse GetLoan()
         {
-            if (!TryGetCity(out _, out BridgeResponse error))
+            if (!TryGetCity(out Entity city, out BridgeResponse error))
             {
                 return error;
             }
@@ -70,13 +71,17 @@ namespace CS2MCP
                     dailyPayment = current.m_DailyPayment,
                 },
                 creditworthiness = loans.Creditworthiness,
-                note = "set the loan principal with /city/loan/set?amount=N (0 repays fully, max = creditworthiness)",
+                constraints = new { schemaVersion = 1,
+                    range = new ValueRange(math.max(0, current.m_Amount - math.max(0, EntityManager.GetComponentData<PlayerMoney>(city).money)),
+                        loans.Creditworthiness, "LoanSystem.ClampLoanAmount; treasury-limited repayment"),
+                    step = (double?)null, stepReason = "native UI step not verified", nativeParityStatus = "notRun" },
+                note = "loan changes are queued; repayment depends on treasury cash; observe currentLoan later for effective principal",
             });
         }
 
         private BridgeResponse SetLoan(BridgeRequest request)
         {
-            if (!TryGetCity(out _, out BridgeResponse error))
+            if (!TryGetCity(out Entity city, out BridgeResponse error))
             {
                 return error;
             }
@@ -86,6 +91,9 @@ namespace CS2MCP
             }
             LoanSystem loans = World.GetOrCreateSystemManaged<LoanSystem>();
             int applied = math.clamp(amount, 0, loans.Creditworthiness);
+            LoanInfo before = loans.CurrentLoan;
+            int availableCash = math.max(0, EntityManager.GetComponentData<PlayerMoney>(city).money);
+            int minPrincipal = math.max(0, before.m_Amount - availableCash);
             LoanInfo offer = loans.RequestLoanOffer(applied);
             loans.ChangeLoan(applied);
             LoanInfo current = loans.CurrentLoan;
@@ -95,6 +103,12 @@ namespace CS2MCP
                 appliedAmount = applied,
                 offer = new { offer.m_Amount, offer.m_DailyInterestRate, offer.m_DailyPayment },
                 currentLoan = new { current.m_Amount, current.m_DailyInterestRate, current.m_DailyPayment },
+                effectiveCandidate = offer.m_Amount,
+                observedPrincipal = current.m_Amount,
+                observedTiming = "immediateAfterQueue; not completion evidence",
+                setterReadback = SetterReadback.Pending(amount, new ValueRange(minPrincipal, loans.Creditworthiness,
+                    "LoanSystem.ClampLoanAmount; treasury-limited repayment"), null, "LoanSystem.ChangeLoan queues LoanAction",
+                    amount == applied ? "later CurrentLoan observation required; native UI step unknown" : "legacyClamped; later CurrentLoan observation required; native UI step unknown"),
             });
         }
 
@@ -109,18 +123,27 @@ namespace CS2MCP
             var result = new Dictionary<string, object>();
             foreach (PlayerResource resource in Enum.GetValues(typeof(PlayerResource)))
             {
-                if ((int)resource < 0)
+                if ((int)resource < 0 || resource >= PlayerResource.Count)
                 {
                     continue;
                 }
                 if (ServiceFeeSystem.TryGetFee(resource, fees, out float fee))
                 {
-                    int3 limits = feeSystem.GetServiceFees(resource);
+                    int3 totals = feeSystem.GetServiceFees(resource);
+                    bool hasParameters = TryGetFeeParameters(resource, out FeeParameters parameters);
                     result[resource.ToString()] = new
                     {
                         fee,
                         estimatedMonthlyIncome = feeSystem.GetServiceFeeIncomeEstimate(resource, fee),
-                        sliderRange = new { min = limits.x, max = limits.y, defaultValue = limits.z },
+                        sliderRange = new { min = totals.x, max = totals.y, defaultValue = totals.z },
+                        sliderRangeDeprecation = "legacy mislabeled financial totals: min=incomeInternal, max=incomeExports, defaultValue=raw signed imports; use constraints",
+                        financialRates = new { schemaVersion = 1, incomeInternal = totals.x, incomeExports = totals.y, expenseImports = -(long)totals.z,
+                            ratePeriod = "unknown", refreshPeriod = "unknown", source = "ServiceFeeSystem.GetServiceFees; native UI field mapping", nativeParityStatus = "notRun" },
+                        constraints = hasParameters ? new {
+                            schemaVersion = 1, range = new ValueRange(0, parameters.m_Max, "ServiceFeeParameterData.GetFeeParameters; native UI min=0"),
+                            defaultValue = parameters.m_Default, adjustable = parameters.m_Adjustable && resource != PlayerResource.Parking,
+                            step = (double?)null, stepReason = "native UI step not verified", nativeParityStatus = "notRun"
+                        } : (object)new { schemaVersion = 1, range = (object)null, step = (double?)null, reason = "fee parameters unavailable", nativeParityStatus = "notRun" },
                     };
                 }
             }
@@ -128,6 +151,7 @@ namespace CS2MCP
             {
                 note = "set with /city/fees/set?resource=<name>&fee=<float>; fees affect service income and citizen happiness",
                 fees = result,
+                stalenessWarning = LockStalenessWarning,
             });
         }
 
@@ -138,27 +162,49 @@ namespace CS2MCP
                 return error;
             }
             if (!request.Query.TryGetValue("resource", out string resourceName)
-                || !Enum.TryParse(resourceName, ignoreCase: true, out PlayerResource resource))
+                || !Enum.TryParse(resourceName, ignoreCase: true, out PlayerResource resource)
+                || !Enum.IsDefined(typeof(PlayerResource), resource) || (int)resource < 0 || resource >= PlayerResource.Count)
             {
                 return BridgeResponse.Error(400,
                     $"provide ?resource=<{string.Join("|", Enum.GetNames(typeof(PlayerResource)))}>");
             }
-            if (!request.TryGetFloat("fee", out float fee))
+            if (!request.TryGetFloat("fee", out float fee) || !ValueValidation.IsFinite(fee))
             {
                 return BridgeResponse.Error(400, "provide ?fee=<float>");
             }
+            if (!TryGetFeeParameters(resource, out FeeParameters parameters))
+                return BridgeResponse.Error(409, "fee parameters unavailable; no fee changed", ErrorCodes.NotReady);
+            if (!parameters.m_Adjustable || resource == PlayerResource.Parking)
+                return BridgeResponse.Error(400, $"resource '{resource}' is not adjustable in the native service-fee UI");
+            ValueCheck check = ValueValidation.Check(fee, 0, parameters.m_Max, 0);
+            if (!check.accepted)
+                return BridgeResponse.Error(400, $"fee must be finite and within 0-{parameters.m_Max}: {check.reason}");
             DynamicBuffer<ServiceFee> fees = EntityManager.GetBuffer<ServiceFee>(city);
             if (!ServiceFeeSystem.TryGetFee(resource, fees, out float previous))
             {
                 return BridgeResponse.Error(400, $"resource '{resource}' has no adjustable fee in this city");
             }
             ServiceFeeSystem.SetFee(resource, fees, fee);
+            bool readback = ServiceFeeSystem.TryGetFee(resource, fees, out float observed);
             return BridgeResponse.Json(new
             {
                 resource = resource.ToString(),
                 previousFee = previous,
                 newFee = fee,
+                setterReadback = SetterReadback.Observed(fee, readback ? (object)observed : null,
+                    new ValueRange(0, parameters.m_Max, "ServiceFeeParameterData.GetFeeParameters; native UI min=0"), null,
+                    "ServiceFeeSystem.TryGetFee", "newFee is the legacy input candidate; native UI step unknown"),
             });
+        }
+
+        private bool TryGetFeeParameters(PlayerResource resource, out FeeParameters parameters)
+        {
+            using (EntityQuery query = EntityManager.CreateEntityQuery(ComponentType.ReadOnly<ServiceFeeParameterData>()))
+            {
+                if (query.CalculateEntityCount() != 1) { parameters = default; return false; }
+                parameters = query.GetSingleton<ServiceFeeParameterData>().GetFeeParameters(resource);
+                return ValueValidation.IsFinite(parameters.m_Max) && parameters.m_Max >= 0;
+            }
         }
 
         private BridgeResponse ListObjects(BridgeRequest request)

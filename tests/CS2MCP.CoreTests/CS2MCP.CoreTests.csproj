@@ -12,6 +12,8 @@
     <Compile Include="ContractTests.cs" />
     <Compile Include="EndpointTests.cs" />
     <Compile Include="MetricTests.cs" />
+    <Compile Include="ValueTests.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/ValueValidation.cs" Link="Core/ValueValidation.cs" />
     <Compile Include="../../CS2MCP.Bridge/Core/Contracts.cs" Link="Core/Contracts.cs" />
     <Compile Include="../../CS2MCP.Bridge/Core/MetricContracts.cs" Link="Core/MetricContracts.cs" />
     <Compile Include="../../CS2MCP.Bridge/Core/ErrorCodes.cs" Link="Core/ErrorCodes.cs" />

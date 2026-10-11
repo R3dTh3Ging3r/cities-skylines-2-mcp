@@ -264,6 +264,8 @@ namespace CS2MCP
                        "cs2_place_transit_stop; train/metro platforms belong to station buildings (station field)",
                 stops = results,
                 placeablePrefabs = prefabs,
+                prerequisites = StopDiscovery.DescribePrerequisites(m_System.SimulationHasTickedSinceLoad, null, null, matches.Count),
+                stalenessWarning = LockStalenessWarning,
             });
         }
 
@@ -342,7 +344,7 @@ namespace CS2MCP
                 foreach (Entity entity in entities)
                 {
                     TransportStopData data = EntityManager.GetComponentData<TransportStopData>(entity);
-                    if (typeFilter.HasValue && data.m_TransportType != typeFilter.Value)
+                    if ((typeFilter.HasValue && data.m_TransportType != typeFilter.Value) || !IsNormalRoadsideStopPrefab(entity, data))
                     {
                         continue;
                     }
@@ -358,6 +360,7 @@ namespace CS2MCP
                         passenger = data.m_PassengerTransport,
                         cargo = data.m_CargoTransport,
                         locked = IsLocked(entity),
+                        prerequisites = StopDiscovery.DescribePrerequisites(m_System.SimulationHasTickedSinceLoad, IsLocked(entity), CountDepots(data.m_TransportType), null),
                     });
                 }
             }
@@ -395,7 +398,7 @@ namespace CS2MCP
             }
             if (IsLocked(prefabEntity) && !IsForced(request))
             {
-                return BridgeResponse.Error(409, $"stop prefab '{prefab.name}' is locked (milestone not reached); pass force=true to place anyway");
+                return TransitLockError($"stop prefab '{prefab.name}'", "place");
             }
 
             Entity forcedRoad = Entity.Null;
@@ -953,7 +956,7 @@ namespace CS2MCP
                 foreach (Entity entity in entities)
                 {
                     TransportStopData data = EntityManager.GetComponentData<TransportStopData>(entity);
-                    if (data.m_TransportType != type || !data.m_PassengerTransport)
+                    if (data.m_TransportType != type || !IsNormalRoadsideStopPrefab(entity, data))
                     {
                         continue;
                     }
@@ -1047,7 +1050,7 @@ namespace CS2MCP
             }
             if (!force)
             {
-                error = BridgeResponse.Error(409, $"{typeName} lines are locked (milestone not reached); pass force=true to create anyway");
+                error = TransitLockError($"{typeName} line prefab", "create");
                 return false;
             }
             prefabEntity = candidates[0].Key;
@@ -1184,6 +1187,21 @@ namespace CS2MCP
                 }
             }
             return stop != Entity.Null && bestDistance <= radius;
+        }
+
+        private bool IsNormalRoadsideStopPrefab(Entity entity, TransportStopData data)
+            => StopDiscovery.IsNormalPlaceable(data.m_TransportType == TransportType.Bus || data.m_TransportType == TransportType.Tram,
+                data.m_PassengerTransport, EntityManager.HasComponent<PlaceableObjectData>(entity),
+                EntityManager.HasComponent<PlaceholderObjectData>(entity), EntityManager.HasBuffer<PlaceholderObjectElement>(entity));
+
+        private BridgeResponse TransitLockError(string subject, string action)
+        {
+            bool warming = !m_System.SimulationHasTickedSinceLoad;
+            return BridgeResponse.Error(409,
+                $"{subject} lock observed; " + (warming ? "city prerequisites are warming; unlock state is unknown" : "unlock-node dependencies are unknown") +
+                $"; depot presence and valid stops are separate prerequisites; pass force=true to {action} anyway",
+                warming ? ErrorCodes.NotReady : ErrorCodes.Locked, nativeErrors: new[] {
+                    "unlockNodes=unknown", "depotDispatch=unknown", "stops=validated separately", "freshness=" + (warming ? "warming" : "current") });
         }
 
         private int CountDepots(TransportType type)

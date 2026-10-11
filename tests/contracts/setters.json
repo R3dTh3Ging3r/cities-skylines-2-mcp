@@ -1,0 +1,13 @@
+{
+  "pending": {
+    "requestedAmount": 25,
+    "appliedAmount": 25,
+    "setterReadback": { "schemaVersion": 1, "requested": 25, "effective": null, "range": { "min": 0, "max": 100, "source": "synthetic" }, "step": 5, "verification": "pending", "mechanism": "queued", "warning": "later getter required", "nativeParityStatus": "notRun" }
+  },
+  "later": { "currentLoan": { "amount": 25 } },
+  "warming": {
+    "placeablePrefabs": [{ "name": "Synthetic Bus Pole", "type": "bus", "locked": true }],
+    "prerequisites": { "schemaVersion": 1, "freshness": "warming", "unlockState": "unknown", "unlockNodes": "unknown", "depotCount": 0, "stopCount": 2, "dispatchReadiness": "unknown", "nativeParityStatus": "notRun" },
+    "stops": []
+  }
+}

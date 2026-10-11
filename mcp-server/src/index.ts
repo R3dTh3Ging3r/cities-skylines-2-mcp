@@ -272,7 +272,8 @@ registerTool(
     title: "Set a tax rate",
     description:
       "Set the tax rate (integer percent) for one tax area. The rate is clamped to the game's allowed " +
-      "range (returned in the response). Higher taxes raise income but lower demand and happiness.",
+      "range (returned in the response). Legacy clamping is reported; setterReadback observes GetTaxRate. " +
+      "Integer representability is not proof of the native UI slider step. Higher taxes lower demand and happiness.",
     inputSchema: {
       area: z.enum(["Residential", "Commercial", "Industrial", "Office"]).describe("Tax area to change"),
       rate: z.number().int().describe("New tax rate in percent"),
@@ -322,7 +323,7 @@ registerTool(
 registerJsonTool(
   "cs2_service_budgets",
   "Get service budgets",
-  "Per-service budget sliders (50-150%, 100 = default) with current efficiency, estimated upkeep cost " +
+  "Per-service budget values (legacy bridge range 50-150%, 100 = default; native UI bounds/step unverified) with current efficiency, estimated upkeep cost " +
     "and raw building count (semantics unverified) for every city service (police, healthcare, education, transport, ...). " +
     "See buildingCountMetadata for the native source and reason.",
   "/city/service-budgets",
@@ -334,7 +335,8 @@ registerTool(
     title: "Set a service budget",
     description:
       "Set the budget percentage (50-150) for one city service by name (from cs2_service_budgets). " +
-      "Lower budgets save money but reduce service efficiency; higher budgets do the opposite.",
+      "The 50-150 range is a legacy bridge constraint; native UI bounds and step are unverified. " +
+      "setterReadback observes GetServiceBudget; appliedPercent is the legacy candidate. Lower budgets reduce efficiency.",
     inputSchema: {
       service: z.string().describe("Service name from cs2_service_budgets"),
       percentage: z.number().int().min(50).max(150).describe("Budget percentage, 100 = default"),
@@ -757,7 +759,9 @@ registerTool(
     title: "Borrow / repay loan",
     description:
       "Set the city's loan principal: higher than current = borrow more (cash added to treasury), " +
-      "lower = repay, 0 = repay fully. Clamped to creditworthiness. Interest accrues daily.",
+      "lower = repay subject to available treasury cash. Legacy clamping to creditworthiness remains. " +
+      "ChangeLoan queues a LoanAction: setterReadback stays pending and immediate currentLoan is not completion. " +
+      "Read cs2_get_loan later for effective principal; native UI step is unknown. Interest accrues daily.",
     inputSchema: {
       amount: z.number().int().min(0).describe("New total loan principal"),
     },
@@ -775,7 +779,8 @@ registerJsonTool(
   "cs2_get_fees",
   "Get service fees",
   "Current price the city charges per service (electricity, water, healthcare, education levels, garbage, " +
-    "parking, public transport...) with slider ranges and estimated monthly income per fee.",
+    "parking, public transport...) with loaded FeeParameters constraints and estimated monthly income. " +
+    "Legacy sliderRange is deprecated: it contains mislabeled financial totals, not limits. Fee step is unknown.",
   "/city/fees",
 );
 
@@ -785,10 +790,11 @@ registerTool(
     title: "Set a service fee",
     description:
       "Set the fee/price for one service resource (name from cs2_get_fees). Higher fees raise income " +
-      "but reduce usage and citizen happiness.",
+      "but reduce usage and citizen happiness. Strictly validates finite values within loaded FeeParameters constraints " +
+      "and native UI adjustability; step is unknown. setterReadback observes TryGetFee; newFee remains the legacy candidate.",
     inputSchema: {
       resource: z.string().describe("Resource name from cs2_get_fees, e.g. 'Electricity'"),
-      fee: z.number().describe("New fee value"),
+      fee: z.number().finite().describe("Finite fee within constraints from cs2_get_fees (native UI step unknown)"),
     },
   },
   async ({ resource, fee }) => {
@@ -988,7 +994,9 @@ registerTool(
       "List existing transit stops (bus/tram roadside stops, train/metro station platforms) with entity id, type, " +
       "name, position, owning station building, attached road and the lines already serving each stop. Filter by " +
       "type and/or spatially (sorted by distance when x/z given). prefabs=true also lists placeable roadside stop " +
-      "prefabs for cs2_place_transit_stop.",
+      "prefabs for cs2_place_transit_stop, excluding native placeholder and integrated-only roles. " +
+      "Prerequisites report warming after load; unlock nodes, depot count and stop validity are distinct. " +
+      "Discovery does not control simulation; ordinary prefab role parity is unverified.",
     inputSchema: {
       type: z.enum(["bus", "tram", "metro", "train", "airplane"]).optional().describe("Only stops of this transport type; airplane lists airport gates (passenger or cargo) and the map's air outside connections"),
       x: z.number().optional().describe("Center X for spatial filter"),
@@ -1521,13 +1529,14 @@ registerTool(
     title: "Set transit line policy",
     description:
       "Activate/deactivate a policy on one transit line (name from cs2_line_policies), e.g. the ticket price or " +
-      "vehicle count slider, the same way the line panel does.",
+      "vehicle count slider. Validates loaded PolicySliderData range/step; omitted adjustment retains legacy 0 " +
+      "and must be valid. Native modification is queued: setterReadback stays pending until a later policy-buffer observation.",
     inputSchema: {
       index: z.number().int().describe("Line entity index"),
       version: z.number().int().describe("Line entity version"),
       name: z.string().describe("Policy internal name"),
       active: z.boolean().describe("true to activate"),
-      adjustment: z.number().optional().describe("Slider value for slider policies"),
+      adjustment: z.number().finite().optional().describe("Slider value within the loaded range and step from cs2_line_policies"),
     },
   },
   async ({ index, version, name, active, adjustment }) => {
@@ -1600,7 +1609,8 @@ registerTool(
     description:
       "Choose the vehicle model new vehicles on a transit line use, as the line panel's vehicle selection does: " +
       "primary = engine or single vehicle, secondary = carriage (names from cs2_line_vehicles). clear=true goes " +
-      "back to a random model per vehicle. Vehicles already running keep their model.",
+      "back to a random model per vehicle. setterReadback verifies the stored VehicleModel buffer selection; " +
+      "dispatch is unverified. Vehicles already running keep their model.",
     inputSchema: {
       index: z.number().int().describe("Line entity index"),
       version: z.number().int().describe("Line entity version"),

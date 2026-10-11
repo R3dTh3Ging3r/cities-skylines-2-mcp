@@ -6,6 +6,7 @@ using Game.SceneFlow;
 using Game.UI.InGame;
 using Unity.Collections;
 using Unity.Entities;
+using CS2MCP.Core;
 
 namespace CS2MCP
 {
@@ -126,7 +127,9 @@ namespace CS2MCP
             {
                 return BridgeResponse.Error(400, "provide ?active=true|false");
             }
-            request.TryGetFloat("adjustment", out float adjustment);
+            float adjustment = 0f; // Preserve the legacy omitted-value default, validate it against the loaded slider.
+            if (request.Query.ContainsKey("adjustment") && (!request.TryGetFloat("adjustment", out adjustment) || !ValueValidation.IsFinite(adjustment)))
+                return BridgeResponse.Error(400, "adjustment must be a finite number");
 
             PrefabSystem prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
             using (NativeArray<Entity> entities = RoutePolicyQuery.ToEntityArray(Allocator.Temp))
@@ -140,7 +143,18 @@ namespace CS2MCP
                     }
                     if (IsLocked(entity))
                     {
-                        return BridgeResponse.Error(409, $"policy '{prefab.name}' is locked (milestone not reached)");
+                        return BridgeResponse.Error(409, $"policy '{prefab.name}' lock is observed; unlock-node dependencies are unknown. {LockStalenessWarning}",
+                            m_System.SimulationHasTickedSinceLoad ? ErrorCodes.Locked : ErrorCodes.NotReady);
+                    }
+                    ValueRange range = null;
+                    double? step = null;
+                    if (EntityManager.HasComponent<PolicySliderData>(entity))
+                    {
+                        PolicySliderData slider = EntityManager.GetComponentData<PolicySliderData>(entity);
+                        ValueCheck check = ValueValidation.Check(adjustment, slider.m_Range.min, slider.m_Range.max, slider.m_Step);
+                        if (!check.accepted) return BridgeResponse.Error(400, $"adjustment violates loaded PolicySliderData: {check.reason}");
+                        range = new ValueRange(slider.m_Range.min, slider.m_Range.max, "PolicySliderData.m_Range");
+                        step = slider.m_Step > 0 ? (double?)slider.m_Step : null;
                     }
                     // Same call the line panel uses (applied at the end of the frame).
                     World.GetOrCreateSystemManaged<PoliciesUISystem>().SetPolicy(line, entity, active, adjustment);
@@ -150,7 +164,9 @@ namespace CS2MCP
                         name = prefab.name,
                         active,
                         adjustment,
-                        note = "applied at end of frame",
+                        note = "queued for end of frame; active/adjustment are legacy input candidates; observe cs2_line_policies later",
+                        setterReadback = SetterReadback.Pending(new { active, adjustment }, range, step,
+                            "PoliciesUISystem.SetPolicy queues Modify through EndFrameBarrier", "later policy buffer observation required"),
                     });
                 }
             }

@@ -102,6 +102,7 @@ namespace CS2MCP
             return BridgeResponse.Json(new
             {
                 allowedRange = new { min = limits.x, max = limits.y },
+                constraints = new { schemaVersion = 1, range = new ValueRange(limits.x, limits.y, "TaxParameterData.m_TotalTaxLimits"), step = (double?)1, stepSource = "integerRepresentability; native UI slider step not verified", nativeParityStatus = "notRun" },
                 stalenessWarning = LockStalenessWarning,
                 taxRates = areas,
             });
@@ -116,7 +117,7 @@ namespace CS2MCP
 
             if (!request.Query.TryGetValue("area", out string areaName)
                 || !Enum.TryParse(areaName, ignoreCase: true, out TaxAreaType area)
-                || area == TaxAreaType.None)
+                || Array.IndexOf(kTaxAreas, area) < 0)
             {
                 return BridgeResponse.Error(400, "provide ?area=Residential|Commercial|Industrial|Office");
             }
@@ -127,16 +128,22 @@ namespace CS2MCP
 
             TaxSystem tax = World.GetOrCreateSystemManaged<TaxSystem>();
             int2 limits = tax.GetTaxParameterData().m_TotalTaxLimits;
-            int applied = math.clamp(rate, limits.x, limits.y);
+            ValueCheck check = ValueValidation.LegacyClamp(rate, limits.x, limits.y);
+            if (!check.accepted) return BridgeResponse.Error(409, "tax limits are unavailable", ErrorCodes.NotReady);
+            int applied = (int)check.effectiveCandidate.Value;
             tax.SetTaxRate(area, applied);
+            int observed = tax.GetTaxRate(area);
 
             return BridgeResponse.Json(new
             {
                 area = area.ToString(),
                 requestedRate = rate,
                 appliedRate = applied,
-                newRate = tax.GetTaxRate(area),
+                newRate = observed,
                 allowedRange = new { min = limits.x, max = limits.y },
+                setterReadback = SetterReadback.Observed(rate, observed, new ValueRange(limits.x, limits.y, "TaxParameterData.m_TotalTaxLimits"), 1,
+                    "TaxSystem.GetTaxRate", check.reason == null ? LockStalenessWarning : check.reason + "; " + LockStalenessWarning),
+                stepSource = "integerRepresentability; native UI slider step not verified",
             });
         }
 
@@ -177,7 +184,9 @@ namespace CS2MCP
 
             return BridgeResponse.Json(new
             {
-                note = "budgetPercent range 50-150, 100 = default; lower budget saves money but reduces efficiency",
+                note = "50-150 is the legacy bridge budget range, 100 = default; native UI bounds and step are not verified",
+                constraints = new { schemaVersion = 1, range = new ValueRange(50, 150, "legacyBridgeClamp; native UI bounds unverified"), step = (double?)null, nativeParityStatus = "notRun" },
+                stalenessWarning = LockStalenessWarning,
                 services,
             });
         }
@@ -210,14 +219,20 @@ namespace CS2MCP
                     {
                         continue;
                     }
-                    int applied = math.clamp(percentage, 50, 150);
+                    ValueCheck check = ValueValidation.LegacyClamp(percentage, 50, 150);
+                    int applied = (int)check.effectiveCandidate.Value;
                     budgetSystem.SetServiceBudget(entity, applied);
+                    int observed = budgetSystem.GetServiceBudget(entity);
                     return BridgeResponse.Json(new
                     {
                         service = prefab.name,
                         requestedPercent = percentage,
                         appliedPercent = applied,
                         efficiencyPercent = budgetSystem.GetServiceEfficiency(entity, applied),
+                        setterReadback = SetterReadback.Observed(percentage, observed,
+                            new ValueRange(50, 150, "legacyBridgeClamp; native UI bounds unverified"), null,
+                            "CityServiceBudgetSystem.GetServiceBudget", (check.reason == null ? "" : check.reason + "; ") +
+                            "native UI bounds and step unverified; efficiencyPercent uses candidate"),
                     });
                 }
             }
