@@ -56,13 +56,84 @@ function Definition {
         Require (-not $Catalog.ContainsKey($Path)) 'Duplicate catalog path'
         $Catalog[$Path] = @{ path = $Path; access = $Match.Groups[2].Value; capability = $Match.Groups[3].Value; completionMechanism = $Match.Groups[4].Value; legacyHttpVerbs = @('GET') }
     }
-    foreach ($Operation in $Data.operations) {
+    $Result = @{ fixture = $Data; catalog = $Catalog; catalogSha256 = (FileHash (Join-Path $RepoRoot 'CS2MCP.Bridge/EndpointCatalog.cs')) }
+    ValidateOperations $Data.operations $Result
+    return $Result
+}
+function ValidateOperations($Operations, $Definition) {
+    Require ((ArrayValue $Operations) -and $Operations.Count -eq $Definition.fixture.operations.Count) 'Fixture operation count mismatch'
+    for ($Index = 0; $Index -lt $Operations.Count; $Index++) {
+        $Operation = $Operations[$Index]
         RequireFields $Operation @('path', 'method')
         Require ($Operation.path -is [string] -and $Operation.path -cmatch '^/[a-z/-]+$' -and $Operation.method -ceq 'GET') 'Invalid fixture operation'
         Require (@($Operation.PSObject.Properties).Count -eq 2) 'Operation must contain only method and path'
-        Require ($Catalog.ContainsKey($Operation.path) -and $Catalog[$Operation.path].access -ceq 'read') 'Non-read operation refused'
+        Require ($Definition.catalog.ContainsKey($Operation.path) -and $Definition.catalog[$Operation.path].access -ceq 'read') 'Non-read operation refused'
+        Require ($Operation.path -ceq $Definition.fixture.operations[$Index].path -and $Operation.method -ceq $Definition.fixture.operations[$Index].method) 'Operation differs from registered fixture'
     }
-    return @{ fixture = $Data; catalog = $Catalog }
+}
+function ValidateEndpoints($Endpoints, $Definition) {
+    Require ((ArrayValue $Endpoints) -and $Endpoints.Count -eq $Definition.catalog.Count) 'Endpoint catalog count mismatch'
+    $Seen = @{}
+    foreach ($Endpoint in $Endpoints) {
+        RequireFields $Endpoint @('path','access','capability','completionMechanism','legacyHttpVerbs')
+        Require ((Nonempty $Endpoint.path) -and $Definition.catalog.ContainsKey($Endpoint.path) -and -not $Seen.ContainsKey($Endpoint.path)) 'Unknown or duplicate endpoint'
+        $Seen[$Endpoint.path] = $true
+        $Source = $Definition.catalog[$Endpoint.path]
+        foreach ($Field in @('path','access','capability','completionMechanism')) {
+            Require ((Nonempty $Endpoint.$Field) -and $Endpoint.$Field -ceq $Source[$Field]) 'Endpoint contradicts source catalog'
+        }
+        Require ((ArrayValue $Endpoint.legacyHttpVerbs) -and $Endpoint.legacyHttpVerbs.Count -eq 1 -and $Endpoint.legacyHttpVerbs[0] -is [string] -and $Endpoint.legacyHttpVerbs[0] -ceq 'GET') 'Endpoint verb definition contradicts source'
+    }
+    ValidateOperations $Definition.fixture.operations $Definition
+}
+function ValidateCatalogObservation($Observation, $Definition) {
+    RequireFields $Observation @('operations','endpoints')
+    ValidateOperations $Observation.operations $Definition
+    ValidateEndpoints $Observation.endpoints $Definition
+}
+function ValidateManifestMetadata($Manifest, $Definition) {
+    RequireFields $Manifest @('protocolVersion','schemaVersion','endpoints')
+    Require ($Manifest.protocolVersion -is [int] -and $Manifest.protocolVersion -eq 1 -and $Manifest.schemaVersion -is [int] -and $Manifest.schemaVersion -eq 1) 'Unsupported or malformed protocol/schema version'
+    ValidateEndpoints $Manifest.endpoints $Definition
+}
+function ValidateManifest($Manifest, $Definition, $Observed) {
+    ValidateManifestMetadata $Manifest $Definition
+    RequireFields $Manifest @('identity','runtime')
+    RequireFields $Manifest.runtime @('ageMilliseconds','observedAtUtc')
+    $Age = $Manifest.runtime.ageMilliseconds
+    Require (($Age -is [int] -or $Age -is [long] -or $Age -is [double] -or $Age -is [decimal]) -and $Age -ge 0 -and $Age -le 5000) 'Runtime snapshot unavailable, malformed or stale'
+    $Snapshot = Stamp $Manifest.runtime.observedAtUtc
+    $Elapsed = ($Observed - $Snapshot).TotalMilliseconds
+    Require ($Elapsed -ge 0 -and $Elapsed -le 5000) 'Runtime timestamp stale at check observation'
+}
+function ValidateBinding($Binding, $Report, [switch]$NativeIdentity) {
+    RequireFields $Binding @('fixture','buildIdentity','bootId','epoch')
+    Require ((Nonempty $Binding.fixture) -and $Binding.fixture -ceq $Report.fixture) 'Fixture binding mismatch'
+    foreach ($Field in @('buildIdentity','bootId')) {
+        $Claimed = if ($Field -ceq 'buildIdentity') { $Report.build.identity.buildIdentity } else { $Report.world.bootId }
+        Require (($null -eq $Binding.$Field -and $null -eq $Claimed) -or ((Nonempty $Binding.$Field) -and $Binding.$Field -ceq $Claimed)) 'Build/world binding mismatch'
+        if ($NativeIdentity) { Require (Nonempty $Binding.$Field) 'Native identity binding unavailable' }
+    }
+    Require (($null -eq $Binding.epoch -and $null -eq $Report.world.epoch) -or (($Binding.epoch -is [int] -or $Binding.epoch -is [long]) -and $Binding.epoch -ceq $Report.world.epoch)) 'Epoch binding mismatch'
+    if ($NativeIdentity) { Require ($null -ne $Binding.epoch) 'Native epoch binding unavailable' }
+}
+function ValidateIdentityObservation($Identity, $Claimed) {
+    foreach ($Field in @('assemblyVersion','modVersion','buildIdentity','sourceRevision','gameVersion')) {
+        Require (Has $Identity $Field) 'Missing observed identity field'
+        Require (($null -eq $Identity.$Field -and $null -eq $Claimed.$Field) -or ((Nonempty $Identity.$Field) -and $Identity.$Field -ceq $Claimed.$Field)) 'Observed identity differs from report'
+    }
+}
+function ValidateBuildObservation($Observation, $Build) {
+    RequireFields $Observation @('identity','loadedModuleSha256')
+    ValidateIdentityObservation $Observation.identity $Build.identity
+    Require ((Nonempty $Observation.loadedModuleSha256) -and $Observation.loadedModuleSha256 -ceq $Build.loadedModuleSha256) 'Observed loaded hash differs from report'
+}
+function ValidateWorldObservation($Observation, $World) {
+    RequireFields $Observation @('bootId','epoch')
+    Require ((Nonempty $Observation.bootId) -and $Observation.bootId -ceq $World.bootId -and ($Observation.epoch -is [int] -or $Observation.epoch -is [long]) -and $Observation.epoch -ceq $World.epoch) 'Observed world differs from report'
+}
+function ReportBinding($Report) {
+    return @{ fixture = $Report.fixture; buildIdentity = $Report.build.identity.buildIdentity; bootId = $Report.world.bootId; epoch = $Report.world.epoch }
 }
 function ValidateReport($Report, [string]$Directory, $Definition) {
     RequireFields $Report @('schemaVersion','fixture','fixtureVersion','provenance','startedAtUtc','finishedAtUtc','build','world','checks','limitations','artifacts','validated','compatibilityVerified')
@@ -113,8 +184,32 @@ function ValidateReport($Report, [string]$Directory, $Definition) {
         }
         if ($Check.status -cne 'passed') { $AllPassed = $false; Require (Nonempty $Check.reason) 'Incomplete check needs reason'; continue }
         Require ($null -ne $Check.expected -and $null -ne $Check.actual -and $Check.artifacts.Count -gt 0) 'Passed check needs values and artifacts'
-        if ($Check.id -ceq 'buildIdentity') { Require ($KnownBuild -and $Report.provenance -ceq 'native') 'Unknown or offline build cannot pass' }
-        if ($Check.id -ceq 'worldIdentity') { Require ($KnownWorld -and $Report.provenance -ceq 'native') 'Unknown or offline world cannot pass' }
+        if ($Check.id -ceq 'catalogReadOnly') {
+            Require ($Check.provenance -ceq 'source') 'Catalog observation must have source provenance'
+            RequireFields $Check.binding @('fixture','fixtureVersion','catalogSha256')
+            Require ($Check.binding.fixture -is [string] -and $Check.binding.fixture -ceq $Report.fixture -and $Check.binding.fixtureVersion -is [int] -and $Check.binding.fixtureVersion -eq $Report.fixtureVersion -and $Check.binding.catalogSha256 -is [string] -and $Check.binding.catalogSha256 -ceq $Definition.catalogSha256) 'Stale or mismatched source catalog binding'
+            ValidateCatalogObservation $Check.expected $Definition
+            ValidateCatalogObservation $Check.actual $Definition
+        }
+        if ($Check.id -ceq 'capabilityExposure') {
+            Require ($Check.provenance -ceq $Report.provenance) 'Capability observation provenance differs from report'
+            ValidateBinding $Check.binding $Report
+            ValidateManifestMetadata $Check.expected $Definition
+            ValidateManifest $Check.actual $Definition $Observed
+            ValidateIdentityObservation $Check.actual.identity $Build.identity
+        }
+        if ($Check.id -ceq 'buildIdentity') {
+            Require ($KnownBuild -and $Report.provenance -ceq 'native' -and $Check.provenance -ceq 'native') 'Unknown or offline build cannot pass'
+            ValidateBinding $Check.binding $Report -NativeIdentity
+            ValidateBuildObservation $Check.expected $Build
+            ValidateBuildObservation $Check.actual $Build
+        }
+        if ($Check.id -ceq 'worldIdentity') {
+            Require ($KnownWorld -and $Report.provenance -ceq 'native' -and $Check.provenance -ceq 'native') 'Unknown or offline world cannot pass'
+            ValidateBinding $Check.binding $Report -NativeIdentity
+            ValidateWorldObservation $Check.expected $World
+            ValidateWorldObservation $Check.actual $World
+        }
         if (Has $Definition.fixture.panelProbes $Check.id) {
             Require ($Report.provenance -ceq 'native' -and $Check.provenance -ceq 'manualPanel' -and (Nonempty $Build.identity.buildIdentity) -and $null -ne $Build.loadedModuleSha256 -and $KnownWorld) 'Panel needs native build/world identity'
             RequireFields $Check.binding @('fixture','buildIdentity','bootId','epoch')
@@ -181,28 +276,24 @@ try {
     $Provenance = if ($Offline) { 'offline' } else { 'native' }
     $Artifacts = @()
     $CatalogPath = Join-Path $Directory 'catalog.json'
-    WriteJson @($Registered.catalog.Values) $CatalogPath
+    $CatalogObservation = @{ operations = $Registered.fixture.operations; endpoints = @($Registered.catalog.Values) }
+    WriteJson $CatalogObservation $CatalogPath
     $Artifacts += $CatalogPath
     $Checks = @()
     foreach ($ID in $Registered.fixture.requiredChecks) {
         $Checks += [pscustomobject]@{ id = $ID; status = 'notRun'; expected = @{ fixture = 'contracts'; check = $ID }; actual = $null; observedAtUtc = $Started; provenance = $Provenance; binding = $null; artifacts = @(); reason = 'nativeObservationNotRun' }
     }
-    $Checks[0].status = 'passed'; $Checks[0].provenance = 'source'; $Checks[0].actual = @{ operations = $Registered.fixture.operations }; $Checks[0].artifacts = @($CatalogPath); $Checks[0].reason = $null
+    $Checks[0].status = 'passed'; $Checks[0].provenance = 'source'; $Checks[0].expected = $CatalogObservation; $Checks[0].actual = $CatalogObservation; $Checks[0].artifacts = @($CatalogPath); $Checks[0].reason = $null
+    $Checks[0].binding = @{ fixture = 'contracts'; fixtureVersion = 1; catalogSha256 = $Registered.catalogSha256 }
     $Manifest = $null; $StartContext = $null; $EndContext = $null
     try {
         $Manifest = ReadJson ($Origin.GetLeftPart([UriPartial]::Authority) + '/capabilities')
         $ManifestPath = Join-Path $Directory 'read-00.json'
         WriteJson $Manifest $ManifestPath
         $Artifacts += $ManifestPath
-        Require ($Manifest.protocolVersion -eq 1 -and $Manifest.schemaVersion -eq 1 -and (ArrayValue $Manifest.endpoints)) 'Missing capability manifest'
-        foreach ($Operation in $Registered.fixture.operations) {
-            $Found = @($Manifest.endpoints | Where-Object { $_.path -ceq $Operation.path })
-            Require ($Found.Count -eq 1 -and $Found[0].access -ceq 'read' -and (ArrayValue $Found[0].legacyHttpVerbs) -and $Found[0].legacyHttpVerbs -ccontains 'GET') 'Missing or contradictory observed read classification'
-            Require ($Found[0].capability -ceq $Registered.catalog[$Operation.path].capability -and $Found[0].completionMechanism -ceq $Registered.catalog[$Operation.path].completionMechanism) 'Manifest contradicts source catalog'
-        }
-        $Age = $Manifest.runtime.ageMilliseconds
-        Require (($Age -is [int] -or $Age -is [long] -or $Age -is [double] -or $Age -is [decimal]) -and $Age -ge 0 -and $Age -le 5000 -and $null -ne $Manifest.runtime.observedAtUtc) 'Runtime snapshot unavailable, malformed or stale'
-        $null = Stamp $Manifest.runtime.observedAtUtc
+        $Checks[1].observedAtUtc = [DateTime]::UtcNow.ToString('o')
+        ValidateManifest $Manifest $Registered (Stamp $Checks[1].observedAtUtc)
+        $Checks[1].expected = @{ protocolVersion = 1; schemaVersion = 1; endpoints = @($Registered.catalog.Values) }
         $Checks[1].status = 'passed'; $Checks[1].actual = $Manifest; $Checks[1].artifacts = @($ManifestPath); $Checks[1].reason = $null
         for ($Index = 1; $Index -lt $Registered.fixture.operations.Count; $Index++) {
             $Operation = $Registered.fixture.operations[$Index]
@@ -240,6 +331,7 @@ try {
         checks = $Checks; artifacts = $Artifacts; validated = $false; compatibilityVerified = $false
         limitations = @('Read sequence is not atomic; city name/frame is not WorldRef', 'Capability runtime snapshot freshness is bounded to 5000ms at observation, not the whole collection', 'No panels observed automatically; native parity remains notRun', 'Installed and candidate file hashes do not identify the loaded module', 'Setter/deferred completion and cargo units require later fixtures')
     }
+    $Checks[1].binding = ReportBinding $Report
     $ReportPath = Join-Path $Directory 'report.json'
     WriteJson $Report $ReportPath
     $Code = ValidateReport ($Report | ConvertTo-Json -Depth 60 | ConvertFrom-Json) $Directory $Registered

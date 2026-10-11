@@ -5,6 +5,7 @@ import { createServer } from 'node:http';
 import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const script = join(root, 'scripts/Test-NativeFixture.ps1');
@@ -12,6 +13,11 @@ const required = ['catalogReadOnly', 'capabilityExposure', 'buildIdentity', 'wor
   'budgetPanel', 'calendarPanel', 'serviceCountsPanel', 'stopRolesPanel', 'sliderBoundsPanel'];
 const stamp = '2026-10-11T12:00:00.000Z';
 const hash = 'a'.repeat(64);
+const definition = JSON.parse(await readFile(join(root, 'tests/native/contracts.json'), 'utf8'));
+const catalogSource = await readFile(join(root, 'CS2MCP.Bridge/EndpointCatalog.cs'), 'utf8');
+const catalogHash = createHash('sha256').update(catalogSource).digest('hex');
+const endpoints = [...catalogSource.matchAll(/new EndpointDescriptor\("([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)"\)/g)]
+  .map(([, path, access, capability, completionMechanism]) => ({ path, access, capability, completionMechanism, legacyHttpVerbs: ['GET'] }));
 const panelProbes = {
   budgetPanel: ['incomeSign', 'expenseSign', 'balance', 'monthlyPeriod', 'hourlyRefresh'],
   calendarPanel: ['rawDate', 'displayDate', 'monthBoundary', 'yearBoundary'],
@@ -43,7 +49,7 @@ async function workspace(fn) {
 // Synthetic *input* to the real validator, never recorded as native release evidence.
 function report(artifact) {
   const binding = { fixture: 'contracts', buildIdentity: 'candidate+revision', bootId: 'disposable-boot', epoch: 1 };
-  return {
+  const value = {
     schemaVersion: 1, fixture: 'contracts', fixtureVersion: 1, provenance: 'native',
     startedAtUtc: stamp, finishedAtUtc: stamp, limitations: ['synthetic validator test input'],
     build: { identity: { assemblyVersion: '0.4.0', modVersion: '0.9.0', buildIdentity: binding.buildIdentity,
@@ -55,10 +61,80 @@ function report(artifact) {
       expected: Object.fromEntries((panelProbes[id] ?? ['probe']).map(key => [key, 'synthetic matching observation'])),
       actual: Object.fromEntries((panelProbes[id] ?? ['probe']).map(key => [key, 'synthetic matching observation'])),
       observedAtUtc: stamp, provenance: id.endsWith('Panel') ? 'manualPanel' : 'native',
-      binding, artifacts: [artifact], reason: null })),
+      binding: { ...binding }, artifacts: [artifact], reason: null })),
     artifacts: [artifact], validated: true, compatibilityVerified: true,
   };
+  const catalog = { operations: definition.operations, endpoints };
+  Object.assign(value.checks[0], { expected: structuredClone(catalog), actual: structuredClone(catalog),
+    provenance: 'source', binding: { fixture: 'contracts', fixtureVersion: 1, catalogSha256: catalogHash } });
+  const metadata = { protocolVersion: 1, schemaVersion: 1, endpoints };
+  Object.assign(value.checks[1], { expected: structuredClone(metadata), actual: {
+    ...structuredClone(metadata), identity: structuredClone(value.build.identity),
+    runtime: { observedAtUtc: stamp, ageMilliseconds: 0, cityLoaded: true, isLoading: false },
+  } });
+  const build = { identity: value.build.identity, loadedModuleSha256: value.build.loadedModuleSha256 };
+  Object.assign(value.checks[2], { expected: structuredClone(build), actual: structuredClone(build) });
+  const world = { bootId: value.world.bootId, epoch: value.world.epoch };
+  Object.assign(value.checks[3], { expected: structuredClone(world), actual: structuredClone(world) });
+  return value;
 }
+
+async function casesAgainstValidator(cases) {
+  await workspace(async directory => {
+    const artifact = join(directory, 'observation.json');
+    await writeFile(artifact, '{}');
+    for (const [name, mutate, expected] of cases) {
+      const value = report(artifact);
+      mutate(value);
+      const path = join(directory, 'report.json');
+      await writeFile(path, JSON.stringify(value));
+      const result = await run(['-ValidateEvidence', path]);
+      assert.equal(result.code, expected, `${name}: ${result.stdout}\n${result.stderr}`);
+    }
+  });
+}
+
+test('native identity checks reject offline provenance, stale bindings and contradictory observations', async () => {
+  await casesAgainstValidator([
+    ['offline build observation', r => { r.checks[2].provenance = 'offline'; }, 1],
+    ['offline world observation', r => { r.checks[3].provenance = 'offline'; }, 1],
+    ['stale build binding', r => { r.checks[2].binding.buildIdentity = 'old-build'; }, 1],
+    ['stale world binding', r => { r.checks[3].binding.epoch = 0; }, 1],
+    ['missing identity binding', r => { r.checks[2].binding = null; }, 1],
+    ['different fixture binding', r => { r.checks[3].binding.fixture = 'other'; }, 1],
+    ['contradictory loaded hash', r => { r.checks[2].actual.loadedModuleSha256 = 'c'.repeat(64); }, 1],
+    ['contradictory expected identity', r => { r.checks[2].expected.identity.gameVersion = 'other-game'; }, 1],
+    ['contradictory world actual', r => { r.checks[3].actual.bootId = 'other-boot'; }, 1],
+    ['contradictory world expected', r => { r.checks[3].expected.epoch = 2; }, 1],
+    ['identity observation outside interval', r => { r.checks[2].observedAtUtc = '2026-10-11T11:59:00Z'; }, 1],
+  ]);
+});
+
+test('offline validation checks imported source catalog and capabilities against authority', async () => {
+  await casesAgainstValidator([
+    ['protocol/schema99 empty endpoints', r => { r.checks[1].actual = { protocolVersion: 99, schemaVersion: 99, endpoints: [] }; }, 1],
+    ['protocol string', r => { r.checks[1].actual.protocolVersion = '1'; }, 1],
+    ['schema string', r => { r.checks[1].actual.schemaVersion = '1'; }, 1],
+    ['manifest expected mismatch', r => { r.checks[1].expected.protocolVersion = 99; }, 1],
+    ['manifest missing route', r => { r.checks[1].actual.endpoints.pop(); }, 1],
+    ['manifest duplicate route', r => { r.checks[1].actual.endpoints[1] = r.checks[1].actual.endpoints[0]; }, 1],
+    ['manifest write classification', r => { r.checks[1].actual.endpoints.find(e => e.path === '/state').access = 'cityWrite'; }, 1],
+    ['manifest wrong method', r => { r.checks[1].actual.endpoints[0].legacyHttpVerbs = ['POST']; }, 1],
+    ['manifest extra method', r => { r.checks[1].actual.endpoints[0].legacyHttpVerbs = ['GET', 'POST']; }, 1],
+    ['manifest wrong capability', r => { r.checks[1].actual.endpoints[0].capability = 'other'; }, 1],
+    ['manifest wrong completion', r => { r.checks[1].actual.endpoints[0].completionMechanism = 'other'; }, 1],
+    ['manifest offline provenance', r => { r.checks[1].provenance = 'offline'; }, 1],
+    ['manifest stale binding', r => { r.checks[1].binding.bootId = 'old-boot'; }, 1],
+    ['manifest wrong identity', r => { r.checks[1].actual.identity.modVersion = 'other'; }, 1],
+    ['manifest stale runtime', r => { r.checks[1].actual.runtime.observedAtUtc = '2026-10-11T11:59:50Z'; }, 1],
+    ['source operation mutation', r => { r.checks[0].actual.operations[0].path = '/sim/control'; }, 1],
+    ['source missing endpoints', r => { r.checks[0].actual.endpoints = []; }, 1],
+    ['source wrong metadata', r => { r.checks[0].actual.endpoints[0].completionMechanism = 'other'; }, 1],
+    ['source wrong expected operations', r => { r.checks[0].expected.operations = []; }, 1],
+    ['source native provenance', r => { r.checks[0].provenance = 'native'; }, 1],
+    ['source stale binding', r => { r.checks[0].binding.catalogSha256 = 'c'.repeat(64); }, 1],
+  ]);
+});
 
 test('actual PowerShell validator gates required evidence and rejects malformed reports', async () => {
   await workspace(async directory => {
@@ -68,7 +144,7 @@ test('actual PowerShell validator gates required evidence and rejects malformed 
       ['complete', () => {}, 0],
       ['failed required', r => { r.checks[4].status = 'failed'; r.checks[4].reason = 'mismatch'; r.validated = r.compatibilityVerified = false; }, 2],
       ['notRun required', r => { r.checks[4].status = 'notRun'; r.checks[4].reason = 'no panel'; r.validated = r.compatibilityVerified = false; }, 2],
-      ['unknown version', r => { r.build.identity.gameVersion = null; r.build.identityReasons.gameVersion = 'notObserved'; r.checks[2].status = 'notRun'; r.checks[2].reason = 'unknown game'; r.validated = r.compatibilityVerified = false; }, 2],
+      ['unknown version', r => { r.build.identity.gameVersion = null; r.checks[1].actual.identity.gameVersion = null; r.build.identityReasons.gameVersion = 'notObserved'; r.checks[2].status = 'notRun'; r.checks[2].reason = 'unknown game'; r.validated = r.compatibilityVerified = false; }, 2],
       ['false validation claim', r => { r.checks[4].status = 'notRun'; r.checks[4].reason = 'no panel'; }, 1],
       ['invalid fixture', r => { r.fixture = '../contracts'; }, 1],
       ['long artifact', r => { r.artifacts = ['x'.repeat(241)]; }, 1],
@@ -99,10 +175,6 @@ test('actual PowerShell validator gates required evidence and rejects malformed 
 });
 
 test('registered read fixture collects explicit fake loopback evidence without native parity', async () => {
-  const definition = JSON.parse(await readFile(join(root, 'tests/native/contracts.json'), 'utf8'));
-  const source = await readFile(join(root, 'CS2MCP.Bridge/EndpointCatalog.cs'), 'utf8');
-  const endpoints = [...source.matchAll(/new EndpointDescriptor\("([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)"\)/g)]
-    .map(([, path, access, capability, completionMechanism]) => ({ path, access, capability, completionMechanism, legacyHttpVerbs: ['GET'] }));
   assert.ok(endpoints.length > 0);
   for (const operation of definition.operations) {
     assert.equal(endpoints.find(e => e.path === operation.path)?.access, 'read');
