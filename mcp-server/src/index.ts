@@ -77,7 +77,8 @@ registerTool(
     title: "Get game state",
     description:
       "Get the current game state: game mode, whether a city is loaded, city name, " +
-      "simulation pause/speed and the in-game date/time.",
+      "simulation pause/speed and the legacy converted in-game date/time (conversion unverified). " +
+      "Calendar metadata includes raw native clock values and the verification reason.",
     inputSchema: {},
   },
   async () => {
@@ -95,7 +96,8 @@ registerTool(
     title: "Get city overview",
     description:
       "Key statistics of the loaded city: population (plus citizens currently moving in), " +
-      "average happiness and health, city treasury money, XP, in-game date and simulation speed. " +
+      "average happiness and health, city treasury money, XP, legacy in-game date (conversion unverified) and simulation speed. " +
+      "Calendar metadata includes raw native clock values. " +
       "Requires a loaded city.",
     inputSchema: {},
   },
@@ -207,7 +209,9 @@ registerJsonTool(
   "Detailed city budget: total income/expenses, balance, and a per-source breakdown " +
     "(residential/commercial/industrial/office taxes, service fees, subsidies, service upkeep, " +
     "loan interest, electricity/water import-export, map tile upkeep). Values are monthly rates; " +
-    "expenses are positive costs.",
+    "refreshed each game hour. totalExpenses is the native signed expense aggregate (negative costs); " +
+    "expenses components are positive costs. balance = totalIncome + totalExpenses; moneyDelta remains raw. " +
+    "Native panel parity is unverified; see metricMetadata.",
   "/city/budget",
 );
 
@@ -257,7 +261,8 @@ registerTool(
 registerJsonTool(
   "cs2_get_taxes",
   "Get tax rates",
-  "Current tax rate and allowed range for each tax area: Residential, Commercial, Industrial, Office.",
+  "Current tax rate and effective rate span across resources/job levels for each tax area: Residential, " +
+    "Commercial, Industrial, Office. allowedRange separately reports setter limits; effectiveRateSpan is not the settable range.",
   "/city/taxes",
 );
 
@@ -318,7 +323,8 @@ registerJsonTool(
   "cs2_service_budgets",
   "Get service budgets",
   "Per-service budget sliders (50-150%, 100 = default) with current efficiency, estimated upkeep cost " +
-    "and building count for every city service (police, healthcare, education, transport, ...).",
+    "and raw building count (semantics unverified) for every city service (police, healthcare, education, transport, ...). " +
+    "See buildingCountMetadata for the native source and reason.",
   "/city/service-budgets",
 );
 
@@ -411,7 +417,7 @@ registerTool(
     description:
       "Build any network segment between two world coordinates (terrain-following): roads, train tracks, " +
       "pedestrian paths, power lines, pipes 鈥?any prefab from cs2_find_prefabs category 'road' or 'net'. " +
-      "Straight by default; pass cx/cz for a curved segment through that control point. Length 8-1500m. " +
+      "Straight by default; pass cx/cz as a quadratic curve control point (the curve need not pass through it). Length 8-1500m. " +
       "Endpoints on existing nodes connect to them. Costs city money; fails with an explanation if blocked.",
     inputSchema: {
       prefab: z.string().describe("Exact prefab name from cs2_find_prefabs (category road or net)"),
@@ -419,7 +425,7 @@ registerTool(
       z1: z.number().describe("Start Z (meters)"),
       x2: z.number().describe("End X (meters)"),
       z2: z.number().describe("End Z (meters)"),
-      cx: z.number().optional().describe("Curve control point X (with cz: builds a curve through it)"),
+      cx: z.number().optional().describe("Quadratic curve control point X (with cz; not a through-point)"),
       cz: z.number().optional().describe("Curve control point Z"),
       e1: z.number().optional().describe("Elevation at start in meters (bridges/elevated; negative = tunnel-ish)"),
       e2: z.number().optional().describe("Elevation at end in meters"),
@@ -1087,8 +1093,10 @@ registerTool(
   {
     title: "List public transport lines",
     description:
-      "List transit lines with the same numbers the game's transportation panel shows: name, number, type, color, " +
-      "active/visible, day/night schedule, stop count, vehicles, passengers on board, usage (occupancy) and length. " +
+      "List transit lines using the game's transportation panel helper: name, number, type, color, " +
+      "active/visible, day/night schedule, stop count, vehicles, raw load, usage (occupancy) and raw length. " +
+      "metricMetadata provides finite nonnegative validatedLengthMeters and distinguishes passengers from cargo (cargo unit unknown). " +
+      "lengthMeters and passengersOnBoard are deprecated raw aliases; native panel parity is unverified. " +
       "includeStops=true adds each stop in order with its waiting passengers. The game keeps no per-line ridership " +
       "history; city-wide passenger series are in cs2_statistics (PassengerCountBus, ...).",
     inputSchema: {
@@ -1297,7 +1305,7 @@ registerTool(
       "Build a road, track or other network segment whose ends join the existing network, like drawing with the " +
       "road tool's snapping: each end snaps to the nearest junction of a compatible network within `snap` meters, " +
       "otherwise splits the nearest compatible segment at that point (a track never joins a road). Ends with " +
-      "nothing in range start freely on the terrain. Straight, or curved through cx/cz (needed where tracks must " +
+      "nothing in range start freely on the terrain. Straight, or curved using cx/cz as a quadratic control point (needed where tracks must " +
       "leave a junction smoothly). Use for new road links and ramps, and for track spurs to station tracks (find " +
       "those with cs2_road_graph allNets). Validated by the game; costs money like a player build.",
     inputSchema: {

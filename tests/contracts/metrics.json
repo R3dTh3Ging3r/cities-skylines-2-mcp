@@ -1,0 +1,22 @@
+{
+  "demand": {
+    "metricMetadata": { "schemaVersion": 1, "buildingDemandMin": 0, "buildingDemandMax": 255, "buildingDemandUnit": "nativeDemand", "companyDemandUnit": "nativeCounter", "refreshPeriod": "simulationUpdates", "factorConvention": "rawSignedContributions" },
+    "residential": { "buildingDemand": { "lowDensity": 0, "mediumDensity": 255, "highDensity": 255 } }, "commercial": { "buildingDemand": 255, "companyDemand": 300 }
+  },
+  "budget": {
+    "metricMetadata": { "schemaVersion": 1, "ratePeriod": "month", "refreshPeriod": "gameHour", "totalExpensesConvention": "signedNegativeCosts", "expenseComponentsConvention": "positiveCosts", "balanceConvention": "totalIncome + totalExpenses", "moneyDeltaConvention": "rawNativeValue", "nativeParityStatus": "unverified", "reason": "nativeBudgetParityNotRun" },
+    "totalIncome": 100, "totalExpenses": -40, "balance": 60, "moneyDelta": -3, "income": { "Taxes": 100 }, "expenses": { "ServiceUpkeep": 40 }
+  },
+  "transit": {
+    "lines": [
+      {
+        "isCargo": true, "lengthMeters": -5, "passengersOnBoard": 12,
+        "metricMetadata": { "schemaVersion": 1, "rawLength": -5, "lengthSource": "UITransportLineData.length", "validatedLengthMeters": null, "lengthStatus": "invalid", "lengthWarning": "native route length is negative or non-finite; no usable metre value", "lengthValidation": "finiteNonnegativeOnly", "nativeParityStatus": "unverified", "nativeParityReason": "nativeRouteParityNotRun", "rawLoad": 12, "loadSource": "UITransportLineData.cargo", "loadKind": "cargo", "loadUnit": "unknown", "loadUnitStatus": "unverified", "loadUnitReason": "nativeCargoAmountUnitNotVerified", "deprecatedAliases": ["lengthMeters", "passengersOnBoard"] }
+      },
+      {
+        "isCargo": false, "lengthMeters": 123.5, "passengersOnBoard": 12,
+        "metricMetadata": { "schemaVersion": 1, "rawLength": 123.5, "lengthSource": "UITransportLineData.length", "validatedLengthMeters": 123.5, "lengthStatus": "valid", "lengthWarning": null, "lengthValidation": "finiteNonnegativeOnly", "nativeParityStatus": "unverified", "nativeParityReason": "nativeRouteParityNotRun", "rawLoad": 12, "loadSource": "UITransportLineData.cargo", "loadKind": "passengers", "loadUnit": "passengers", "loadUnitStatus": "sourceDefined", "loadUnitReason": "passengerRoutePanelLoad", "deprecatedAliases": ["lengthMeters", "passengersOnBoard"] }
+      }
+    ]
+  }
+}

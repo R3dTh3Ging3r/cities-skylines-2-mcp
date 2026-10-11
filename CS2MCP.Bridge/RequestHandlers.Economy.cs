@@ -6,6 +6,7 @@ using Game.Simulation;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using CS2MCP.Core;
 
 namespace CS2MCP
 {
@@ -65,7 +66,9 @@ namespace CS2MCP
 
             return BridgeResponse.Json(new
             {
-                note = "hourly-updated monthly rates; expense values are positive costs",
+                metricMetadata = MetricContracts.DescribeBudget(),
+                note = "hourly-updated monthly rates; totalExpenses is the native signed aggregate (negative costs); " +
+                       "expenses components are positive costs; balance uses totalIncome + totalExpenses. Native panel parity is unverified.",
                 totalIncome = budget.GetTotalIncome(),
                 totalExpenses = budget.GetTotalExpenses(),
                 totalTaxIncome = budget.GetTotalTaxIncome(),
@@ -159,13 +162,15 @@ namespace CS2MCP
                     }
                     int budget = budgetSystem.GetServiceBudget(entity);
                     budgetSystem.GetEstimatedServiceBudget(entity, out int upkeep);
+                    int buildingCount = budgetSystem.GetNumberOfServiceBuildings(entity);
                     services.Add(new
                     {
                         name = prefab.name,
                         budgetPercent = budget,
                         efficiencyPercent = budgetSystem.GetServiceEfficiency(entity, budget),
                         estimatedUpkeep = upkeep,
-                        buildings = budgetSystem.GetNumberOfServiceBuildings(entity),
+                        buildings = buildingCount,
+                        buildingCountMetadata = MetricContracts.DescribeServiceBuildingCount(buildingCount),
                     });
                 }
             }

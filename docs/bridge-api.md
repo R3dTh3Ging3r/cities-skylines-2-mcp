@@ -122,20 +122,53 @@ to verified completion. Always reconcile uncertain outcomes before retrying.
 Errors retain the legacy `error` string plus F2 `errorData` with code, message,
 retryability, outcome and available status/native/operation details.
 
-Building demand uses the native 0–255 scale; company-demand counters can exceed
-255. Budget values are monthly rates refreshed hourly. These meanings remain
-unchanged; the MCP demand description now states the correct scale.
+## Metric contracts and legacy fields
+
+F4 adds metadata objects with their own `schemaVersion: 1`; the manifest remains
+protocol 1/schema 1. Legacy numeric values are preserved without rescaling,
+absolute-value conversion, date correction or cargo-unit guesses.
+
+| Endpoint / legacy raw fields | Additive metadata and interpretation |
+|---|---|
+| `/city/demand`: `*.buildingDemand`, `*.companyDemand`, residential `householdDemand`, signed factors | `metricMetadata` declares `buildingDemandMin: 0`, `buildingDemandMax: 255`, `buildingDemandUnit: nativeDemand`, `companyDemandUnit: nativeCounter`. Company counters may exceed 255; they are not percentages. Demand refreshes during simulation updates and can remain stale while paused. |
+| `/city/budget`: `totalIncome`, `totalExpenses`, `balance`, `moneyDelta`, `income`, `expenses` | `metricMetadata.ratePeriod: month`, `refreshPeriod: gameHour`. `totalExpensesConvention: signedNegativeCosts` identifies the native signed aggregate; `expenseComponentsConvention: positiveCosts` describes `expenses` components. `balanceConvention: totalIncome + totalExpenses`. `moneyDelta` remains a raw native value. Native panel parity is `unverified` with `nativeBudgetParityNotRun`. |
+| `/transit/lines`: each row's `lengthMeters` and `passengersOnBoard` | Both are **deprecated raw aliases** retained unchanged. Row `metricMetadata.rawLength` comes from `UITransportLineData.length`; `validatedLengthMeters` is that value only when finite and nonnegative, otherwise null with `lengthStatus: invalid` and `lengthWarning`. `lengthValidation: finiteNonnegativeOnly` describes this numeric check, not native path correctness. |
+| `/transit/lines`: `isCargo`, deprecated `passengersOnBoard`, `usage` | Row `metricMetadata.rawLoad` preserves `UITransportLineData.cargo`; `loadKind` is `passengers` or `cargo`. Passenger `loadUnit: passengers` has `loadUnitStatus: sourceDefined` and the source reason. Cargo `loadUnit: unknown`, `loadUnitStatus: unverified`, `loadUnitReason: nativeCargoAmountUnitNotVerified`; cargo 12 is not 12 passengers or a claim of tonnes. `usage` remains the raw panel helper value. Native route parity is `unverified`. |
+| `/state`: `simulation.gameDateTime`; `/city/overview`: `gameDateTime`, `gameYear` | `calendarMetadata` (under `simulation` in `/state`) preserves `rawNormalizedDate`, `rawNormalizedTime`, `rawYear`, `rawDaysPerYear` directly from `TimeSystem`. Legacy formatting still uses `GetCurrentDateTime()`. `conversionStatus: unverified`, `reason: nativeCalendarParityNotRun`; no calendar conversion is asserted to match the displayed panel. |
+| `/city/service-budgets`: `services[].buildings` | Each row's `buildingCountMetadata.rawCount` preserves the same getter value; `source: CityServiceBudgetSystem.GetNumberOfServiceBuildings`, `status: unverified`, `reason: nativeServiceBuildingCountParityNotRun`. Count inclusion/aggregation semantics remain unresolved. |
+
+For example, monthly income 100, signed aggregate expenses −40, positive
+component costs 40 and balance 60 describe the same budget. No arbitrary raw
+field is normalized with `abs`. Invalid native route length −5 remains −5 in
+the deprecated alias and `rawLength`, while `validatedLengthMeters` is null.
+Non-finite raw floating values follow the existing serializer's representation;
+the qualified length is always null for them.
+
+`/city/taxes.allowedRange` is the allowed setter range.
+`taxRates.*.effectiveRateSpan` describes the span of current effective rates
+across resources/job levels and must not be used as the setter range. Existing
+unlock/staleness warnings remain applicable. The read endpoints do not unpause
+the city to refresh their measurements.
+
+Road and connected-road `(cx, cz)` arguments are quadratic curve **control
+points**, not through-points; a curve need not pass through that coordinate.
 
 ## Offline validation and native handoff
 
 Run `npm --prefix mcp-server test`, then build the core test runner and execute
-its `contracts` and `endpoints` suites from the repository root. Tests use
+its `contracts`, `endpoints` and `metrics` suites from the repository root. Tests use
 explicit ephemeral fake bridge URLs and never import the executable MCP entry
 point. The endpoint suite compares the catalog against dispatcher cases and
 listener routes, and exercises runtime/identity/manifest contracts without game
 assemblies. Compile the mod with `-p:SkipDeploy=true` and the configured GamePath.
+The metric suite links the pure `MetricContracts.cs` source and checks demand
+scale, budget conventions, invalid/valid route length, cargo units, and qualified
+calendar/count evidence. `tests/contracts/metrics.json` supplies demand 0/255,
+signed budget and cargo/negative-length fixtures to real MCP transport tests.
 
 F6 must read `/ping` and `/capabilities` at main menu, during loading and in a
 loaded disposable city, including paused behavior. That native check is
 `notRun` for F3. Compilation and offline fixtures do not prove native parity,
 save completion or compatibility. No deployment is part of this task.
+F6 budget/calendar/service-count and route panel comparisons also remain
+`notRun` for F4. Cargo amount units need the later T1 native verification.

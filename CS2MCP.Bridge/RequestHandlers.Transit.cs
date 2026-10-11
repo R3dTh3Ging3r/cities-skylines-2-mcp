@@ -8,6 +8,7 @@ using Game.UI;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using CS2MCP.Core;
 using Transform = Game.Objects.Transform;
 
 namespace CS2MCP
@@ -453,8 +454,7 @@ namespace CS2MCP
             {
                 foreach (Entity line in lines)
                 {
-                    // The transportation overview panel builds its rows with this
-                    // exact helper, so the numbers match the game UI.
+                    // Reuse the panel's helper; native runtime parity remains unverified.
                     Game.UI.InGame.UITransportLineData data = Game.UI.InGame.TransportUIUtils.BuildTransportLine(line, EntityManager, prefabSystem);
                     if (typeFilter.HasValue && data.type != typeFilter.Value)
                     {
@@ -489,6 +489,7 @@ namespace CS2MCP
                         passengersOnBoard = data.cargo,
                         usage = data.usage,
                         lengthMeters = data.length,
+                        metricMetadata = MetricContracts.DescribeRoute(data.length, data.isCargo, data.cargo),
                         stopList = includeStops ? DescribeLineStops(line, names) : null,
                     });
                 }
@@ -498,7 +499,9 @@ namespace CS2MCP
             {
                 totalMatches = total,
                 returned = results.Count,
-                note = "stats come from the game's transportation panel helper: usage = passengers on board / capacity; " +
+                note = "stats come from the game's transportation panel helper; native parity is unverified. " +
+                       "lengthMeters and passengersOnBoard are deprecated raw aliases; metricMetadata qualifies length and passenger/cargo load. " +
+                       "Cargo amount unit is unknown pending native verification; usage is the raw panel occupancy value. " +
                        "the game keeps no per-line ridership history (city-wide PassengerCount* series: cs2_statistics). " +
                        "includeStops=true adds waiting passengers per stop.",
                 lines = results,

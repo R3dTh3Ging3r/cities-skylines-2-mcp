@@ -222,6 +222,7 @@ namespace CS2MCP
                     effectiveSpeed = sim.smoothSpeed,
                     frameIndex = sim.frameIndex,
                     gameDateTime = SafeGameDateTime(time),
+                    calendarMetadata = MetricContracts.DescribeCalendar(time.normalizedDate, time.normalizedTime, time.year, time.daysPerYear),
                 };
             }
 
@@ -262,6 +263,7 @@ namespace CS2MCP
                 xp = citySystem.XP,
                 gameYear = time.year,
                 gameDateTime = SafeGameDateTime(time),
+                calendarMetadata = MetricContracts.DescribeCalendar(time.normalizedDate, time.normalizedTime, time.year, time.daysPerYear),
                 simulationPaused = sim.selectedSpeed <= 0f,
                 simulationSpeed = sim.selectedSpeed,
             });
@@ -288,9 +290,10 @@ namespace CS2MCP
 
             return BridgeResponse.Json(new
             {
+                metricMetadata = MetricContracts.DescribeDemand(),
                 note = "buildingDemand uses the game's internal 0-255 scale; companyDemand counters can exceed 255; " +
                        "factors are raw signed contributions (positive pushes demand up, negative down). " +
-                       "Values only refresh while the simulation is running (unpause briefly for fresh numbers).",
+                       "Values refresh during simulation updates and may remain stale while paused.",
                 residential = new
                 {
                     householdDemand = residential.householdDemand,
