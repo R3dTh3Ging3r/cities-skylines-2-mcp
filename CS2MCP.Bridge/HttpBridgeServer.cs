@@ -5,7 +5,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using Game.SceneFlow;
 using CS2MCP.Core;
 
 namespace CS2MCP
@@ -111,6 +110,11 @@ namespace CS2MCP
             {
                 return HandlePing();
             }
+            if (request.Path == "/capabilities")
+            {
+                return BridgeResponse.Json(EndpointCatalog.CreateManifest(Mod.Identity,
+                    Mod.RuntimeSnapshots.Read(DateTime.UtcNow)));
+            }
 
             m_EnqueueToMainThread(request);
             BridgeResponse response = request.WaitForResponse(MainThreadTimeoutMs);
@@ -121,28 +125,16 @@ namespace CS2MCP
 
         private static BridgeResponse HandlePing()
         {
-            string gameMode = "Unknown";
-            bool isLoading = false;
-            try
-            {
-                GameManager manager = GameManager.instance;
-                if (manager != null)
-                {
-                    gameMode = manager.gameMode.ToString();
-                    isLoading = manager.isGameLoading;
-                }
-            }
-            catch
-            {
-                // GameManager not ready yet; report Unknown
-            }
+            RuntimeEvidence runtime = Mod.RuntimeSnapshots.Read(DateTime.UtcNow);
             return BridgeResponse.Json(new
             {
                 ok = true,
                 mod = Mod.Name,
                 version = Mod.Version,
-                gameMode,
-                isLoading,
+                gameMode = runtime.gameMode,
+                isLoading = runtime.isLoading,
+                runtime,
+                identity = Mod.Identity,
             });
         }
 

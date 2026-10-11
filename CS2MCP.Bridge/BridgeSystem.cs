@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using Colossal.Serialization.Entities;
 using Game;
 using Game.Simulation;
+using Game.SceneFlow;
 using UnityEngine.Scripting;
 
 namespace CS2MCP
@@ -48,6 +49,7 @@ namespace CS2MCP
             Instance = this;
             m_Handlers = new RequestHandlers(this);
             m_SimulationSystem = base.World.GetOrCreateSystemManaged<SimulationSystem>();
+            PublishRuntimeSnapshot();
 
             int port = DefaultPort;
             string envPort = Environment.GetEnvironmentVariable("CS2MCP_PORT");
@@ -75,11 +77,13 @@ namespace CS2MCP
             base.OnGameLoadingComplete(purpose, mode);
             m_FrameIndexAtLoad = m_SimulationSystem.frameIndex;
             SimulationHasTickedSinceLoad = false;
+            PublishRuntimeSnapshot();
         }
 
         [Preserve]
         protected override void OnUpdate()
         {
+            PublishRuntimeSnapshot();
             if (!SimulationHasTickedSinceLoad && m_SimulationSystem.frameIndex != m_FrameIndexAtLoad)
             {
                 SimulationHasTickedSinceLoad = true;
@@ -115,6 +119,23 @@ namespace CS2MCP
         {
             m_Server?.Stop();
             m_Server = null;
+        }
+
+        private void PublishRuntimeSnapshot()
+        {
+            try
+            {
+                GameManager manager = GameManager.instance;
+                if (manager == null)
+                    Mod.RuntimeSnapshots.Publish(DateTime.UtcNow, null, null, null, "gameManagerUnavailable");
+                else
+                    Mod.RuntimeSnapshots.Publish(DateTime.UtcNow, manager.gameMode.ToString(), manager.isGameLoading,
+                        !manager.isGameLoading && manager.gameMode == GameMode.Game, null);
+            }
+            catch (Exception)
+            {
+                Mod.RuntimeSnapshots.Publish(DateTime.UtcNow, null, null, null, "nativeObservationUnavailable");
+            }
         }
 
         [Preserve]

@@ -12,6 +12,8 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { createBridgeClient } from "./bridge-client.js";
 import { errorResult, jsonResult } from "./tool-results.js";
+import { withMcpExposure } from "./capabilities.js";
+import type { CapabilityManifest } from "./contracts.js";
 
 const BRIDGE_URL = (process.env.CS2_BRIDGE_URL ?? "http://127.0.0.1:8642").replace(/\/+$/, "");
 
@@ -19,15 +21,44 @@ const bridgeClient = createBridgeClient({ baseUrl: BRIDGE_URL });
 const bridgeFetch = bridgeClient.getResponse;
 const bridgeJson = bridgeClient.getJson;
 
-const server = new McpServer({ name: "cs2-mcp", version: "0.8.0" });
+const MCP_VERSION = "0.8.0";
+const server = new McpServer({ name: "cs2-mcp", version: MCP_VERSION });
+const registeredTools: string[] = [];
+// Observe successful registrations, including registerJsonTool calls below.
+const registerTool = new Proxy(server.registerTool.bind(server), {
+  apply(target, thisArg, args) {
+    const registration = Reflect.apply(target, thisArg, args);
+    registeredTools.push(args[0]);
+    return registration;
+  },
+});
 
-server.registerTool(
+registerTool(
+  "cs2_capabilities",
+  {
+    title: "Inspect bridge capabilities and exposure",
+    description: "Report bridge endpoint contracts, separate build/mod/MCP/game identities, cached runtime " +
+      "readiness and native verification limits. Optional clientTools compares supplied client visibility " +
+      "with bridge implementation and actual MCP registrations; omitted visibility stays unknown.",
+    inputSchema: { clientTools: z.array(z.string()).optional().describe("Tool names actually visible in the client") },
+  },
+  async ({ clientTools }) => {
+    try {
+      const manifest = await bridgeJson("/capabilities", undefined, 3_000) as CapabilityManifest;
+      return jsonResult(withMcpExposure(manifest, MCP_VERSION, registeredTools, clientTools));
+    } catch (err) {
+      return errorResult(err);
+    }
+  },
+);
+
+registerTool(
   "cs2_ping",
   {
     title: "Ping the game bridge",
     description:
       "Check that Cities: Skylines II is running with the CS2MCP bridge mod loaded. " +
-      "Returns mod version, current game mode (MainMenu / Game / Editor) and whether a save is loading. " +
+      "Returns mod version and cached main-thread game/loading evidence with age and unavailable reasons. " +
       "Works even while a save is still loading; use this first to diagnose connection issues.",
     inputSchema: {},
   },
@@ -40,7 +71,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_game_state",
   {
     title: "Get game state",
@@ -58,7 +89,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_city_overview",
   {
     title: "Get city overview",
@@ -77,13 +108,13 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_demand",
   {
     title: "Get RCI zoning demand",
     description:
       "Residential (low/medium/high density), commercial, industrial, office and storage demand " +
-      "of the loaded city (0-100), including the demand factors that explain WHY demand is high or low " +
+      "of the loaded city (building demand uses the internal 0-255 scale; company counters can exceed 255), including the demand factors that explain WHY demand is high or low " +
       "(e.g. Taxes, Unemployment, EmptyZones, Homelessness). Positive factor values push demand up, " +
       "negative values push it down.",
     inputSchema: {},
@@ -97,7 +128,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_set_simulation",
   {
     title: "Pause / set simulation speed",
@@ -125,7 +156,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_screenshot",
   {
     title: "Take a screenshot",
@@ -161,7 +192,7 @@ server.registerTool(
 
 /** Register a parameter-less tool that returns bridge JSON. */
 function registerJsonTool(name: string, title: string, description: string, path: string) {
-  server.registerTool(name, { title, description, inputSchema: {} }, async () => {
+  registerTool(name, { title, description, inputSchema: {} }, async () => {
     try {
       return jsonResult(await bridgeJson(path));
     } catch (err) {
@@ -196,7 +227,7 @@ registerJsonTool(
   "/city/labor",
 );
 
-server.registerTool(
+registerTool(
   "cs2_statistics",
   {
     title: "Get statistic history",
@@ -230,7 +261,7 @@ registerJsonTool(
   "/city/taxes",
 );
 
-server.registerTool(
+registerTool(
   "cs2_set_tax",
   {
     title: "Set a tax rate",
@@ -259,7 +290,7 @@ registerJsonTool(
   "/city/policies",
 );
 
-server.registerTool(
+registerTool(
   "cs2_set_policy",
   {
     title: "Toggle a city policy",
@@ -291,7 +322,7 @@ registerJsonTool(
   "/city/service-budgets",
 );
 
-server.registerTool(
+registerTool(
   "cs2_set_service_budget",
   {
     title: "Set a service budget",
@@ -313,7 +344,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_find_prefabs",
   {
     title: "Search placeable prefabs",
@@ -343,7 +374,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_place_building",
   {
     title: "Place a building",
@@ -373,7 +404,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_build_road",
   {
     title: "Build a road segment",
@@ -416,7 +447,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_list_buildings",
   {
     title: "List placed buildings",
@@ -448,7 +479,7 @@ registerJsonTool(
   "/zones",
 );
 
-server.registerTool(
+registerTool(
   "cs2_zone_area",
   {
     title: "Zone an area",
@@ -476,7 +507,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_upgrade_road",
   {
     title: "Upgrade a road segment",
@@ -502,7 +533,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_list_roads",
   {
     title: "List road segments",
@@ -532,7 +563,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_demolish",
   {
     title: "Demolish a building or road segment",
@@ -560,7 +591,7 @@ registerJsonTool(
   "/camera",
 );
 
-server.registerTool(
+registerTool(
   "cs2_set_camera",
   {
     title: "Move the camera",
@@ -593,7 +624,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_terrain",
   {
     title: "Get terrain & water map",
@@ -615,7 +646,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_gridmap",
   {
     title: "Get data-layer grid",
@@ -638,7 +669,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_zoning",
   {
     title: "Read current zoning",
@@ -664,7 +695,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_notifications",
   {
     title: "List warning notifications",
@@ -686,7 +717,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_inspect",
   {
     title: "Inspect an entity",
@@ -714,7 +745,7 @@ registerJsonTool(
   "/city/loan",
 );
 
-server.registerTool(
+registerTool(
   "cs2_set_loan",
   {
     title: "Borrow / repay loan",
@@ -742,7 +773,7 @@ registerJsonTool(
   "/city/fees",
 );
 
-server.registerTool(
+registerTool(
   "cs2_set_fee",
   {
     title: "Set a service fee",
@@ -764,7 +795,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_list_objects",
   {
     title: "List standalone trees/plants",
@@ -794,7 +825,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_run_simulation",
   {
     title: "Run simulation for N in-game hours",
@@ -822,7 +853,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_save_game",
   {
     title: "Save the game",
@@ -858,7 +889,7 @@ registerJsonTool(
   "/districts",
 );
 
-server.registerTool(
+registerTool(
   "cs2_create_district",
   {
     title: "Create a district",
@@ -881,7 +912,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_district_policies",
   {
     title: "List district policies",
@@ -902,7 +933,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_set_district_policy",
   {
     title: "Toggle a district policy",
@@ -943,7 +974,7 @@ function joinEntityOrPoints(items: z.infer<typeof entityOrPoint>[]): string {
   return items.map((item) => ("index" in item ? `${item.index}:${item.version}` : `${item.x},${item.z}`)).join(";");
 }
 
-server.registerTool(
+registerTool(
   "cs2_list_transit_stops",
   {
     title: "List public transport stops",
@@ -977,7 +1008,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_place_transit_stop",
   {
     title: "Place a bus/tram stop on a road",
@@ -1014,7 +1045,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_create_transit_line",
   {
     title: "Create a public transport line",
@@ -1051,7 +1082,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_list_transit_lines",
   {
     title: "List public transport lines",
@@ -1081,7 +1112,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_delete_transit_line",
   {
     title: "Delete a public transport line",
@@ -1102,7 +1133,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_list_map_tiles",
   {
     title: "List map tiles",
@@ -1135,7 +1166,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_buy_map_tiles",
   {
     title: "Buy map tiles",
@@ -1158,7 +1189,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_traffic",
   {
     title: "Traffic report",
@@ -1191,7 +1222,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_vehicles",
   {
     title: "Vehicle census and queue heads",
@@ -1223,7 +1254,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_road_graph",
   {
     title: "Road graph of an area",
@@ -1258,7 +1289,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_connect_road",
   {
     title: "Build a connected road or track",
@@ -1305,7 +1336,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_prefab_info",
   {
     title: "Prefab dimensions and placement rules",
@@ -1327,7 +1358,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_buildings_near",
   {
     title: "Buildings near a point",
@@ -1356,7 +1387,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_place_roadside",
   {
     title: "Place a building against a road",
@@ -1389,7 +1420,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_place_shoreline",
   {
     title: "Place a building on the shore",
@@ -1418,7 +1449,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_replace_road",
   {
     title: "Replace road type",
@@ -1454,7 +1485,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_line_policies",
   {
     title: "Transit line policies",
@@ -1476,7 +1507,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_set_line_policy",
   {
     title: "Set transit line policy",
@@ -1507,7 +1538,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_set_junction_control",
   {
     title: "Set junction traffic control",
@@ -1531,7 +1562,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_line_vehicles",
   {
     title: "Transit line vehicle models",
@@ -1554,7 +1585,7 @@ server.registerTool(
   },
 );
 
-server.registerTool(
+registerTool(
   "cs2_set_line_vehicles",
   {
     title: "Set transit line vehicle model",

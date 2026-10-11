@@ -64,6 +64,8 @@ namespace CS2MCP
         {
             switch (request.Path)
             {
+                case "/capabilities":
+                    return GetCapabilities(request);
                 case "/state":
                     return GetState();
                 case "/city/overview":

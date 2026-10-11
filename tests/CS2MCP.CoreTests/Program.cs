@@ -29,6 +29,7 @@ namespace CS2MCP.CoreTests
         {
             string suite = args.Length == 2 && args[0] == "--suite" ? args[1] : null;
             if (suite == "contracts") ContractTests.Run();
+            else if (suite == "endpoints") EndpointTests.Run();
             else { failed++; Console.WriteLine("FAIL unknown or missing suite: " + (suite ?? "<missing>")); }
             if (passed + failed == 0) { failed++; Console.WriteLine("FAIL zero assertions"); }
             Console.WriteLine($"Suite {suite ?? "<missing>"}: {passed + failed} assertions, {passed} passed, {failed} failed");

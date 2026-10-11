@@ -1,0 +1,141 @@
+# Bridge API: release 1 capability contract
+
+This release adds `GET /capabilities` and the MCP tool `cs2_capabilities`. It reports
+`protocolVersion: 1` and `schemaVersion: 1`. Existing route and success field names
+remain available; unavailable ping evidence becomes nullable as documented below.
+Protocol 2, operation receipts, admission guards and new method
+enforcement are future work; this manifest does not advertise them.
+
+## Discovery and exposure
+
+`/capabilities` returns `identity`, `runtime`, `endpoints`, `capabilities`,
+`nativeSupport` and `degradedReasons`. `EndpointCatalog.All` in
+[EndpointCatalog.cs](../CS2MCP.Bridge/EndpointCatalog.cs) is the authoritative
+classification of the 66 HTTP routes. There are 66 MCP tools, including the new
+discovery tool. Each endpoint names its corresponding MCP capability.
+
+`capabilities[].support: supported` means the bridge implements that endpoint.
+It does not establish a loaded city, native correctness, or client visibility.
+`nativeSupport` separately marks existing native endpoints `unverified` with
+`nativeFixtureNotRun`. The legacy transit handlers explicitly reject airplane
+stop/line creation; `transitPassengerAirCreation` is therefore `unsupported`.
+This says nothing about listing airplane connections or future cargo features.
+No native fixture results have been supplied by this offline release.
+
+`cs2_capabilities` adds `identity.mcpVersion` and an `exposure` report. Its optional
+`clientTools: string[]` argument supplies the tool names actually visible in the
+calling client. No client list means `clientTools: null` and
+`clientExposure: unknown`. An empty supplied list means no tools are exposed.
+An implemented capability absent from the list has `clientExposure: notExposed`;
+its bridge support remains unchanged. A listed name has `clientExposure: exposed`.
+`registered: true|false` is independent evidence from successful MCP registration
+calls, including tools registered through the JSON helper. `registeredTools`
+contains those observed names. The client list is evaluated in Node and is not
+sent to the bridge. Discovery never edits a client allowlist.
+
+Example MCP arguments: `{ "clientTools": ["cs2_ping", "cs2_budget"] }`.
+Omit the argument when client visibility is unavailable.
+
+## Identity and runtime evidence
+
+`identity.assemblyVersion` comes from the loaded bridge assembly (normally
+`0.4.0.0` for package version `0.4.0`); `modVersion` is the separate mod product
+version `0.9.0`. The Node package/advertised MCP version is `0.8.0`. These values
+are separate identities and are never substituted for a game version.
+
+`buildIdentity` is the assembly's informational version when embedded by the
+build. `sourceRevision` comes from embedded `SourceRevisionId` metadata or an
+exact hexadecimal 40/64-character revision suffix in that informational version.
+The running bridge does not read the checkout or guess the deployed commit.
+An embedded revision is the build's recorded source revision; it does not attest
+that the source tree was clean when compiled.
+Missing build/source evidence is null with `buildIdentityReason` or
+`sourceRevisionReason`. `gameVersion` is currently null with
+`gameVersionReason: gameVersionNotObserved`; native handoff must obtain reliable
+game-version evidence before making a compatibility claim.
+
+`runtime` contains `observedAtUtc`, `ageMilliseconds`, `gameMode`, nullable
+`isLoading`, nullable `cityLoaded` and `reason`. BridgeSystem publishes an
+immutable managed snapshot on the main thread during creation, UI updates
+(including paused updates), and load completion. Listener threads atomically
+read this snapshot; they never access GameManager, Unity or ECS.
+
+Before publication, native fields are null with `noMainThreadObservation`. If no
+update arrives within 5,000 wall-clock milliseconds, or the UTC clock moves
+backwards, native fields become null with `mainThreadObservationStale`; the last
+observation time/age remain visible. Native observation failures also return
+null fields with a reason. A fresh observation remains cached evidence and may
+precede a transition that has started since its timestamp. Loading-start and
+paused/main-menu behavior still require F6 native verification.
+
+`degradedReasons` reports missing native/build/game evidence and transient
+`gameLoading` or `gameNotLoaded` when observed. Main menu and loading do not
+change bridge support to `unsupported`. Listener liveness remains independent
+of main-thread availability.
+
+`/ping` retains `ok`, `mod`, legacy `version` (the mod product version),
+`gameMode` and `isLoading`, and adds `identity` and `runtime`. The two legacy
+native fields now use the cached observation and can be null when unavailable
+or stale. Consumers should migrate to `runtime` freshness/reason checks;
+`ok: true` establishes listener liveness only. `/capabilities` also replies on
+the listener thread without waiting for native dispatch.
+
+## Endpoint classifications and completion boundaries
+
+Each descriptor contains `path`, `legacyHttpVerbs`, `access`, `capability` and
+`completionMechanism`. `legacyHttpVerbs: ["GET"]` documents observed legacy MCP
+usage, including writer routes. Other accidental method acceptance is not a
+supported contract. This release adds no method enforcement.
+
+| Access | Meaning and examples |
+|---|---|
+| `read` | Observations, screenshots and discovery; native reads still require their existing main-thread dispatch. |
+| `cityWrite` | Persistent city writes, including loan, policy UI queues, tile purchases and asynchronous saves. |
+| `uiWrite` | Camera movement (`/camera/set`). |
+| `control` | Simulation pause/speed and scheduled runs. |
+| `nativePreview` | Reserved; no existing route performs native preview validation. |
+
+Roadside and shoreline placement are conservatively `cityWrite`, even though
+their dry-run branch returns calculated geometry synchronously. That geometry
+does not validate native preview entities. Internal transit rename and tile
+refresh work are dependencies of their originating route, not additional HTTP
+routes.
+
+| Completion mechanism | What the current reply establishes |
+|---|---|
+| `off-thread-liveness` | Listener answered; native evidence is cached. |
+| `off-thread-snapshot` | Managed manifest/snapshot serialized without a native-thread wait. |
+| `sync-read` | Handler built an observation; freshness/native parity are separate. |
+| `sync-set` | Setter/buffer write returned; some routes read back, others echo input. Native downstream effects may follow. |
+| `end-frame-ack` | UI/barrier work queued; barrier playback and downstream work are later. |
+| `tool-apply-ack` | Generic tool selected Apply; commit/tool restoration are not independently verified. Placement dry runs instead return calculated geometry. |
+| `tool-finish-readback` | Road Finish performed spatial result matching, without exact identity/preservation proof. |
+| `transit-finish-readback` | Resulting entity exists and is neither Temp nor Deleted. |
+| `transit-finish+rename-ack` | Committed line checked; optional rename setter acknowledged, without rename barrier verification. |
+| `purchase-readback+refresh-queued` | Tile ownership/money read back; border refresh queued for a later ToolUpdate. |
+| `run-scheduled` | Target frame/speed installed; timed-run completion is later. Cancellation clears the target and pauses synchronously. |
+| `save-started` | Native asynchronous save invoked; `saving: true` is not a completed save or asset identity check. |
+| `end-frame-capture` | Screenshot coroutine produced actual PNG bytes. |
+
+The catalog describes existing boundaries; it does not upgrade acknowledgments
+to verified completion. Always reconcile uncertain outcomes before retrying.
+Errors retain the legacy `error` string plus F2 `errorData` with code, message,
+retryability, outcome and available status/native/operation details.
+
+Building demand uses the native 0–255 scale; company-demand counters can exceed
+255. Budget values are monthly rates refreshed hourly. These meanings remain
+unchanged; the MCP demand description now states the correct scale.
+
+## Offline validation and native handoff
+
+Run `npm --prefix mcp-server test`, then build the core test runner and execute
+its `contracts` and `endpoints` suites from the repository root. Tests use
+explicit ephemeral fake bridge URLs and never import the executable MCP entry
+point. The endpoint suite compares the catalog against dispatcher cases and
+listener routes, and exercises runtime/identity/manifest contracts without game
+assemblies. Compile the mod with `-p:SkipDeploy=true` and the configured GamePath.
+
+F6 must read `/ping` and `/capabilities` at main menu, during loading and in a
+loaded disposable city, including paused behavior. That native check is
+`notRun` for F3. Compilation and offline fixtures do not prove native parity,
+save completion or compatibility. No deployment is part of this task.
