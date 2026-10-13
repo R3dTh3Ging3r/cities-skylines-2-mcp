@@ -213,6 +213,17 @@ function registerJsonTool(name: string, title: string, description: string, path
 }
 
 registerJsonTool(
+  "cs2_clear_tool",
+  "Return to the default selection tool",
+  "Leave the active construction or editing tool and return to default selection mode. " +
+    "Discards unfinished player tool previews; does not demolish placed objects. " +
+    "Use before cs2_screenshot to leave road-building outline mode. " +
+    "Does not hide all UI or explicitly selected info views. Requires a loaded city and " +
+    "refuses while a bridge build operation is in progress. Safe to repeat when already in selection mode.",
+  "/tools/clear",
+);
+
+registerJsonTool(
   "cs2_budget",
   "Get budget breakdown",
   "Detailed city budget: total income/expenses, balance, and a per-source breakdown " +

@@ -90,7 +90,7 @@ claude mcp add cs2 -- node <repo-path>\mcp-server\dist\index.js
 
 Start the game, load a save, then ask Claude: "How are my city's finances?", "Zone a residential area by the river", "Build a road connecting the industrial area to the highway".
 
-## Tool Reference (62 tools)
+## Tool Reference (66 tools)
 
 **State & view**
 
@@ -100,6 +100,7 @@ Start the game, load a save, then ask Claude: "How are my city's finances?", "Zo
 | `cs2_game_state` | Mode, city name, pause/speed, in-game date & time |
 | `cs2_city_overview` | Population, happiness, health, money, XP, date |
 | `cs2_screenshot` | Current view as PNG (end-of-frame capture, default 1280px wide) |
+| `cs2_clear_tool` | Leave construction/editing mode and return to the default selection tool; discards unfinished previews, refuses during bridge build operations |
 | `cs2_get_camera` / `cs2_set_camera` | Camera read/write (pivot/angles/zoom) — combined with screenshots, the AI's own eyes |
 
 **City data**
@@ -185,7 +186,13 @@ Start the game, load a save, then ask Claude: "How are my city's finances?", "Zo
 - Terraforming is not implemented yet
 - Transit: stops can be placed for bus/tram (roadside); train/metro stops are station buildings (place with `cs2_place_building`) that must be connected by tracks. Lines only get vehicles when a depot of the same type exists and the simulation runs
 - Ramps can only connect at segment endpoints (nodes); mid-segment smooth merges are not supported yet
-- Screenshots capture the game's current rendering: with a road-tool panel open the game renders roads in white outline mode
+- Screenshots capture the game's current rendering. Use `cs2_clear_tool` before `cs2_screenshot` to leave road-building outline mode; this discards unfinished tool previews and does not hide all UI or explicitly selected info views.
+
+### Trying clear tool
+
+With a city loaded, open the road-building tool and take a screenshot. Call `cs2_clear_tool` with `{}`, then take another screenshot: the active tool should be `DefaultToolSystem` and road-building outlines should clear. Repeat the call to check `changed: false`, then select the road tool again to continue building. Existing placed roads and buildings should remain unchanged. A pending bridge build returns an error instead of being interrupted; wait for it to finish before retrying.
+
+Cloud protocol checks: run `npm test` in `mcp-server` (dependencies must already be installed). These compile TypeScript and exercise the real MCP process against a local fixture, including refusal/error handling and screenshots. They do not compile the C# mod or verify rendering inside the game.
 
 ## Disclaimer & Credits
 

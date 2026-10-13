@@ -111,6 +111,8 @@ namespace CS2MCP
                     return GetCamera();
                 case "/camera/set":
                     return SetCamera(request);
+                case "/tools/clear":
+                    return ClearTool();
                 case "/city/terrain":
                     return GetTerrain(request);
                 case "/city/gridmap":

@@ -90,7 +90,7 @@ claude mcp add cs2 -- node <仓库路径>\mcp-server\dist\index.js
 
 启动游戏、读取存档，然后问 Claude："看看我的城市财政状况"、"在河边划一片住宅区"、"修一条路把工业区接上高速"。
 
-## 工具总览（44 个）
+## 工具总览
 
 **状态与画面**
 
@@ -100,6 +100,7 @@ claude mcp add cs2 -- node <仓库路径>\mcp-server\dist\index.js
 | `cs2_game_state` | 模式、城市名、暂停/速度、游戏内日期时间 |
 | `cs2_city_overview` | 人口、幸福度、健康度、资金、XP、日期 |
 | `cs2_screenshot` | 当前画面 PNG（帧末采集，默认缩至 1280 宽） |
+| `cs2_clear_tool` | 退出建造/编辑工具，回到默认选择模式；丢弃未完成的预览，桥接建造操作进行中时拒绝执行 |
 | `cs2_get_camera` / `cs2_set_camera` | 相机读写（观察点/角度/距离），配合截图 = AI 自主取景 |
 
 **城市数据**
@@ -161,7 +162,7 @@ claude mcp add cs2 -- node <仓库路径>\mcp-server\dist\index.js
 
 - 购买地块、公交线路规划、地形改造尚未实现（v0.9 计划）
 - 匝道只能接在路段端点（节点），尚不支持路中段平滑汇入
-- 截图为游戏当前渲染画面：道路类工具面板开启时游戏会以白色轮廓模式渲染
+- 截图为游戏当前渲染画面：可先调用 `cs2_clear_tool` 退出道路建造轮廓模式，再调用 `cs2_screenshot`。这会丢弃未完成的工具预览，但不会隐藏所有 UI 或手动选择的信息视图。
 
 ## 免责与致谢
 
