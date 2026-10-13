@@ -1278,7 +1278,8 @@ registerTool(
       "Road segments in an area with their junction ids (so you can see what connects to what), direction " +
       "(one-way roads run start to end), flow and volume, plus each junction's position, number of roads and " +
       "whether it has traffic lights or is a roundabout. Use it to plan road changes before cs2_replace_road, " +
-      "cs2_build_road or cs2_demolish.",
+      "cs2_build_road or cs2_demolish. includeCurve returns raw cubic control points in world-space meters " +
+      "with y elevation; b/c are handles, not necessarily points on the segment. This does not validate lane ownership or snapping.",
     inputSchema: {
       x: z.number().describe("Center X"),
       z: z.number().describe("Center Z"),
@@ -1289,14 +1290,16 @@ registerTool(
         .boolean()
         .optional()
         .describe("Include every network, not just roads: train/subway/tram tracks (incl. stations' own tracks), paths..."),
+      includeCurve: z.boolean().optional().describe("Include raw cubic Bezier a/b/c/d XYZ control points (default false)"),
     },
   },
-  async ({ x, z: zCoord, radius, limit, query, allNets }) => {
+  async ({ x, z: zCoord, radius, limit, query, allNets, includeCurve }) => {
     const params = new URLSearchParams({ x: String(x), z: String(zCoord) });
     if (radius !== undefined) params.set("radius", String(radius));
     if (limit) params.set("limit", String(limit));
     if (query) params.set("query", query);
     if (allNets) params.set("nets", "all");
+    if (includeCurve !== undefined) params.set("includeCurve", String(includeCurve));
     try {
       return jsonResult(await bridgeJson("/city/road-graph", params));
     } catch (err) {

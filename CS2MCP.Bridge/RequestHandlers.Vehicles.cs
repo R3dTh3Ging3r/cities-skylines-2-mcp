@@ -389,6 +389,7 @@ namespace CS2MCP
             request.Query.TryGetValue("query", out string query);
             bool allNets = request.Query.TryGetValue("nets", out string nets)
                 && string.Equals(nets, "all", System.StringComparison.OrdinalIgnoreCase);
+            bool includeCurve = request.TryGetBool("includeCurve", out bool rawIncludeCurve) && rawIncludeCurve;
             float2 center = new float2(x, z);
 
             var edgeItems = new List<object>();
@@ -431,6 +432,13 @@ namespace CS2MCP
                         endNode = ends.m_End.Index,
                         start = new { x = curve.m_Bezier.a.x, y = curve.m_Bezier.a.y, z = curve.m_Bezier.a.z },
                         end = new { x = curve.m_Bezier.d.x, y = curve.m_Bezier.d.y, z = curve.m_Bezier.d.z },
+                        curve = includeCurve ? new
+                        {
+                            a = new { x = curve.m_Bezier.a.x, y = curve.m_Bezier.a.y, z = curve.m_Bezier.a.z },
+                            b = new { x = curve.m_Bezier.b.x, y = curve.m_Bezier.b.y, z = curve.m_Bezier.b.z },
+                            c = new { x = curve.m_Bezier.c.x, y = curve.m_Bezier.c.y, z = curve.m_Bezier.c.z },
+                            d = new { x = curve.m_Bezier.d.x, y = curve.m_Bezier.d.y, z = curve.m_Bezier.d.z },
+                        } : null,
                         length = math.round(curve.m_Length),
                         partOfBuilding = EntityManager.HasComponent<Owner>(edge),
                         flowPercent = flow,
@@ -487,7 +495,10 @@ namespace CS2MCP
                        "(startNode/endNode are junction ids; one-way roads run from start to end); junctions = their " +
                        "end nodes with how many segments meet there and whether they have traffic lights. " +
                        "partOfBuilding = owned by a building or asset (e.g. a station's own tracks). flowPercent/volume " +
-                       "as in cs2_traffic (roads only).",
+                       "as in cs2_traffic (roads only)." + (includeCurve
+                           ? " curve = raw cubic Bezier control points in world-space meters; y is elevation, " +
+                             "b/c are handles and need not lie on the segment. This does not validate lane ownership or snapping."
+                           : ""),
             });
         }
 

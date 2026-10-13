@@ -117,8 +117,15 @@ Start the game, load a save, then ask Claude: "How are my city's finances?", "Zo
 | `cs2_notifications` | All in-world warning icons (no power/water, abandoned...) with target entities |
 | `cs2_traffic` | City-wide traffic flow, worst roads (flow %, volume, four daily periods) and traffic bottlenecks, with the game's own numbers |
 | `cs2_vehicles` | Census of driving vehicles by type and destination, what stopped vehicles wait for, the queue heads holding traffic up and any gridlock loops |
-| `cs2_road_graph` | Road segments of an area with their junctions, direction, flow and traffic lights (optionally every network, incl. station tracks) |
+| `cs2_road_graph` | Road segments of an area with their junctions, direction, flow and traffic lights; optional network/track inclusion and raw 3D cubic curves |
 | `cs2_inspect` | Single-entity detail (residents/employees/status flags) |
+
+For raw road/rail geometry, call `cs2_road_graph` with
+`{"x":0,"z":0,"radius":300,"allNets":true,"includeCurve":true}`.
+Each segment's `curve.a/b/c/d` contains world-space XYZ coordinates in meters;
+`y` is elevation and `b/c` are cubic control handles that need not lie on the
+segment. This readback does not validate lane ownership or snapping; native
+geometry validation remains unverified.
 
 **Construction**
 
