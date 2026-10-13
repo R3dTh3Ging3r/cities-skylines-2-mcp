@@ -2,6 +2,8 @@
 
 ## Development handoff
 
+The remotely preserved handoff baseline is `c5cd81a32760a18cd8ad43c9f71c183d00ad2739` on `origin/codex/bridge-operations`; later documentation-only receipts may follow it. Both development and foundation branches are preserved in the personal fork, with no PR or merge performed.
+
 Read [docs/HANDOFF.md](docs/HANDOFF.md) and [the retained implementation decisions](docs/handoff/IMPLEMENTATION-DECISIONS.md) before development. The authoritative local checkout is `D:\Codex-Projects\Mods-For-Games\CitySkylines_2`, branch `codex/bridge-operations`, in the personal fork `R3dTh3Ging3r/cities-skylines-2-mcp`. The implementation checkpoint is `b9871afc85d7ed4b47c35960d2c17868aa630c57`; later handoff commits change documentation only. Resolve the current branch tip and the commit containing `docs/HANDOFF.md` when resuming; do not reset to this older code checkpoint.
 
 Feature execution remains paused after the October 13 handoff. F1–F6 passed offline implementation/review; O1 awaits independent review of `9ad3e6746cc3843958bead973fd4dd180c055a26..b9871afc85d7ed4b47c35960d2c17868aa630c57`. O2–O8 and all construction/transit/management tasks remain pending. Native validation remains `notRun`. On authorization to resume, finish O1 review first; do not restart F1 or skip to construction. Use GPT-6.1 Sol/high for task implementation/review, one source implementer at a time, with root orchestration and review after each task.

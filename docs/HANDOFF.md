@@ -33,6 +33,8 @@ Eight modified tracked files and 24 untracked Markdown files were inventoried: R
 
 Before edits, all 32 files were copied byte-for-byte and SHA256 checked under ignored `.local/handoff-1013/files/`; `files.json` records the inventory. `unstaged.patch` and a verified `repo.bundle` preserve the starting Git state, including local refs. Keep this backup. Existing `.local/`, `.codex/`, `.superpowers/`, build/dependency directories and game runtime data remain in place. The installed mod and save directories were not changed. A credential-pattern scan of the 13 local-only commit trees found no matches; documentation was separately inspected for configuration and runtime data.
 
+Preservation completed: documentation commit `c5cd81a32760a18cd8ad43c9f71c183d00ad2739` saved all 38 reviewed Markdown paths. An atomic push preserved it on `origin/codex/bridge-operations` and the foundation `9ad3e67` on `origin/codex/bridge-contracts`; GitHub refs were read back and matched. There were zero local-branch-only commits and a clean tracked/untracked working tree after that push. This receipt may be a newer documentation commit, identified by the file-history command above. Branch publication is backup/handoff, not approval of O1, a merge, a PR or a deployment. Ignored local evidence and configuration remain intentionally local.
+
 ## Installed runtime versus next development version
 
 The game mod and Node MCP adapter are independently loaded components. Package version strings alone cannot establish which source they contain.
