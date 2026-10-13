@@ -159,6 +159,28 @@ the city to refresh their measurements.
 Road and connected-road `(cx, cz)` arguments are quadratic curve **control
 points**, not through-points; a curve need not pass through that coordinate.
 
+## Optional road-graph curve readback
+
+`cs2_road_graph` accepts optional boolean `includeCurve` (default false). The
+existing `GET /city/road-graph` endpoint receives `includeCurve=true|false` when
+explicitly supplied; omission preserves the default. `allNets:true` still maps
+to `nets=all` to include rail/other networks, and existing area, prefab query and
+limit filters are unchanged.
+
+When enabled, each `roads[]` row adds `curve: {a,b,c,d}`, where every point is
+`{x,y,z}` copied directly from the segment's native `Game.Net.Curve.m_Bezier`.
+Coordinates are world-space meters; `y` is world elevation, not a height offset
+above terrain. `a` and `d` equal the existing `start` and `end`; `b` and `c` are
+cubic Bezier control handles and need not lie on the segment. Coordinates are
+not rounded or flattened. With the option omitted or false, `curve` is null.
+Legacy `start`, `end`, rounded `length`, graph connections and other fields
+retain their existing meanings.
+
+This is raw diagnostic readback on the existing read endpoint. It does not infer
+lane ownership, validate snapping/connectivity, or certify native geometry.
+Native parity remains unverified; this addition does not complete the planned
+C1 inspection or enable any new writer capability.
+
 ## Setter values and normal stop discovery
 
 F5 adds `setterReadback` with `schemaVersion: 1`, `requested`, nullable
