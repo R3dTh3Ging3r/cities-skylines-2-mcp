@@ -182,6 +182,12 @@ Start the game, load a save, then ask Claude: "How are my city's finances?", "Zo
 
 ## Known Limitations / Roadmap
 
+For the authoritative development checkout, installed-versus-candidate build, review boundary and protected cloud-to-local workflow, start with the [development handoff](docs/HANDOFF.md).
+
+For this personal fork's gameplay findings, proposed priorities and validation criteria, see the [bridge improvement roadmap](docs/BRIDGE-ROADMAP.md). It distinguishes existing capabilities from missing features and preserves the original upstream architecture.
+
+The [implementation plan](docs/superpowers/plans/2026-10-11-bridge-implementation.md) breaks that roadmap into focused releases with shared contracts, native investigation gates and verification steps. These are proposed changes, not currently shipped capabilities.
+
 - Terraforming is not implemented yet
 - Transit: stops can be placed for bus/tram (roadside); train/metro stops are station buildings (place with `cs2_place_building`) that must be connected by tracks. Lines only get vehicles when a depot of the same type exists and the simulation runs
 - Ramps can only connect at segment endpoints (nodes); mid-segment smooth merges are not supported yet

@@ -1,5 +1,7 @@
 # CS2 bridge improvement roadmap
 
+October 13 execution status: see [the authoritative handoff](HANDOFF.md). F1–F6 are accepted offline; O1 awaits independent review; other tasks remain pending and native gates remain notRun. The dated proposal below is retained as planning history.
+
 October 11, 2026 · Proposed priorities · Planning only
 
 The [implementation package](superpowers/plans/2026-10-11-bridge-implementation.md) now translates this roadmap into five focused plans, shared contracts, native investigation gates and release checks. It is a proposed execution plan, not evidence of implemented features.

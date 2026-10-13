@@ -1,5 +1,7 @@
 # Connect Cities Skylines II to Codex on Windows
 
+October 11 documentation update: the dated installation checks below are historical. Subsequent [gameplay records](gameplay/README.md) verify loaded-city inspection, saves, simulation and many construction/transit actions; they do not establish that every tool works. Current improvement priorities and known capability limits are in the [bridge roadmap](BRIDGE-ROADMAP.md). No live compatibility check was performed during this documentation review.
+
 CS2MCP exposes game tools through a local Node process. Codex communicates with that process over standard input/output; the process calls the game mod at `http://127.0.0.1:8642`. The HTTP address is the game bridge, not an MCP server URL.
 
 ## Build
