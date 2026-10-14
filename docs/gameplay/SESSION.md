@@ -1,4 +1,22 @@
-# Ezra City — cargo handoff and bridge implementation planning
+# Cities: Skylines II — current session record
+
+## October 13, 2026 (00:57 UTC October 14) — candidate curve-readback smoke test
+
+**Objective:** Live-test the optional `cs2_road_graph.includeCurve` feature from candidate commit `d21a56315b9f4cb2e21670a25ca6f17a1e708868` in the user-designated unlimited-money sandbox. The running bridge identified mod version `0.9.0`, assembly `0.4.0.0`, and that exact source revision.
+
+**Baseline and clock:** City `Round Rock`; user reported unlimited money and all unlocks. Bridge state at 2026-10-14 00:57 UTC: simulation paused, frame `6545271`, no city loading. This was a read-only test; no named game checkpoint was created and no save was made.
+
+**Results:** A bounded query centered at X `-755.738`, Z `-1339.409`, radius `900 m`, limit `300`, `allNets=true` returned 15 network segments. With `includeCurve` omitted or false, all 15 had `curve:null`. With it true, all 15 had cubic controls; all XYZ values were finite, `a`/`d` matched segment start/end within `0.01 m`, and eight segments had a handle more than `0.1 m` off the chord. A wider `2000 m` query returned 50 segments: 22 one-way highway, 2 medium road, 15 double train track, and 11 high-voltage line. All 50 had curves and finite matching endpoints; all 15 rail segments passed the same check. The omitted/false/true sequence was run three times with identical counts.
+
+Existing direct read tools also responded in the same paused city: overview reported treasury 2,000,000,000 and population 0; the monthly budget and electricity/water/garbage metrics were zero; demand returned residential household demand 35 and building demand 100 for low/medium/high, with commercial and industrial building demand 100, office 100, storage 0. This verifies reachability only—the empty sandbox does not exercise nonzero metrics or native-panel parity.
+
+**Clock/checkpoint verification:** The bridge reported the same paused frame before and after the readback pass, so the simulation did not advance. No construction, demolition, UI interaction during the pass, or save operations occurred. Raw query tooling and verified rollback files remain under ignored local paths; no raw runtime evidence or machine-specific path is included in Git. The candidate and adapter remain installed; no source code or PRs were changed during the game test.
+
+**Outcome and next step:** Native road-graph curve readback passed for this city's sampled road and rail network. This does not validate snapping, lane ownership, connectivity, or any mutation behavior. The candidate corresponds to draft PR #2 and remains unmerged. Keep feature work paused; if development resumes, follow the handoff's O1 review gate before other roadmap tasks. The user may continue using the sandbox city independently.
+
+## Historical October 13 planning handoff
+
+The planning narrative below is historical. Offline foundation F1–F6 is accepted; O1 was awaiting independent review at that handoff. See [the development handoff](../HANDOFF.md) for its as-of-October-13 roadmap and source state. No city state was refreshed during that handoff.
 
 October 13 development handoff: the planning narrative below is historical. Offline foundation F1–F6 is now accepted; O1 is implemented with independent review pending. Feature work is paused. See [the authoritative development handoff](../HANDOFF.md) for current status and the exact resume step. No city state was refreshed during this handoff.
 

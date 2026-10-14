@@ -71,6 +71,10 @@ See [retained decisions](handoff/IMPLEMENTATION-DECISIONS.md) and [review eviden
 
 ## Tested local setup
 
+### Post-handoff native candidate check — October 13, 2026
+
+The focused optional curve-readback smoke test **passed** against candidate `d21a56315b9f4cb2e21670a25ca6f17a1e708868` (draft [PR #2](https://github.com/R3dTh3Ging3r/cities-skylines-2-mcp/pull/2)). Repeated paused-city queries returned the expected `curve:null` for omitted/false and finite cubic controls for true, with matching endpoints across sampled road and rail segments. Existing overview, budget, service and demand read tools also returned responses. This is narrow live evidence only: the sandbox had population 0, and this does not establish traffic, mutation, nonzero metrics, native-panel parity or full release acceptance. G1/G2/G3/G4 remain open. See the [native test report](handoff/NATIVE-TEST-2026-10-13-CURVE-READBACK.md) for procedure, counts, exact scope and remaining checks. The game stayed paused and no city changes or save were made.
+
 The build targets C# 9 / .NET Framework 4.7.2; the installed SDK is .NET `10.0.401`. The isolated compatibility test runtime is Node `18.20.8`, npm `10.8.2`, TypeScript `5.9.3`. Normal user MCP configuration uses the existing system Node executable; tests set PATH only within their process.
 
 The Steam game references are at `E:/SteamLibrary/steamapps/common/Cities Skylines II/Cities2_Data/Managed`. No proprietary assemblies are copied into Git. Existing dependencies are used, with no dependency or machine configuration changes. Use [docs/testing.md](testing.md) for exact commands and distinctions between offline and native evidence. **Every development mod build must include `-p:SkipDeploy=true`; the project otherwise deploys automatically.**
