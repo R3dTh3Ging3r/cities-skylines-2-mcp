@@ -47,6 +47,9 @@ export interface CapabilityManifest {
   endpoints: EndpointDescriptor[];
   capabilities: Capability[];
   nativeSupport: Capability[];
+  operationProtocol?: { version: 2; dispatchAvailable: false; scopedStatusAvailable: false;
+    reason: string; legacyWrites: "unmigrated"; world: WorldRef | null; ready: boolean;
+    registryCapacity: number; pendingCapacity: number; maxBodyBytes: number; };
   degradedReasons: string[];
 }
 
@@ -54,4 +57,22 @@ export interface ExposureReport {
   registeredTools: string[];
   clientTools: string[] | null;
   capabilities: (Capability & { registered: boolean; clientExposure: "unknown" | "exposed" | "notExposed" })[];
+}
+
+export interface WorldRef { bootId: string; epoch: number; }
+export interface EntityRef { world: WorldRef; index: number; version: number; }
+export interface CommandRequest {
+  operationId: string; world: WorldRef; leaseId: string; name: string;
+  args: Record<string, unknown>; expectedFingerprint?: string;
+}
+export type OperationPhase = "queued" | "validating" | "applying" | "verifying" | "succeeded" |
+  "failed" | "cancelled" | "interrupted" | "indeterminate";
+export interface MutationReceipt {
+  created: EntityRef[]; changed: EntityRef[]; reused: EntityRef[]; removed: EntityRef[];
+  actualCost: number | null; costStatus: string; result: unknown; warnings: string[]; verification: string;
+}
+export interface OperationRecord {
+  operationId: string; requestHash: string; world: WorldRef; name: string; phase: OperationPhase;
+  error: BridgeErrorData | null; receipt: MutationReceipt | null; createdAtUtc: string; updatedAtUtc: string;
+  cancellationRequested: boolean; retrySafe: boolean;
 }

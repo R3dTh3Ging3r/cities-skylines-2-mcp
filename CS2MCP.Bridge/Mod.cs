@@ -10,6 +10,8 @@ namespace CS2MCP
     {
         public const string Name = "CS2MCP";
         public const string Version = "0.9.0";
+        // Per mod lifetime, including listener/system recreation. Never infer identity from save names/frames.
+        public static readonly WorldIdentity Worlds = new WorldIdentity(System.Guid.NewGuid().ToString("D"));
         public static readonly RuntimeSnapshotStore RuntimeSnapshots = new RuntimeSnapshotStore();
         public static readonly BuildIdentity Identity = ReadBuildIdentity();
         // Read once with mod startup; later environment changes cannot enable probe dispatch.

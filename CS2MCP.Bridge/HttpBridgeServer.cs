@@ -17,20 +17,23 @@ namespace CS2MCP
     /// </summary>
     public sealed class HttpBridgeServer
     {
-        private const int MaxHeaderBytes = 16 * 1024;
-        private const int MaxBodyBytes = 1024 * 1024;
         private const int MainThreadTimeoutMs = 10000;
 
         private readonly int m_Port;
-        private readonly Action<BridgeRequest> m_EnqueueToMainThread;
+        private readonly Func<BridgeRequest, bool> m_EnqueueToMainThread;
+        private readonly Func<BridgeRequest, BridgeResponse> m_Operations;
+        private readonly WorldIdentity m_World;
         private TcpListener m_Listener;
         private Thread m_AcceptThread;
         private volatile bool m_Running;
 
-        public HttpBridgeServer(int port, Action<BridgeRequest> enqueueToMainThread)
+        public HttpBridgeServer(int port, Func<BridgeRequest, bool> enqueueToMainThread,
+            Func<BridgeRequest, BridgeResponse> operations, WorldIdentity world)
         {
             m_Port = port;
             m_EnqueueToMainThread = enqueueToMainThread;
+            m_Operations = operations;
+            m_World = world;
         }
 
         public void Start()
@@ -87,13 +90,20 @@ namespace CS2MCP
                     client.ReceiveTimeout = 15000;
                     client.SendTimeout = 15000;
 
-                    BridgeRequest request = ReadRequest(stream);
-                    if (request == null)
+                    try
                     {
-                        WriteResponse(stream, BridgeResponse.Error(400, "malformed HTTP request"));
-                        return;
+                        HttpIngress.ReadAndDispatch(stream, parsed => {
+                            var request = new BridgeRequest { Method = parsed.Method, Path = parsed.Path, Body = parsed.Body,
+                                Command = parsed.Command, OperationId = parsed.OperationId, IngressWorld = m_World.Current };
+                            ParseUrl(parsed.RawTarget, request);
+                            WriteResponse(stream, Dispatch(request));
+                        });
                     }
-                    WriteResponse(stream, Dispatch(request));
+                    catch (OperationException error)
+                    {
+                        BridgeErrorData e = error.Error;
+                        WriteResponse(stream, BridgeResponse.Error(e.httpStatus ?? 400, e.message, e.code, e.retryable, e.outcome, e.operationId));
+                    }
                 }
             }
             catch (Exception e)
@@ -112,11 +122,12 @@ namespace CS2MCP
             }
             if (request.Path == "/capabilities")
             {
-                return BridgeResponse.Json(EndpointCatalog.CreateValidationManifest(Mod.Identity,
-                    Mod.RuntimeSnapshots.Read(DateTime.UtcNow), Mod.NativeValidation));
+                return BridgeResponse.Json(EndpointCatalog.CreateOperationManifest(Mod.Identity,
+                    Mod.RuntimeSnapshots.Read(DateTime.UtcNow), Mod.NativeValidation, m_World.Snapshot));
             }
 
-            m_EnqueueToMainThread(request);
+            if (request.Path.StartsWith("/v2/", StringComparison.Ordinal)) return m_Operations(request);
+            if (!m_EnqueueToMainThread(request)) return BridgeResponse.Error(409, "pending queue is full", ErrorCodes.BridgeBusy);
             BridgeResponse response = request.WaitForResponse(MainThreadTimeoutMs);
             return response ?? BridgeResponse.Error(503,
                 "simulation thread did not respond within 10s (game still loading, or bridge system disabled)",
@@ -136,73 +147,6 @@ namespace CS2MCP
                 runtime,
                 identity = Mod.Identity,
             });
-        }
-
-        private static BridgeRequest ReadRequest(NetworkStream stream)
-        {
-            // Read until end of headers (\r\n\r\n).
-            var headerBytes = new MemoryStream();
-            int matched = 0;
-            while (matched < 4)
-            {
-                int b = stream.ReadByte();
-                if (b < 0 || headerBytes.Length > MaxHeaderBytes)
-                {
-                    return null;
-                }
-                headerBytes.WriteByte((byte)b);
-                bool expectCr = matched == 0 || matched == 2;
-                matched = (expectCr && b == '\r') || (!expectCr && b == '\n') ? matched + 1 : (b == '\r' ? 1 : 0);
-            }
-
-            string headerText = Encoding.ASCII.GetString(headerBytes.ToArray());
-            string[] lines = headerText.Split(new[] { "\r\n" }, StringSplitOptions.None);
-            string[] requestLine = lines[0].Split(' ');
-            if (requestLine.Length < 3)
-            {
-                return null;
-            }
-
-            var request = new BridgeRequest { Method = requestLine[0].ToUpperInvariant() };
-            ParseUrl(requestLine[1], request);
-
-            int contentLength = 0;
-            for (int i = 1; i < lines.Length; i++)
-            {
-                int colon = lines[i].IndexOf(':');
-                if (colon <= 0)
-                {
-                    continue;
-                }
-                string name = lines[i].Substring(0, colon).Trim();
-                string value = lines[i].Substring(colon + 1).Trim();
-                if (name.Equals("Content-Length", StringComparison.OrdinalIgnoreCase))
-                {
-                    int.TryParse(value, out contentLength);
-                }
-            }
-
-            if (contentLength > 0)
-            {
-                if (contentLength > MaxBodyBytes)
-                {
-                    return null;
-                }
-                var body = new byte[contentLength];
-                int read = 0;
-                while (read < contentLength)
-                {
-                    int n = stream.Read(body, read, contentLength - read);
-                    if (n <= 0)
-                    {
-                        return null;
-                    }
-                    read += n;
-                }
-                request.Body = Encoding.UTF8.GetString(body);
-            }
-
-            return request;
         }
 
         private static void ParseUrl(string rawUrl, BridgeRequest request)

@@ -9,8 +9,8 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const script = join(root, 'scripts/Test-NativeFixture.ps1');
 const source = await readFile(join(root, 'CS2MCP.Bridge/EndpointCatalog.cs'), 'utf8');
-const endpoints = [...source.matchAll(/new EndpointDescriptor\("([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)"\)/g)]
-  .map(([, path, access, capability, completionMechanism]) => ({ path, access, capability, completionMechanism, legacyHttpVerbs: ['GET'] }));
+const endpoints = [...source.matchAll(/new EndpointDescriptor\("([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)"(?:, "(GET|POST)")?\)/g)]
+  .map(([, path, access, capability, completionMechanism, verb = 'GET']) => ({ path, access, capability, completionMechanism, legacyHttpVerbs: [verb] }));
 const probeIds = ['preloadOrder', 'toolApplyFinish', 'manualToolSwitch', 'saveIdentity', 'previewOwnership'];
 const state = { world: { bootId: 'fake-boot', epoch: 1 }, city: { identity: 'fake-city' } };
 const context = () => ({ schemaVersion: 1, fixture: 'lifecycle', disposableCityConfirmed: true,

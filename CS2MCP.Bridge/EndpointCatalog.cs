@@ -5,18 +5,19 @@ using CS2MCP.Core;
 
 namespace CS2MCP
 {
-    /// <summary>Classification of an existing route, not new method enforcement or completion verification.</summary>
+    /// <summary>Fixed route/method classification; completion metadata is not native verification.</summary>
     public sealed class EndpointDescriptor
     {
         public string path { get; }
-        public IReadOnlyList<string> legacyHttpVerbs { get; } = Array.AsReadOnly(new[] { "GET" });
+        public IReadOnlyList<string> legacyHttpVerbs { get; }
         public string access { get; }
         public string capability { get; }
         public string completionMechanism { get; }
 
-        internal EndpointDescriptor(string path, string access, string capability, string completionMechanism)
+        internal EndpointDescriptor(string path, string access, string capability, string completionMechanism, string verb = "GET")
         {
             this.path = path;
+            legacyHttpVerbs = Array.AsReadOnly(new[] { verb });
             this.access = access;
             this.capability = capability;
             this.completionMechanism = completionMechanism;
@@ -47,6 +48,21 @@ namespace CS2MCP
         public NativeValidationMetadata(string startupValue) { enabled = startupValue == "true"; }
     }
 
+    public sealed class OperationProtocolMetadata
+    {
+        public int version => 2;
+        public bool dispatchAvailable => false;
+        public bool scopedStatusAvailable => false;
+        public string reason => "completionAndLeaseGuardsUnavailable";
+        public string legacyWrites => "unmigrated";
+        public WorldRef world { get; }
+        public bool ready { get; }
+        public int registryCapacity => OperationRegistry.Capacity;
+        public int pendingCapacity => OperationRegistry.PendingCapacity;
+        public int maxBodyBytes => HttpIngress.MaxBodyBytes;
+        internal OperationProtocolMetadata(WorldSnapshot snapshot) { world = snapshot?.world; ready = snapshot?.ready ?? false; }
+    }
+
     public sealed class CapabilityManifest
     {
         public int protocolVersion => 1;
@@ -58,14 +74,17 @@ namespace CS2MCP
         public IReadOnlyList<Capability> nativeSupport { get; }
         public IReadOnlyList<string> degradedReasons { get; }
         public NativeValidationMetadata nativeValidation { get; }
+        public OperationProtocolMetadata operationProtocol { get; }
 
-        internal CapabilityManifest(BuildIdentity identity, RuntimeEvidence runtime, NativeValidationMetadata validation)
+        internal CapabilityManifest(BuildIdentity identity, RuntimeEvidence runtime, NativeValidationMetadata validation, WorldSnapshot world = null)
         {
             this.identity = identity;
             this.runtime = runtime;
             nativeValidation = validation;
+            operationProtocol = new OperationProtocolMetadata(world);
             capabilities = Array.AsReadOnly(EndpointCatalog.All.Select(endpoint => new Capability {
-                name = endpoint.capability, support = "supported"
+                name = endpoint.capability, support = endpoint.path.StartsWith("/v2/", StringComparison.Ordinal) ? "unverified" : "supported",
+                reason = endpoint.path.StartsWith("/v2/", StringComparison.Ordinal) ? "completionAndLeaseGuardsUnavailable" : null
             }).ToArray());
             nativeSupport = Array.AsReadOnly(EndpointCatalog.All
                 .Where(endpoint => endpoint.path != "/ping" && endpoint.path != "/capabilities")
@@ -155,7 +174,33 @@ namespace CS2MCP
             new EndpointDescriptor("/transit/lines/vehicles", "read", "cs2_line_vehicles", "sync-read"),
             new EndpointDescriptor("/transit/lines/vehicles/set", "cityWrite", "cs2_set_line_vehicles", "sync-set"),
             new EndpointDescriptor("/capabilities", "read", "cs2_capabilities", "off-thread-snapshot"),
+            new EndpointDescriptor("/v2/commands", "control", "cs2_submit_command", "guarded-admission-disabled", "POST"),
+            new EndpointDescriptor("/v2/operations/{operationId}", "read", "cs2_operation", "managed-record"),
+            new EndpointDescriptor("/v2/operations/{operationId}/cancel", "control", "cs2_cancel_operation", "cancel-request-ack", "POST"),
         });
+
+        public static EndpointDescriptor Resolve(string path, out string operationId)
+        {
+            operationId = null;
+            foreach (EndpointDescriptor endpoint in All)
+            {
+                if (!endpoint.path.Contains("{operationId}")) { if (endpoint.path == path) return endpoint; continue; }
+                const string prefix = "/v2/operations/";
+                string suffix = endpoint.path.EndsWith("/cancel", StringComparison.Ordinal) ? "/cancel" : "";
+                if (!path.StartsWith(prefix, StringComparison.Ordinal) || !path.EndsWith(suffix, StringComparison.Ordinal)) continue;
+                int length = path.Length - prefix.Length - suffix.Length;
+                if (length != 36 || !Guid.TryParseExact(path.Substring(prefix.Length, length), "D", out Guid id)) continue;
+                operationId = id.ToString("D"); return endpoint;
+            }
+            return null;
+        }
+
+        public static CapabilityManifest CreateOperationManifest(BuildIdentity identity, RuntimeEvidence runtime,
+            NativeValidationMetadata validation, WorldSnapshot world)
+        {
+            if (identity == null || runtime == null || validation == null) throw new ArgumentNullException();
+            return new CapabilityManifest(identity, runtime, validation, world);
+        }
 
         public static CapabilityManifest CreateManifest(BuildIdentity identity, RuntimeEvidence runtime)
         {

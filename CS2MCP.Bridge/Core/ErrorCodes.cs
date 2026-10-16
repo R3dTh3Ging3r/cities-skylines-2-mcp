@@ -2,6 +2,10 @@ namespace CS2MCP.Core
 {
     public static class ErrorCodes
     {
+        public const string WorldMismatch = "WORLD_MISMATCH";
+        public const string IdempotencyConflict = "IDEMPOTENCY_CONFLICT";
+        public const string OperationCapacity = "OPERATION_CAPACITY";
+        public const string UpgradeRequired = "UPGRADE_REQUIRED";
         public const string InvalidArgument = "INVALID_ARGUMENT";
         public const string BridgeBusy = "BRIDGE_BUSY";
         public const string NotReady = "NOT_READY";

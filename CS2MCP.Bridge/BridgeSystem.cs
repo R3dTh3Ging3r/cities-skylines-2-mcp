@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Threading;
+using CS2MCP.Core;
 using Colossal.Serialization.Entities;
 using Game;
 using Game.Simulation;
@@ -24,6 +27,10 @@ namespace CS2MCP
         private RequestHandlers m_Handlers;
         private SimulationSystem m_SimulationSystem;
         private uint m_FrameIndexAtLoad;
+        private int m_PendingCount;
+        private WorldLoadObserver m_LoadObserver;
+        private OperationRegistry m_Operations;
+        internal OperationRegistry Operations => Volatile.Read(ref m_Operations);
         private readonly ConcurrentQueue<BridgeRequest> m_Pending = new ConcurrentQueue<BridgeRequest>();
 
         /// <summary>
@@ -47,6 +54,8 @@ namespace CS2MCP
         {
             base.OnCreate();
             Instance = this;
+            m_LoadObserver = new WorldLoadObserver(Mod.Worlds);
+            BeginWorldLoad();
             m_Handlers = new RequestHandlers(this);
             m_SimulationSystem = base.World.GetOrCreateSystemManaged<SimulationSystem>();
             PublishRuntimeSnapshot();
@@ -58,7 +67,7 @@ namespace CS2MCP
                 port = parsed;
             }
 
-            m_Server = new HttpBridgeServer(port, m_Pending.Enqueue);
+            m_Server = new HttpBridgeServer(port, TryEnqueue, m_Handlers.HandleOperationRequest, Mod.Worlds);
             try
             {
                 m_Server.Start();
@@ -71,12 +80,45 @@ namespace CS2MCP
             }
         }
 
+        private void BeginWorldLoad()
+        {
+            m_LoadObserver.BeginLoad();
+            ResetOperationRegistry();
+        }
+
+        private void ResetOperationRegistry()
+        {
+            // Completion/lease producers are deliberately unavailable; no descriptor enables dispatch.
+            Volatile.Write(ref m_Operations, new OperationRegistry(Mod.Worlds, _ => new BridgeErrorData(
+                ErrorCodes.Unsupported, "native operation completion/lease guards are not implemented", httpStatus: 501)));
+        }
+
+        [Preserve]
+        protected override void OnGamePreload(Purpose purpose, GameMode mode)
+        {
+            // Retained native metadata places this before load cleanup. Runtime timing still needs G1.
+            BeginWorldLoad();
+            base.OnGamePreload(purpose, mode);
+        }
+
+        private bool TryEnqueue(BridgeRequest request)
+        {
+            int count;
+            do { count = Volatile.Read(ref m_PendingCount); if (count >= OperationRegistry.PendingCapacity) return false; }
+            while (Interlocked.CompareExchange(ref m_PendingCount, count + 1, count) != count);
+            m_Pending.Enqueue(request); return true;
+        }
+
         [Preserve]
         protected override void OnGameLoadingComplete(Purpose purpose, GameMode mode)
         {
             base.OnGameLoadingComplete(purpose, mode);
             m_FrameIndexAtLoad = m_SimulationSystem.frameIndex;
             SimulationHasTickedSinceLoad = false;
+            WorldRef before = Mod.Worlds.Current;
+            m_LoadObserver.LoadingComplete();
+            if (!WorldIdentity.Same(before, Mod.Worlds.Current)) ResetOperationRegistry();
+            // Loading-complete occurs before manager ready; readiness waits for a later safe OnUpdate.
             PublishRuntimeSnapshot();
         }
 
@@ -84,6 +126,10 @@ namespace CS2MCP
         protected override void OnUpdate()
         {
             PublishRuntimeSnapshot();
+            RuntimeEvidence runtime = Mod.RuntimeSnapshots.Read(DateTime.UtcNow);
+            WorldRef before = Mod.Worlds.Current;
+            m_LoadObserver.Observe(runtime.isLoading, runtime.cityLoaded);
+            if (!WorldIdentity.Same(before, Mod.Worlds.Current)) ResetOperationRegistry();
             if (!SimulationHasTickedSinceLoad && m_SimulationSystem.frameIndex != m_FrameIndexAtLoad)
             {
                 SimulationHasTickedSinceLoad = true;
@@ -94,14 +140,30 @@ namespace CS2MCP
                 AutoPauseTargetFrame = 0;
                 Mod.Log.Info("timed run finished, simulation auto-paused");
             }
-            while (m_Pending.TryDequeue(out BridgeRequest request))
+            var readBudget = Stopwatch.StartNew();
+            int reads = 0; bool writerStarted = false;
+            while (reads < 8 && readBudget.ElapsedMilliseconds < 2 && m_Pending.TryPeek(out BridgeRequest next))
             {
+                EndpointDescriptor endpoint = EndpointCatalog.Resolve(next.Path, out _);
+                bool writer = endpoint == null || endpoint.access != "read";
+                if (writer && writerStarted) break;
+                if (!m_Pending.TryDequeue(out BridgeRequest request)) continue;
+                Interlocked.Decrement(ref m_PendingCount);
+                if (writer) writerStarted = true; else reads++;
                 BridgeResponse response;
                 try
                 {
                     // A null response means the handler completes the request
                     // asynchronously itself (e.g. screenshots at end-of-frame).
+                    // Legacy ingress fencing is weaker than a caller-observed WorldRef and does not
+                    // fence already deferred legacy callbacks. All-writer lifecycle migration belongs to O5.
+                    if (writer) Mod.Worlds.Validate(request.IngressWorld);
                     response = m_Handlers.Handle(request);
+                }
+                catch (OperationException e)
+                {
+                    response = BridgeResponse.Error(e.Error.httpStatus ?? 409, e.Error.message, e.Error.code,
+                        e.Error.retryable, e.Error.outcome, e.Error.operationId);
                 }
                 catch (Exception e)
                 {
@@ -129,8 +191,11 @@ namespace CS2MCP
                 if (manager == null)
                     Mod.RuntimeSnapshots.Publish(DateTime.UtcNow, null, null, null, "gameManagerUnavailable");
                 else
-                    Mod.RuntimeSnapshots.Publish(DateTime.UtcNow, manager.gameMode.ToString(), manager.isGameLoading,
-                        !manager.isGameLoading && manager.gameMode == GameMode.Game, null);
+                {
+                    bool loading = manager.isGameLoading;
+                    Mod.RuntimeSnapshots.Publish(DateTime.UtcNow, manager.gameMode.ToString(), loading,
+                        !loading && manager.gameMode == GameMode.Game, null);
+                }
             }
             catch (Exception)
             {
@@ -141,6 +206,7 @@ namespace CS2MCP
         [Preserve]
         protected override void OnDestroy()
         {
+            Mod.Worlds.MarkUnavailable();
             StopServer();
             if (Instance == this)
             {

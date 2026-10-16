@@ -9,6 +9,11 @@
     <Reference Include="System.Web.Extensions" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
     <Compile Include="Program.cs" />
+    <Compile Include="OperationTests.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/OperationRegistry.cs" Link="Core/OperationRegistry.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/WorldIdentity.cs" Link="Core/WorldIdentity.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/CommandJson.cs" Link="Core/CommandJson.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/HttpIngress.cs" Link="Core/HttpIngress.cs" />
     <Compile Include="ContractTests.cs" />
     <Compile Include="EndpointTests.cs" />
     <Compile Include="MetricTests.cs" />

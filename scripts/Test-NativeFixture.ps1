@@ -105,15 +105,16 @@ function Definition([string]$ID) {
         }
     }
     $Source = Get-Content -Raw -LiteralPath (Join-Path $RepoRoot 'CS2MCP.Bridge/EndpointCatalog.cs')
-    $Pattern = 'new EndpointDescriptor\("([^"\r\n]+)", "([^"\r\n]+)", "([^"\r\n]+)", "([^"\r\n]+)"\)'
+    $Pattern = 'new EndpointDescriptor\("([^"\r\n]+)", "([^"\r\n]+)", "([^"\r\n]+)", "([^"\r\n]+)"(?:, "(GET|POST)")?\)'
     $Matches = [regex]::Matches($Source, $Pattern)
     Require ($Matches.Count -gt 0 -and $Matches.Count -eq [regex]::Matches($Source, 'new EndpointDescriptor\(').Count) 'Catalog extraction failed closed'
-    Require ($Source.Contains('legacyHttpVerbs { get; } = Array.AsReadOnly(new[] { "GET" })')) 'Catalog verb definition changed'
+    Require ($Source.Contains('string verb = "GET"') -and $Source.Contains('legacyHttpVerbs = Array.AsReadOnly(new[] { verb })')) 'Catalog verb definition changed'
     $Catalog = @{}
     foreach ($Match in $Matches) {
         $Path = $Match.Groups[1].Value
         Require (-not $Catalog.ContainsKey($Path)) 'Duplicate catalog path'
-        $Catalog[$Path] = @{ path = $Path; access = $Match.Groups[2].Value; capability = $Match.Groups[3].Value; completionMechanism = $Match.Groups[4].Value; legacyHttpVerbs = @('GET') }
+        $Verb = if ($Match.Groups[5].Success) { $Match.Groups[5].Value } else { 'GET' }
+        $Catalog[$Path] = @{ path = $Path; access = $Match.Groups[2].Value; capability = $Match.Groups[3].Value; completionMechanism = $Match.Groups[4].Value; legacyHttpVerbs = @($Verb) }
     }
     $Result = @{ fixture = $Data; catalog = $Catalog; catalogSha256 = (FileHash (Join-Path $RepoRoot 'CS2MCP.Bridge/EndpointCatalog.cs')) }
     ValidateOperations $Data.operations $Result
@@ -141,7 +142,7 @@ function ValidateEndpoints($Endpoints, $Definition) {
         foreach ($Field in @('path','access','capability','completionMechanism')) {
             Require ((Nonempty $Endpoint.$Field) -and $Endpoint.$Field -ceq $Source[$Field]) 'Endpoint contradicts source catalog'
         }
-        Require ((ArrayValue $Endpoint.legacyHttpVerbs) -and $Endpoint.legacyHttpVerbs.Count -eq 1 -and $Endpoint.legacyHttpVerbs[0] -is [string] -and $Endpoint.legacyHttpVerbs[0] -ceq 'GET') 'Endpoint verb definition contradicts source'
+        Require ((ArrayValue $Endpoint.legacyHttpVerbs) -and $Endpoint.legacyHttpVerbs.Count -eq 1 -and $Endpoint.legacyHttpVerbs[0] -is [string] -and $Endpoint.legacyHttpVerbs[0] -ceq $Source.legacyHttpVerbs[0]) 'Endpoint verb definition contradicts source'
     }
     ValidateOperations $Definition.fixture.operations $Definition
 }
@@ -487,13 +488,13 @@ try {
     if ($LASTEXITCODE -ne 0) { $Revision = $null }
     $Dirty = (& git -C $RepoRoot status --porcelain 2>$null | Out-String).Trim().Length -gt 0
     $CheckByID.buildIdentity.reason = 'loadedModuleHashNotExposed; gameVersion may be unknown; installed file is not loaded identity'
-    $CheckByID.worldIdentity.reason = 'WorldRef bootId/epoch not exposed by current bridge'
+    $CheckByID.worldIdentity.reason = 'WorldRef collection and native reload/readiness validation remain pending'
     $Finished = [DateTime]::UtcNow.ToString('o')
     $Report = [pscustomobject]@{
         schemaVersion = 1; fixture = $Fixture; fixtureVersion = 1; provenance = $Provenance
         startedAtUtc = $Started; finishedAtUtc = $Finished
         build = @{ identity = $Identity; identityReasons = $Reasons; sourceRevision = $Revision; sourceDirty = $Dirty; installedSha256 = $Installed; candidateSha256 = $Candidate; loadedModuleSha256 = $null; hashReasons = $HashReasons }
-        world = @{ bootId = $null; epoch = $null; reason = 'worldRefNotExposed'; startContext = $StartContext; endContext = $EndContext }
+        world = @{ bootId = $null; epoch = $null; reason = 'worldRefNotCollected'; startContext = $StartContext; endContext = $EndContext }
         checks = $Checks; artifacts = $Artifacts; validated = $false; compatibilityVerified = $false
         limitations = @('Read sequence is not atomic; city name/frame is not WorldRef', 'Capability runtime snapshot freshness is bounded to 5000ms at observation, not the whole collection', 'No panels observed automatically; native parity remains notRun', 'Installed and candidate file hashes do not identify the loaded module', 'Setter/deferred completion and cargo units require later fixtures')
     }
