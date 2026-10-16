@@ -9,14 +9,15 @@ using CS2MCP.Core;
 
 namespace CS2MCP
 {
-    /// <summary>Game-thread-only adapter. One explicitly versioned root per call, no query or traversal.</summary>
-    internal sealed class NativeConstructionReader
+    /// <summary>Game-thread-only adapter. Exact roots and fixed direct instance sources; no query or recursive traversal.</summary>
+    internal sealed class NativeConstructionReader:IConstructionRelationshipSource
     {
-        private readonly EntityManager manager;
+        private readonly Lazy<EntityManager> managerSource;
+        private EntityManager manager=>managerSource.Value;
         private readonly Func<Entity,string> assetKey;
-        internal NativeConstructionReader(EntityManager manager,Func<Entity,string> assetKey){this.manager=manager;this.assetKey=assetKey;}
+        internal NativeConstructionReader(Func<EntityManager> manager,Func<Entity,string> assetKey){managerSource=new Lazy<EntityManager>(manager);this.assetKey=assetKey;}
         private static Point3 Point(float3 p)=>new Point3(p.x,p.y,p.z);
-        private static EntityRef Ref(Entity e,WorldRef world)=>e==Entity.Null?null:new EntityRef{world=world,index=e.Index,version=e.Version};
+        private static EntityRef Ref(Entity e,WorldRef world)=>e==Entity.Null||e.Index<=0||e.Version<=0?null:new EntityRef{world=world,index=e.Index,version=e.Version};
         internal ConstructionEntity ReadEntity(EntityRef reference)
         {
             var result=new ConstructionEntity{entity=reference};
@@ -29,8 +30,9 @@ namespace CS2MCP
             if(!network&&!building){result.unavailableReason="unsupportedEntityKind";return result;}
             result.kind=network?"networkEdge":"building";
             if(manager.HasComponent<Owner>(entity)) {
-                result.owner=Ref(manager.GetComponentData<Owner>(entity).m_Owner,reference.world);
-                result.ownerReason=result.owner==null?"nullOwner":null;
+                Entity owner=manager.GetComponentData<Owner>(entity).m_Owner;
+                result.owner=Ref(owner,reference.world);
+                result.ownerReason=result.owner==null?(owner==Entity.Null?"nullOwner":"invalidNativeOwner"):null;
             }
             Entity prefab=Entity.Null;
             if(manager.HasComponent<PrefabRef>(entity)) {
@@ -44,6 +46,49 @@ namespace CS2MCP
             if(network)ReadNetwork(entity,prefab,reference.world,result);
             if(building)ReadRootBounds(entity,prefab,result);
             return result;
+        }
+        string State(Entity entity)
+        {
+            if(!manager.Exists(entity))return "missingDeletedOrRecycled";
+            if(manager.HasComponent<Deleted>(entity))return "deleted";
+            if(manager.HasComponent<Temp>(entity))return "temporary";
+            return null;
+        }
+        public ConstructionRelationSource[] Headers(EntityRef root)
+        {
+            Entity entity=new Entity{Index=root.index,Version=root.version};
+            var headers=ConstructionRelationships.EmptyHeaders(root,State(entity));
+            if(headers[0].present==null)return headers;
+            // Presence/counts only. Do not read scalar values or buffer elements
+            // until the core reserves every requested source against the global cap.
+            void Count(int index,bool present,int count) {
+                if(!present)return;
+                headers[index].present=true;headers[index].observedCount=count;headers[index].reason=null;
+            }
+            Count(0,manager.HasComponent<Owner>(entity),1);
+            Count(1,manager.HasComponent<Game.Objects.Attached>(entity),1);
+            if(manager.HasBuffer<Game.Objects.SubObject>(entity))Count(2,true,manager.GetBuffer<Game.Objects.SubObject>(entity,true).Length);
+            if(manager.HasBuffer<Game.Buildings.InstalledUpgrade>(entity))Count(3,true,manager.GetBuffer<Game.Buildings.InstalledUpgrade>(entity,true).Length);
+            if(manager.HasBuffer<Game.Net.SubNet>(entity))Count(4,true,manager.GetBuffer<Game.Net.SubNet>(entity,true).Length);
+            if(manager.HasBuffer<Game.Areas.SubArea>(entity))Count(5,true,manager.GetBuffer<Game.Areas.SubArea>(entity,true).Length);
+            return headers;
+        }
+        public ConstructionReference Slot(EntityRef root,string kind,int slot)
+        {
+            Entity entity=new Entity{Index=root.index,Version=root.version},target;
+            switch(kind) {
+                case "owner":target=manager.GetComponentData<Owner>(entity).m_Owner;break;
+                case "attached":target=manager.GetComponentData<Game.Objects.Attached>(entity).m_Parent;break;
+                case "subObject":target=manager.GetBuffer<Game.Objects.SubObject>(entity,true)[slot].m_SubObject;break;
+                case "installedUpgrade":target=manager.GetBuffer<Game.Buildings.InstalledUpgrade>(entity,true)[slot].m_Upgrade;break;
+                case "subNet":target=manager.GetBuffer<Game.Net.SubNet>(entity,true)[slot].m_SubNet;break;
+                case "subArea":target=manager.GetBuffer<Game.Areas.SubArea>(entity,true)[slot].m_Area;break;
+                default:throw CommandJson.Invalid("unsupported relationship source");
+            }
+            if(target==Entity.Null)return new ConstructionReference{reason="nullReference"};
+            if(target.Index<=0||target.Version<=0)return new ConstructionReference{
+                reason="invalidNativeReference",rawIndex=target.Index,rawVersion=target.Version};
+            return new ConstructionReference{target=Ref(target,root.world)};
         }
         private void ReadNetwork(Entity entity,Entity prefab,WorldRef world,ConstructionEntity result)
         {
@@ -63,7 +108,10 @@ namespace CS2MCP
                 else geometry.widthReason="invalidNativeWidth";
             }
             if(prefab!=Entity.Null&&manager.HasComponent<NetData>(prefab)) {
-                var data=manager.GetComponentData<NetData>(prefab);geometry.requiredLayers=data.m_RequiredLayers.ToString();geometry.connectLayers=data.m_ConnectLayers.ToString();geometry.layersReason=null;
+                var data=manager.GetComponentData<NetData>(prefab);
+                string required=data.m_RequiredLayers.ToString(),connect=data.m_ConnectLayers.ToString();
+                if(required.Length<=128&&connect.Length<=128){geometry.requiredLayers=required;geometry.connectLayers=connect;geometry.layersReason=null;}
+                else geometry.layersReason="nativeLayerNameExceedsBound";
             }
             result.network=geometry;result.networkReason=null;
         }

@@ -2,12 +2,18 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {startFakeBridge,startOfflineMcp} from './fake-bridge.mjs';
+import {startOfflineMcp} from './fake-bridge.mjs';
 import {createBridgeClient} from '../dist/bridge-client.js';
+import {createServer} from 'node:http';
+import {once} from 'node:events';
+import {readFileSync} from 'node:fs';
+const wire=JSON.parse(readFileSync(new URL('./fixtures/construction-relationships-wire.json',import.meta.url),'utf8'));
+function baseline(world,entities){const value=structuredClone(wire.baseline);value.world=world;value.data.requestedEntities=entities;value.data.entities=entities.map(entity=>({...structuredClone(wire.baseline.data.entities[0]),entity}));return value;}
+async function startInventoryBridge(){const requests=[];const server=createServer((req,res)=>{const u=new URL(req.url,'http://test');const query=Object.fromEntries(u.searchParams);requests.push({path:u.pathname,query,rawQuery:u.search.slice(1),method:req.method});res.end(JSON.stringify(baseline({bootId:query.bootId,epoch:Number(query.epoch)},query.entities.split(',').map(ref=>{const [index,version]=ref.split(':').map(Number);return {world:{bootId:query.bootId,epoch:Number(query.epoch)},index,version};}))));});server.listen(0,'127.0.0.1');await once(server,'listening');return {url:`http://127.0.0.1:${server.address().port}`,requests,close:async()=>{server.closeAllConnections();server.close();await once(server,'close');}};}
 const world={bootId:'boot + /?',epoch:7};
 const entity=(index=1)=>({world,index,version:2});
 test('actual MCP registration encodes observed world and 32 explicit entity refs through typed inventory transport',async()=>{
- const fake=await startFakeBridge();let mcp;
+ const fake=await startInventoryBridge();let mcp;
  try {
   mcp=await startOfflineMcp(fake.url);
   const {tools}=await mcp.client.listTools();const tool=tools.find(t=>t.name==='cs2_construction_inventory');assert.ok(tool,'bounded inventory registration missing');
@@ -23,7 +29,7 @@ test('actual MCP registration encodes observed world and 32 explicit entity refs
  }finally{await mcp?.close();await fake.close();}
 });
 test('typed inventory client validates independently before fetching and bounds encoded query',async()=>{
- let calls=0,url;const bridge=createBridgeClient({baseUrl:'http://127.0.0.1:1234',fetchImpl:async u=>{calls++;url=u;return new Response('{}');}});
+ let calls=0,url;const bridge=createBridgeClient({baseUrl:'http://127.0.0.1:1234',fetchImpl:async u=>{calls++;url=u;return Response.json(baseline(world,[entity()]));}});
  assert.equal(typeof bridge.constructionInventory,'function','typed inventory transport missing');
  await bridge.constructionInventory({world,entities:[entity()]});assert.equal(calls,1);assert.match(url,/bootId=boot%20%2B%20%2F%3F/);
  for(const patch of [{entities:[]},{entities:[{...entity(),index:NaN}]},{entities:[{...entity(),version:Infinity}]},{world:{...world,bootId:'a'.repeat(129)}},{entities:[entity(),{...entity(),version:3}]},{spatial:{}}])

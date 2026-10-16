@@ -308,7 +308,7 @@ GET /v2/construction/inventory?bootId=example-boot&epoch=7&entities=123%3A4
 
 Multiple refs use a percent-encoded comma-separated `index:version` list.
 The typed client uses the shared query encoder, preserving spaces and literal
-plus signs. Only `bootId`, `epoch`, and `entities` query keys are accepted;
+plus signs. Only `bootId`, `epoch`, `entities` and optional `relationships=directDepth1` query keys are accepted;
 duplicate decoded keys, malformed escapes, unknown keys, spatial/cursor/family
 expansion/limit options and bodies reject. Decoded boot ID is 1–128 characters
 and nonblank; epoch is an integer from 0 through 9007199254740991. Index/version
@@ -335,7 +335,40 @@ measurements are null with reasons, never zero. `data.scope="explicitEntities"`,
 `support="partial"`, `worldBounds=null`, `worldBoundsReason="notMeasured"`,
 `nextCursor=null`, `truncated=false`, `nativeVerification="CON-01:notRun"`.
 
-The capability is read-only / `degraded` (`explicitEntitiesOnlyRootGeometryNativeNotRun`);
+Optional `relationships:"directDepth1"` on the same MCP request (or GET flag)
+adds fixed direct instance sources and related geometry. The fixed O7
+`construction.inventory` arguments accept the identical flag and producer. It
+reads Owner, Attached parent, SubObject, InstalledUpgrade, SubNet and SubArea;
+these labels name stored references, not certified platform/family/connector roles.
+Omit the flag for the original root-only native read pattern; the additive
+`relationships` result is then null.
+
+The expansion first checks all root liveness/source headers, reserving at most
+128 total scalar/buffer slots before any root geometry or relationship value is
+read. Exceeding this global count refuses with `RESULT_TOO_LARGE`, without a
+prefix or additional-target read. Null and duplicate slots consume budget and
+remain visible. Related targets are deduplicated by full world/index/version,
+reusing explicit roots and reading at most128 additional targets. They provide
+existing building root OBB/network cubic facts or explicit unsupported/missing
+reasons. Target buffers and owner chains are never recursively traversed.
+
+`relationships.sources` contains six ordered summaries per root; presence,
+observedCount, visitedCount and coverageComplete describe source slots only.
+Missing sources have unknown count; present empty buffers have complete zero
+slot coverage. Links retain source/kind/slot and nullable target, unavailable
+reason/raw malformed pointer evidence, and targetIndex into the compact target
+table. `coverage="directSourceSlotsOnly"` never means complete facility coverage.
+Expanded unknown installed-upgrade state remains null with
+`fullUpgradeDescriptionNotMeasured`; direct upgrade links are separate evidence.
+
+Direct HTTP and O7 items independently cap actual finite UTF8 JSON at256KiB;
+O7 groups retain4MiB. The typed direct and O7 clients validate original identity,
+ordered cardinality, geometry, source counts and link indices before returning.
+The direct MCP tool separately caps its escaped text wrapper at256KiB. Oversize
+complete results refuse rather than omit links. A maximum-count request need not
+fit worst-case strings; select fewer roots. No endpoint or tool was added.
+
+The capability is read-only / `degraded` (`explicitEntitiesAndDirectRelationshipsNativeNotRun`);
 its native support is `unverified`. Full C1 and native G1/G2/CON-01 remain open.
 See [supported fields and deferred evidence](native/construction-gates.md).
 Existing `PrefabInfo` and `RoadGraph` payloads and midpoint-filter defaults retain

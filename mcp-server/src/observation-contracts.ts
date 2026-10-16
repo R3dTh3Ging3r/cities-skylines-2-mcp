@@ -1,3 +1,4 @@
+import {parseConstructionObservation} from "./construction-contracts.js";
 import {metricReadRequestSchema,parseMetricBatchObservation} from "./diagnostic-metric-contracts.js";
 import {transitRequestSchema,parseTransitObservation} from "./features/transit-contracts.js";
 import { z } from "zod";
@@ -44,6 +45,7 @@ export function parseObservationResult(value: unknown, request: ObservationBatch
         const observation = item.observation;
         if (!observation)
             continue;
+        if(expected.name === "construction.inventory") parseConstructionObservation(observation,expected.args);
         if(expected.name === "metrics.read") parseMetricBatchObservation(observation,expected.args);
         if(expected.name === "transit.selectedLine") parseTransitObservation(observation,expected.args);
         if (!same(observation.world, result.world) || observation.startFrame === null || observation.endFrame === null || result.startFrame === null ||

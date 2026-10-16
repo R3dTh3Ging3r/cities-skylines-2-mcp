@@ -30,7 +30,8 @@ namespace CS2MCP.Core
         }
         public static ConstructionQuery Parse(IDictionary<string,string> query)
         {
-            if (query == null || query.Count != 3 || query.Keys.Any(k=>k!="bootId" && k!="epoch" && k!="entities") ||
+            if (query == null || (query.Count != 3 && query.Count != 4) || query.Keys.Any(k=>k!="bootId" && k!="epoch" && k!="entities" && k!="relationships") ||
+                (query.TryGetValue("relationships",out string mode) && mode!="directDepth1") ||
                 !query.TryGetValue("bootId",out string boot) || string.IsNullOrWhiteSpace(boot) || boot.Length>128 ||
                 !query.TryGetValue("epoch",out string epochText) || !long.TryParse(epochText,NumberStyles.None,CultureInfo.InvariantCulture,out long epoch) || epoch>MaxSafeEpoch ||
                 !query.TryGetValue("entities",out string raw) || string.IsNullOrEmpty(raw) || raw.Length>704)
@@ -45,25 +46,40 @@ namespace CS2MCP.Core
                     throw CommandJson.Invalid("invalid or duplicate explicit entity index/version");
                 entities[i]=new EntityRef{world=world,index=index,version=version};
             }
-            return new ConstructionQuery{world=world,entities=entities};
+            return new ConstructionQuery{world=world,entities=entities,relationships=query.TryGetValue("relationships",out string selected)?selected:null};
         }
         public static Observation<ConstructionSnapshot> Read(IDictionary<string,string> query,WorldIdentity worlds,
-            Func<long> frame,Func<EntityRef,ConstructionEntity> readEntity)
+            Func<long> frame,Func<EntityRef,ConstructionEntity> readEntity,IConstructionRelationshipSource relationships=null)
         {
             ConstructionQuery request=Parse(query);
             worlds.Validate(request.world);
             var observation=new Observation<ConstructionSnapshot>{world=request.world,startFrame=frame()};
+            var headers=request.relationships==null?null:ConstructionRelationships.Reserve(request,worlds,relationships);
             var entities=new ConstructionEntity[request.entities.Length];
             for(int i=0;i<entities.Length;i++) {
                 worlds.Validate(request.world);
                 entities[i]=readEntity(request.entities[i]);
                 worlds.Validate(request.world);
             }
+            ConstructionRelationshipSnapshot expanded=null;
+            if(request.relationships!=null) {
+                expanded=ConstructionRelationships.Read(request,entities,worlds,readEntity,relationships,headers);
+                foreach(var entity in entities) {
+                    entity.installedUpgradesReason="fullUpgradeDescriptionNotMeasured";
+                    var ownerSource=expanded.sources.First(source=>ConstructionRelationships.Same(source.source,entity.entity)&&source.kind=="owner");
+                    if(ownerSource.present==true) {
+                        var ownerLink=expanded.links.First(link=>ConstructionRelationships.Same(link.source,entity.entity)&&link.kind=="owner");
+                        entity.owner=ownerLink.target;
+                        entity.ownerReason=entity.owner!=null?null:ownerLink.reason=="nullReference"?"nullOwner":"invalidNativeOwner";
+                    } else if(ownerSource.present==null)entity.ownerReason=ownerSource.reason;
+                }
+            }
             observation.endFrame=frame();observation.sampledAtUtc=DateTime.UtcNow;
             worlds.Validate(request.world);
-            observation.data=new ConstructionSnapshot{requestedEntities=request.entities,entities=entities};
+            observation.data=new ConstructionSnapshot{requestedEntities=request.entities,entities=entities,relationships=expanded};
             observation.freshness="current";
             var warnings=new List<string>{"partialExplicitEntityInventory","rootGeometryOnly","nativeConstructionFixtureNotRun"};
+            if(expanded!=null)warnings.Add("directRelationshipsNotCompleteFacilityGeometry");
             if(observation.startFrame!=observation.endFrame)warnings.Add("multiFrameReadNotAtomic");
             observation.warnings=warnings.ToArray();
             return observation;

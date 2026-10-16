@@ -125,8 +125,8 @@ namespace CS2MCP.Core
                 MetricReadRequest metrics = null;
                 if (key == "construction.inventory")
                 {
-                    Keys(map, "world", "entities");
-                    if (map.Count != 2 || !map.TryGetValue("world", out var entityWorld) || !map.TryGetValue("entities", out var entities) || !(entities is List<object> refs) || refs.Count < 1 || refs.Count > 32)
+                    Keys(map, "world", "entities", "relationships");
+                    if ((map.Count != 2 && map.Count != 3) || !map.TryGetValue("world", out var entityWorld) || !map.TryGetValue("entities", out var entities) || !(entities is List<object> refs) || refs.Count < 1 || refs.Count > 32)
                         throw CommandJson.Invalid("invalid inventory arguments");
                     var observed = World(entityWorld);
                     var encoded = new List<string>();
@@ -139,6 +139,10 @@ namespace CS2MCP.Core
                         encoded.Add(Integer(index).ToString(CultureInfo.InvariantCulture) + ":" + Integer(version).ToString(CultureInfo.InvariantCulture));
                     }
                     compact = new Dictionary<string, string> { { "bootId", observed.bootId }, { "epoch", observed.epoch.ToString(CultureInfo.InvariantCulture) }, { "entities", string.Join(",", encoded) } };
+                    if(map.TryGetValue("relationships",out var relationshipMode)) {
+                        if(!(relationshipMode is string selected)||selected!="directDepth1")throw CommandJson.Invalid("invalid relationship mode");
+                        compact.Add("relationships",selected);
+                    }
                     ConstructionInventory.Parse(compact);
                 }
                 else if (key == "metrics.read")

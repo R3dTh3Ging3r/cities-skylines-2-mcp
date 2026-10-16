@@ -15,6 +15,11 @@ namespace CS2MCP.CoreTests
         static void Reject(Dictionary<string,string> query) => Program.Throws<OperationException>(() => ConstructionInventory.Parse(query));
         public static void Run()
         {
+            ConstructionRelationshipTests.Run();
+            Program.Check("directDepth1 literal passes actual inventory decode and parsing", () => {
+                var query=ConstructionInventory.DecodeQuery("bootId=boot&epoch=1&entities=1:1&relationships=directDepth1");
+                Program.Equal(1,ConstructionInventory.Parse(query).entities.Length);
+            });
             Program.Check("bounded explicit query accepts 1 and 32 exact versioned entities", () => {
                 foreach(int n in new[]{1,32}) { var q=ConstructionInventory.Parse(Query(n)); Program.Equal(n,q.entities.Length); Program.Equal(1L,q.world.epoch); }
             });
@@ -95,7 +100,7 @@ namespace CS2MCP.CoreTests
             Program.Check("inventory manifest reports a partial read and retains disabled operations", () => {
                 var manifest=EndpointCatalog.CreateManifest(new BuildIdentity("test","test",null,null),new RuntimeSnapshotStore().Read(DateTime.UtcNow));
                 var endpoint=EndpointCatalog.All.Single(e=>e.capability=="cs2_construction_inventory");Program.Equal("read",endpoint.access);
-                var support=manifest.capabilities.Single(c=>c.name==endpoint.capability);Program.Equal("degraded",support.support);Program.Equal("explicitEntitiesOnlyRootGeometryNativeNotRun",support.reason);
+                var support=manifest.capabilities.Single(c=>c.name==endpoint.capability);Program.Equal("degraded",support.support);Program.Equal("explicitEntitiesAndDirectRelationshipsNativeNotRun",support.reason);
                 Program.Equal("unverified",manifest.nativeSupport.Single(c=>c.name==endpoint.capability).support);
                 Program.Equal(false,manifest.operationProtocol.dispatchAvailable);
             });
