@@ -57,7 +57,7 @@ test("offline capability tool preserves distinct versions and reports actual reg
     mcp = await startOfflineMcp(`http://127.0.0.1:${server.address().port}`);
     const { tools } = await mcp.client.listTools();
     assert.ok(tools.some((tool) => tool.name === "cs2_capabilities"), "additive capability tool is missing");
-    assert.equal(tools.length, 75);
+    assert.equal(tools.length, 79);
     assert.equal(requests.length, 0);
     for (const args of [{}, { clientTools: ["cs2_ping"] }]) {
       const result = await mcp.client.callTool({ name: "cs2_capabilities", arguments: args });
@@ -74,6 +74,9 @@ test("offline capability tool preserves distinct versions and reports actual reg
       assert.equal(payload.exposure.capabilities[1].registered, false);
       assert.equal(payload.exposure.capabilities[0].clientExposure, args.clientTools ? "notExposed" : "unknown");
       assert.equal(payload.exposure.capabilities[0].support, "supported");
+      assert.equal(payload.clientOnlyCapabilities.length, 4);
+      assert.ok(payload.clientOnlyCapabilities.every(item => item.registered && item.clientExposure === (args.clientTools ? "notExposed" : "unknown")));
+      assert.ok(payload.clientOnlyCapabilities.every(item => !payload.capabilities.some(native => native.name === item.name)));
       assert.equal(payload.capabilities[0].reason, null);
       assert.equal(payload.exposure.capabilities[0].reason, null);
     }

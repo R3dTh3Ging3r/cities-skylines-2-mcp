@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+import { ObservationHistory } from "./observation-history.js";
+import { registerHistoryTools, historyToolNames } from "./observation-history-tools.js";
+import { bindObservationHistoryLifecycle } from "./observation-history-lifecycle.js";
 import {registerDiagnosticMetricTools} from "./diagnostic-metrics.js";
 import {registerTransitTools} from "./features/transit.js";
 /**
@@ -43,6 +46,8 @@ registerConstructionTools(registerTool, bridgeClient);
 registerObservationTools(registerTool,bridgeClient);
 registerTransitTools(registerTool,bridgeClient);
 registerDiagnosticMetricTools(registerTool,bridgeClient);
+const observationHistory = new ObservationHistory(bridgeClient);
+registerHistoryTools(registerTool, observationHistory);
 
 registerTool(
   "cs2_capabilities",
@@ -56,7 +61,7 @@ registerTool(
   async ({ clientTools }) => {
     try {
       const manifest = await bridgeJson("/capabilities", undefined, 3_000) as CapabilityManifest;
-      return jsonResult(withMcpExposure(manifest, MCP_VERSION, registeredTools, clientTools));
+      return jsonResult(withMcpExposure(manifest, MCP_VERSION, registeredTools, clientTools, historyToolNames));
     } catch (err) {
       return errorResult(err);
     }
@@ -1662,5 +1667,13 @@ registerTool(
 );
 
 const transport = new StdioServerTransport();
-await server.connect(transport);
+const historyLifecycle = bindObservationHistoryLifecycle({server, transport, history: observationHistory,
+  stdin: process.stdin, stdout: process.stdout, process,
+  reportError: error => console.error("cs2-mcp history lifecycle:", error)});
+try {
+  await server.connect(transport);
+} catch (error) {
+  await historyLifecycle.shutdown();
+  throw error;
+}
 console.error(`cs2-mcp 0.8.0 running on stdio (bridge: ${BRIDGE_URL})`);

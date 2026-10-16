@@ -147,6 +147,20 @@ and fixed member metadata are required; the direct metric read returns the
 dictionary facade of the same producer. Source sampling is sequential and never
 atomic. Refresh timestamps, native clock conversion, panel parity and performance
 remain unverified. Selected-line fault counts require complete per-slot evidence;
-unknown distance does not become zero invalid segments. No collected history,
-comparison tools, automatic score, simulation change or new writer capability
-exists in this M4 slice. M5 remains separate work after review.
+unknown distance does not become zero invalid segments. M4 itself adds no automatic score, simulation change or new writer capability.
+
+The bounded [M5 collection workflow](observations.md#collected-diagnostic-history--bounded-m5-slice)
+now uses those same metric batches. Call `cs2_collect_observations` with explicit
+world/queries/scope/cohort and an interval of at least 1000ms; retain the returned
+process-local ID. Collect two or more observations, call
+`cs2_stop_observation_collection`, then page `cs2_read_observation_history`.
+Repeat for a second history and pass explicit retained inclusive sequence ranges,
+the exact cohort and raw-normalized-time policy to `cs2_compare_observations`.
+Stop returns a bounded summary, not a full history. Eight histories remain
+retained including stopped histories; there is no deletion or persistence.
+Comparison requires compatible source/clock/member evidence and never turns a
+new empty replacement line into improvement. All v1 improvement fields are null;
+large complete comparisons explicitly require narrower ranges. Disconnect/EOF
+and shutdown abort pending collection reads without affecting simulation or
+writer operations. Native history, calendar conversion, source refresh and
+performance remain unverified.

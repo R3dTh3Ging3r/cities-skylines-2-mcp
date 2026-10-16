@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "npm run build && node --test test/encoding.test.mjs test/mcp-smoke.test.mjs test/errors.test.mjs test/capabilities.test.mjs test/metrics.test.mjs test/setters.test.mjs test/evidence.test.mjs test/native-runner.test.mjs test/road-curve.test.mjs test/operations.test.mjs test/construction.test.mjs test/observations.test.mjs test/transit-contracts.test.mjs test/diagnostic-metrics.test.mjs"
+    "test": "npm run build && node --test test/encoding.test.mjs test/mcp-smoke.test.mjs test/errors.test.mjs test/capabilities.test.mjs test/metrics.test.mjs test/setters.test.mjs test/evidence.test.mjs test/native-runner.test.mjs test/road-curve.test.mjs test/operations.test.mjs test/construction.test.mjs test/observations.test.mjs test/transit-contracts.test.mjs test/diagnostic-metrics.test.mjs test/history-catalog-cancel.test.mjs test/observation-history.test.mjs test/observation-history-lifecycle.test.mjs test/observation-history-tools.test.mjs test/observation-comparison.test.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",

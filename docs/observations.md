@@ -83,3 +83,83 @@ implementations (household/workplace/service/budget internals) are absent here:
 hidden synchronization/traversal latency and panel parity remain unverified.
 Actual game-thread/lifecycle timing and whole-candidate compilation require the
 reviewed SHA on PC with `SkipDeploy=true`; G1–G4/native fixtures remain `notRun`.
+
+## Collected diagnostic history — bounded M5 slice
+
+The MCP process can collect the fixed M4 `metrics.read` entry; it adds no native
+history endpoint or gameplay authority. `cs2_collect_observations` takes a strict
+`{world,queries,scope,cohort,maxSamples,intervalMs}`. Copy the ready observed world,
+use the catalog's literal keys with empty parameter maps, and declare either
+`scope={kind:"city"}` with `cohort={kind:"city",world,members:[]}`, or one full
+selected-line scope with `cohort={kind:"fixedSelectedLine",world,members:[line]}`.
+The line world/index/version must agree everywhere. City output's `line:null` is
+an output field; omit it when constructing a new input scope.
+
+Admission snapshots the authoritative catalog and freezes the selected definitions
+and request. Collection starts only on explicit request. Eight retained histories
+include stopped histories and pending admissions; a ninth gets `SERIES_CAPACITY`.
+IDs and samples last only for this process. There is no delete, external append,
+export, persistence, auto-restart or replacement-world API.
+
+One monotonic scheduler owns at most one poll per series and two total network
+requests, including admission catalog requests. It skips missed deadlines with
+explicit gaps rather than issuing catch-up bursts. UTC labels do not schedule
+polls. Stop, disconnect and shutdown abort real HTTP reads and fence late replies;
+a cancelled read retains its network permit until its original promise settles.
+World changes and backwards observed frames stop that history without adopting a
+new world. Repeated paused frames can be retained, but establish no simulated
+duration. Native getters remain nonpreemptible and their latency unverified.
+
+| Retained or returned surface | Bound |
+| --- | --- |
+| Samples | Requested 1–512;128KiB serialized UTF8 per complete sample |
+| History | 1MiB including spec, definitions, samples and gap metadata;128KiB reserved for metadata |
+| All histories | 8MiB total; at most eight retained/pending histories |
+| Gaps | 64 detailed entries/history, adjacent equal reasons coalesced; aged detail summarized by fixed reason/count/sequence bounds |
+| Tool result | 256KiB including the actual MCP text/error wrapper and escaping, for collect, stop, read and compare |
+| Read page | 1–128 samples within the result byte cap |
+
+These are serialized-byte limits, not exact JavaScript heap measurements. The
+underlying O7 client separately caps streamed responses at4MiB. Oversized samples
+become gaps. Retention evicts whole oldest samples and reports their lost coverage;
+unavailable values remain null. Source frames, freshness, warnings, unknown refresh
+timestamps, exact member refs and producer-owned structural evidence are retained.
+
+`cs2_stop_observation_collection({id})` is idempotent and returns status, counts,
+retained span and gap summary; it does not dump the history. Read with
+`cs2_read_observation_history({id,limit:20})`. `afterSequence` is exclusive. If the
+page returns non-null `nextSequence`, continue with
+`afterSequence: nextSequence-1`; this works across gaps and byte-limited pages.
+A page that cannot hold its first sample returns `RESULT_TOO_LARGE`.
+
+`cs2_compare_observations` takes two explicit inclusive retained ranges:
+`baseline/current={id,fromSequence,toSequence}`, the original `cohort`, and
+`policy={mode:"rawNormalizedTime",phaseTolerance:0.001,maxObservedPhaseStep:0.1,
+frameDurationTolerance:0,maxSourceSpanFrames:8}`. Tolerances describe observed raw
+phase/frame evidence, not hours. Each range needs at least two samples. Bounds
+that were never observed or are no longer retained, crossed gaps, missing or
+paused/wrapping/backwards clocks and incompatible definitions/cohorts refuse a
+comparable verdict. Ranges are never silently clamped to retention.
+
+Different absolute dates/frames between windows are allowed. Every point must
+have a unique ordered phase match, compatible positive frame duration and bounded
+original source span. The comparison preserves the producer's explicit clock
+`sourceObservationId`, including State fallback; it does not guess from overview
+availability. Matching structural fingerprints establish only equality of the
+sampled structure. Missing/incomplete/changed or recycled line members cannot
+produce gain for the original cohort, and caller reconciliation receipts reject.
+
+Results contain qualified paired values/deltas and first-to-last stock/count
+changes. Every `improvement` is null. There are no irregular unweighted averages,
+interpolation, rate integration or zero filling. A complete comparison exceeding
+256KiB gets `RESULT_TOO_LARGE`; request narrower sequence ranges. No pair is
+silently dropped. `rawNormalizedOnly` and `nativeCalendarParityNotRun` remain
+explicit: sparse observations cannot certify continuous coverage, no unseen
+pause/wrap, native hours, native source refresh or service performance.
+
+The four history tools are reported separately as `clientOnlyCapabilities` by
+`cs2_capabilities`; they are not native endpoint descriptors. Actual registration
+and supplied client visibility remain separate evidence. The MCP stdio owner
+handles EOF, stream failure, SDK close and SIGINT/SIGTERM through normal SDK close,
+removing its listeners/timer and preserving earlier callbacks. No writer timeout
+or simulation timer semantics change.

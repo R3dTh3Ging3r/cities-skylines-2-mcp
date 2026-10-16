@@ -1,6 +1,6 @@
 # Bridge API
 
-The current source candidate has **71 endpoint descriptors and 71 registered MCP
+The current source candidate has **75 native endpoint descriptors and 79 registered MCP
 tools**, verified by the catalog and offline MCP discovery tests. The legacy
 manifest retains `protocolVersion:1` / `schemaVersion:1` and advertises managed
 `operationProtocol.version:2`. Strict HTTP method/framing checks are implemented;
@@ -23,10 +23,14 @@ becomes nullable as documented below.
 `nativeSupport`, `degradedReasons`, `nativeValidation` `operationProtocol` and `observationProtocol`.
 `EndpointCatalog.All` in
 [EndpointCatalog.cs](../CS2MCP.Bridge/EndpointCatalog.cs) is the authoritative
-classification of the current 71 endpoint descriptors. There are 71 registered
-MCP tools, including discovery, three operation tools, partial C1 inspection and
-bounded observation groups.
-Each endpoint names its corresponding MCP capability.
+classification of the current 75 native endpoint descriptors. There are 79 registered
+MCP tools: the native endpoint consumers plus four bounded process-local history
+tools. These include discovery, three operation tools, partial C1 inspection,
+selected transit, typed diagnostic metrics and bounded observation groups.
+Each native endpoint names its corresponding MCP capability. The four
+[M5 collection/comparison tools](observations.md#collected-diagnostic-history--bounded-m5-slice)
+appear separately as MCP `clientOnlyCapabilities`; they add no native endpoint or
+writer authority.
 
 `capabilities[].support: supported` means the bridge implements that endpoint.
 It does not establish a loaded city, native correctness, or client visibility.
