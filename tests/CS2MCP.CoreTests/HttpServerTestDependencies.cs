@@ -17,6 +17,7 @@ namespace CS2MCP
     }
     public sealed class BridgeResponse
     {
+        public WorldRef CaptureWorld; public bool? CaptureWorldReady;
         public int Status=200;public string ContentType="application/json";public byte[] Body=new byte[0];
         public static BridgeResponse Json(object payload){return new BridgeResponse();}
         public static BridgeResponse Error(int status,string message,string code,bool retryable=false,string outcome="notApplied",string operationId=null){return new BridgeResponse{Status=status};}

@@ -10,7 +10,7 @@ import "dotenv/config";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { createBridgeClient } from "./bridge-client.js";
+import { BridgeClientError, createBridgeClient } from "./bridge-client.js";
 import { errorResult, jsonResult } from "./tool-results.js";
 import { registerConstructionTools } from "./construction.js";
 import { registerOperationTools } from "./operations.js";
@@ -186,10 +186,23 @@ registerTool(
     try {
       const res = await bridgeFetch("/screenshot", new URLSearchParams({ width: String(w) }), 30_000);
       const buffer = Buffer.from(await res.arrayBuffer());
+      const bootId = res.headers.get("X-CS2MCP-Boot-Id");
+      const epoch = res.headers.get("X-CS2MCP-Epoch");
+      const ready = res.headers.get("X-CS2MCP-World-Ready");
+      let captureMetadata;
+      if (bootId !== null || epoch !== null || ready !== null) {
+        if (!bootId || bootId.length > 128 || !epoch || !/^(0|[1-9][0-9]*)$/.test(epoch) ||
+            !Number.isSafeInteger(Number(epoch)) || !["true", "false"].includes(ready ?? "")) {
+          throw new BridgeClientError({code:"PROTOCOL_ERROR",message:"screenshot returned invalid capture-world metadata",
+            retryable:false,outcome:"notApplied"});
+        }
+        captureMetadata = {captureWorld:{bootId,epoch:Number(epoch)},captureWorldReady:ready === "true"};
+      }
       return {
         content: [
           { type: "image" as const, data: buffer.toString("base64"), mimeType: "image/png" },
         ],
+        ...(captureMetadata ? {structuredContent:captureMetadata} : {}),
       };
     } catch (err) {
       return errorResult(err);

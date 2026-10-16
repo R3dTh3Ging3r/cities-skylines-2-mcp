@@ -44,11 +44,12 @@ namespace CS2MCP
         internal uint CurrentFrame => m_SimulationSystem.frameIndex;
 
         /// <summary>Frame at which the simulation auto-pauses (0 = disabled).</summary>
-        public uint AutoPauseTargetFrame { get; private set; }
+        private readonly WorldBoundPause m_AutoPause = new WorldBoundPause(Mod.Worlds);
+        public uint AutoPauseTargetFrame => m_AutoPause.TargetFrame;
 
-        public void SetAutoPause(uint targetFrame)
+        public void SetAutoPause(uint targetFrame, WorldRef originalWorld)
         {
-            AutoPauseTargetFrame = targetFrame;
+            m_AutoPause.Arm(originalWorld, targetFrame);
         }
 
         [Preserve]
@@ -84,12 +85,14 @@ namespace CS2MCP
 
         private void BeginWorldLoad()
         {
+            m_AutoPause.Clear();
             m_LoadObserver.BeginLoad();
             ResetOperationRegistry();
         }
 
         private void ResetOperationRegistry()
         {
+            m_AutoPause.Clear();
             // Completion/lease producers are deliberately unavailable; no descriptor enables dispatch.
             Volatile.Write(ref m_Operations, new OperationRegistry(Mod.Worlds, _ => new BridgeErrorData(
                 ErrorCodes.Unsupported, "native operation completion/lease guards are not implemented", httpStatus: 501)));
@@ -136,12 +139,10 @@ namespace CS2MCP
             {
                 SimulationHasTickedSinceLoad = true;
             }
-            if (AutoPauseTargetFrame != 0 && m_SimulationSystem.frameIndex >= AutoPauseTargetFrame)
-            {
-                m_SimulationSystem.selectedSpeed = 0f;
-                AutoPauseTargetFrame = 0;
-                Mod.Log.Info("timed run finished, simulation auto-paused");
-            }
+            if (!Mod.Worlds.IsReady) m_AutoPause.Clear();
+            if (m_AutoPause.Poll(m_SimulationSystem.frameIndex, () => m_SimulationSystem.selectedSpeed = 0f, out var pauseError))
+                Mod.Log.Info("timed run reached its target, simulation pause requested");
+            else if (pauseError != null) Mod.Log.Warn($"timed-run pause was not completed: {pauseError.message}");
             var readBudget = Stopwatch.StartNew();
             int reads = 0; bool writerStarted = false;
             while (reads < 8 && readBudget.ElapsedMilliseconds < 2 && m_Pending.TryPeek(out BridgeRequest next))
@@ -181,6 +182,7 @@ namespace CS2MCP
 
         public void StopServer()
         {
+            m_AutoPause.Clear();
             m_Server?.Stop();
             m_Server = null;
         }
@@ -208,6 +210,7 @@ namespace CS2MCP
         [Preserve]
         protected override void OnDestroy()
         {
+            m_AutoPause.Clear();
             Mod.Worlds.MarkUnavailable();
             StopServer();
             if (Instance == this)

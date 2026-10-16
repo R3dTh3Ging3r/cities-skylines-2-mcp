@@ -7,6 +7,7 @@ using Game.Tools;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using CS2MCP.Core;
 
 namespace CS2MCP
 {
@@ -166,6 +167,7 @@ namespace CS2MCP
 
         private BridgeResponse BuyMapTiles(BridgeRequest request)
         {
+            var refresh = new DeferredWorldWork(Mod.Worlds, request.IngressWorld, true, "partial", request.OperationId);
             if (!TryGetCity(out Entity city, out BridgeResponse error))
             {
                 return error;
@@ -296,7 +298,7 @@ namespace CS2MCP
 
             // UnlockTile flagged the tiles from this (UI) phase, too late for this
             // frame's border redraw; re-flag them at the start of the next frame.
-            World.GetOrCreateSystemManaged<BridgeMapTileRefreshSystem>().Enqueue(boughtTiles);
+            World.GetOrCreateSystemManaged<BridgeMapTileRefreshSystem>().Enqueue(boughtTiles, refresh);
 
             return BridgeResponse.Json(new
             {

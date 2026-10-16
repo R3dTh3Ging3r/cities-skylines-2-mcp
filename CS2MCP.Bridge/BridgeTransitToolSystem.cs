@@ -15,9 +15,9 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine.Scripting;
+using CS2MCP.Core;
 using AgeMask = Game.Tools.AgeMask;
 using Transform = Game.Objects.Transform;
-using CS2MCP.Core;
 
 namespace CS2MCP
 {
@@ -81,6 +81,7 @@ namespace CS2MCP
         // Set by the Apply/WaitForPaths stage; reported by Finish once committed.
         private Entity m_ResultEntity;
         private bool m_Applied;
+        private DeferredWorldWork m_LineContinuation;
 
         private CityConfigurationSystem m_CityConfigurationSystem;
         private NameSystem m_NameSystem;
@@ -165,6 +166,8 @@ namespace CS2MCP
             {
                 return false;
             }
+            // Capture before the native creation stages; never resample after a line has been applied.
+            m_LineContinuation = new DeferredWorldWork(Mod.Worlds, request?.IngressWorld, true, "partial", request?.OperationId);
             m_PendingKind = OperationKind.Line;
             m_PendingPrefabEntity = prefabEntity;
             m_PendingPrefab = prefab;
@@ -220,7 +223,17 @@ namespace CS2MCP
                         break;
 
                     case Stage.Finish:
-                        applyMode = ApplyMode.None;
+                        if (m_PendingKind == OperationKind.Line)
+                        {
+                            if (m_LineContinuation == null || !m_LineContinuation.TryRun(() => applyMode = ApplyMode.None, out _))
+                            {
+                                CompletePending(BridgeResponse.Error(409, "line finish lost its captured world/readiness; original creation may already have applied",
+                                    ErrorCodes.WorldMismatch, outcome: "partial", operationId: m_PendingRequest?.OperationId));
+                                Deactivate(); // Managed clearing only when the captured line context is invalid.
+                                break;
+                            }
+                        }
+                        else applyMode = ApplyMode.None;
                         if (m_Applied)
                         {
                             if (m_PendingKind == OperationKind.Stop)
@@ -236,6 +249,15 @@ namespace CS2MCP
                         break;
 
                     default:
+                        if (m_PendingKind == OperationKind.Line)
+                        {
+                            // A skipped stale restoration must not be retried unguarded on the next idle update.
+                            m_LineContinuation?.TryRun(() => {
+                                applyMode = ApplyMode.None;
+                                if (m_ToolSystem.activeTool == this) m_ToolSystem.activeTool = m_DefaultToolSystem;
+                            }, out _);
+                            break;
+                        }
                         applyMode = ApplyMode.None;
                         // Idle but active (e.g. another bridge tool restored us as its
                         // "previous tool"): hand control back to the default tool.
@@ -254,7 +276,9 @@ namespace CS2MCP
                     ? $"the game applied the transit operation, but finishing it failed ({detail}); " +
                       "check cs2_list_transit_lines / cs2_list_transit_stops"
                     : $"transit operation failed: {detail}"));
-                applyMode = ApplyMode.Clear;
+                if (m_PendingKind == OperationKind.Line)
+                    m_LineContinuation?.TryRun(() => applyMode = ApplyMode.Clear, out _);
+                else applyMode = ApplyMode.Clear;
                 Deactivate();
             }
             return inputDeps;
@@ -271,6 +295,7 @@ namespace CS2MCP
                     "transit operation interrupted because another tool became active; " +
                     "check cs2_list_transit_lines / cs2_list_transit_stops before retrying"));
                 m_Stage = Stage.Idle;
+                m_LineContinuation = null;
                 m_PendingPrefab = null;
                 m_PendingPrefabEntity = Entity.Null;
                 m_LineStops = null;
@@ -387,18 +412,32 @@ namespace CS2MCP
 
         private void FinishLine()
         {
-            Func<string, BridgeResponse> buildResponse = PrepareLineResponse();
-            if (!string.IsNullOrEmpty(m_LineName) && IsCommitted(m_ResultEntity))
+            DeferredWorldWork work = m_LineContinuation;
+            if (work == null)
             {
-                // NameSystem writes through EndFrameBarrier, which refuses new command
-                // buffers during the tool phase, so the rename and the reply are
-                // handed to the UI phase (where the transportation panel renames).
-                base.World.GetOrCreateSystemManaged<BridgeTransitRenameSystem>()
-                    .Enqueue(m_ResultEntity, m_LineName, m_PendingRequest, buildResponse);
-                m_PendingRequest = null;
+                CompletePending(BridgeResponse.Error(500, "line continuation context is unavailable; prior creation outcome is unknown",
+                    ErrorCodes.OutcomeUnknown, outcome: "unknown"));
                 return;
             }
-            CompletePending(buildResponse(null));
+            if (!work.TryRun(() => PrepareLineResponse(work), out Func<string, BridgeResponse> buildResponse, out var error) ||
+                !work.TryRun(() => IsCommitted(m_ResultEntity), out bool committed, out error))
+            {
+                CompletePending(BridgeResponse.Error(error.httpStatus ?? 500, error.message, error.code,
+                    retryable: false, outcome: error.outcome, operationId: error.operationId));
+                return;
+            }
+            if (!string.IsNullOrEmpty(m_LineName) && committed)
+            {
+                if (work.TryRun(() => base.World.GetOrCreateSystemManaged<BridgeTransitRenameSystem>()
+                    .Enqueue(m_ResultEntity, m_LineName, m_PendingRequest, buildResponse, work), out error))
+                    m_PendingRequest = null;
+                else CompletePending(BridgeResponse.Error(error.httpStatus ?? 500, error.message, error.code,
+                    retryable: false, outcome: error.outcome, operationId: error.operationId));
+                return;
+            }
+            if (work.TryRun(() => buildResponse(null), out BridgeResponse response, out error)) CompletePending(response);
+            else CompletePending(BridgeResponse.Error(error.httpStatus ?? 500, error.message, error.code,
+                retryable: false, outcome: error.outcome, operationId: error.operationId));
         }
 
         /// <summary>
@@ -406,8 +445,9 @@ namespace CS2MCP
         /// tool state). The returned builder reads the line's name when invoked,
         /// so a rename done later in the UI phase is reflected.
         /// </summary>
-        private Func<string, BridgeResponse> PrepareLineResponse()
+        private Func<string, BridgeResponse> PrepareLineResponse(DeferredWorldWork work)
         {
+            work.ThrowIfInvalid();
             Entity line = m_ResultEntity;
             if (!IsCommitted(line))
             {
@@ -424,19 +464,22 @@ namespace CS2MCP
             for (int i = 0; i < m_LineStops.Length; i++)
             {
                 Entity stop = m_LineStops[i].Stop;
-                stops.Add(new { order = i + 1, stop = new { index = stop.Index, version = stop.Version }, name = SafeLabel(stop) });
+                stops.Add(new { order = i + 1, stop = new { index = stop.Index, version = stop.Version }, name = ResponseLabel(stop, work) });
             }
             string type = m_PendingTypeName;
             string prefab = m_PendingPrefab != null ? m_PendingPrefab.name : null;
             int depots = m_DepotCount;
-            return nameWarning => BridgeResponse.Json(new
+            return nameWarning => {
+                // The response closure is deferred too; never read an old line through the new world's NameSystem.
+                work.ThrowIfInvalid();
+                return BridgeResponse.Json(new
             {
                 created = true,
                 type,
                 prefab,
                 line = new { index = line.Index, version = line.Version },
                 number = number > 0 ? (int?)number : null,
-                name = SafeLabel(line),
+                name = ResponseLabel(line, work),
                 color,
                 stopCount = stops.Count,
                 stops,
@@ -448,6 +491,16 @@ namespace CS2MCP
                 note = "created through the game's route pipeline (definitions, pathfinding, validation, apply). " +
                        "Vehicles are dispatched only while the simulation runs. Verify with cs2_list_transit_lines.",
             });
+            };
+        }
+
+        private string ResponseLabel(Entity entity, DeferredWorldWork work)
+        {
+            work.ThrowIfInvalid();
+            // Unlike optional labels on unrelated legacy paths, a failed delayed read must reach TryRun.
+            string label = m_NameSystem.GetRenderedLabelName(entity);
+            work.ThrowIfInvalid();
+            return label;
         }
 
         private bool IsCommitted(Entity entity)
@@ -483,18 +536,30 @@ namespace CS2MCP
 
         private void Deactivate()
         {
+            DeferredWorldWork lineWork = m_LineContinuation;
+            bool line = m_PendingKind == OperationKind.Line;
+            ToolBaseSystem previous = m_PreviousTool;
             m_Stage = Stage.Idle;
+            if (!line) m_LineContinuation = null;
             m_PendingRequest = null;
             m_PendingPrefab = null;
             m_PendingPrefabEntity = Entity.Null;
             m_LineStops = null;
             m_ResultEntity = Entity.Null;
             m_Applied = false;
-            if (m_ToolSystem.activeTool == this)
-            {
-                m_ToolSystem.activeTool = m_PreviousTool != null && m_PreviousTool != this ? m_PreviousTool : m_DefaultToolSystem;
-            }
             m_PreviousTool = null;
+            if (line)
+            {
+                // Clearing these managed fields is not proof of native cleanup. In particular, a stale
+                // line must not even read activeTool or restore an old tool in the replacement world.
+                if (lineWork != null && !lineWork.TryRun(() => {
+                    if (m_ToolSystem.activeTool == this)
+                        m_ToolSystem.activeTool = previous != null && previous != this ? previous : m_DefaultToolSystem;
+                }, out var error)) Mod.Log.Warn($"line tool restoration skipped/uncertain: {error.message}");
+                return;
+            }
+            if (m_ToolSystem.activeTool == this)
+                m_ToolSystem.activeTool = previous != null && previous != this ? previous : m_DefaultToolSystem;
         }
 
         /// <summary>

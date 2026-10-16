@@ -9,6 +9,8 @@
     <Reference Include="System.Web.Extensions" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
     <Compile Include="Program.cs" />
+    <Compile Include="DeferredWorkTests.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/DeferredWorldWork.cs" Link="Core/DeferredWorldWork.cs" />
     <Compile Include="ConstructionInventoryTests.cs" />
     <Compile Include="HttpServerTestDependencies.cs" />
     <Compile Include="../../CS2MCP.Bridge/HttpBridgeServer.cs" Link="HttpBridgeServer.cs" />

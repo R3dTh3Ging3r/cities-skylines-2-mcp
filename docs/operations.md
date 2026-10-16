@@ -77,9 +77,13 @@ The existing legacy queue now bounds pending requests at 256 and starts at most
 one writer plus eight reads or 2 ms additional queued work per update. Existing
 legacy writers capture a managed ingress world and reject at dispatch when it
 changed or remains unavailable. Legacy reads retain their existing behavior.
-These checks do **not** fence deferred rename/tile/tool callbacks, supply a
-caller-observed world, disable legacy writes by default, or prevent a legacy
-writer conflicting with a later v2 lease. O5 must deliver that migration together
+The original O2 checks did not fence deferred callbacks. The subsequent bounded
+O3 slice now fences deferred transit naming (including its response/name getter),
+tile refresh and screenshot capture/publication, and disarms old-world auto-pause.
+It still does **not** fence generic tool creation/apply, the earlier transit
+CreateDefinitions/WaitForPaths/OnStopRunning stages, supply a caller-observed
+legacy world, disable legacy writes by default, or prevent a legacy writer
+conflicting with a later v2 lease. O5 must deliver that migration together
 with explicit local compatibility opt-in and `retrySafe:false` server-assigned
 legacy IDs. Until then, no release 2 or all-writer safety claim is made.
 
@@ -95,3 +99,28 @@ its bounded entity reads. Only the three fixed operation routes use listener-sid
 managed refusal. Inventory supports query parameters as documented in
 [the bridge API](bridge-api.md#bounded-explicit-construction-inspection-partial-c1);
 operation routes still reject them. It supplies no writer or lease authority.
+
+## Deferred-world safety slice
+
+The named O3 continuations retain the original ingress WorldRef. Each native
+callback and delayed response builder checks world/readiness before and after
+execution. Failure permanently discards that continuation, so later readiness
+recovery cannot revive old work or idle tool restoration. A refused line finish
+clears managed state without reading/restoring native tool state; this is not a
+native cleanup or writer-readiness acknowledgment. Other tool lifecycle paths
+remain outside this slice and require O3/O5/G1.
+
+A stale/failed post-create line continuation returns a non-retryable partial or
+unknown outcome. It never inspects the replacement city's entity to reconcile
+old effects. Stale tile refresh is dropped without undoing the earlier purchase.
+Legacy auto-pause retains its start world and clears on preload, observed
+readiness loss and system destruction. It is not the O6 monotonic run supervisor.
+
+Successful PNG responses add X-CS2MCP-Boot-Id, X-CS2MCP-Epoch and
+X-CS2MCP-World-Ready headers. The MCP screenshot tool preserves its image and
+adds structuredContent.captureWorld/captureWorldReady when these headers exist.
+Main-menu/loading diagnostic images may report readiness=false; that is not a
+ready-city observation. A changed world/readiness during deferred capture makes
+an explicit error instead of publishing an image. Older bridges without these
+headers preserve legacy image output; malformed/partial metadata produces a
+protocol error. No native G1 assertion has been executed or passed by this work.

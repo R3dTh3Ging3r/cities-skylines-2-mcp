@@ -114,7 +114,7 @@ namespace CS2MCP
 
             if (request.TryGetBool("cancel", out bool cancel) && cancel)
             {
-                m_System.SetAutoPause(0);
+                m_System.SetAutoPause(0, request.IngressWorld);
                 sim.selectedSpeed = 0f;
                 return BridgeResponse.Json(new { cancelled = true, paused = true });
             }
@@ -127,7 +127,7 @@ namespace CS2MCP
             float speed = request.TryGetFloat("speed", out float rawSpeed) ? math.clamp(rawSpeed, 0.5f, 8f) : 4f;
 
             uint targetFrame = sim.frameIndex + (uint)(hours * kFramesPerHour);
-            m_System.SetAutoPause(targetFrame);
+            m_System.SetAutoPause(targetFrame, request.IngressWorld);
             sim.selectedSpeed = speed;
 
             return BridgeResponse.Json(new

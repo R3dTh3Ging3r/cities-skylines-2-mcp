@@ -64,6 +64,8 @@ namespace CS2MCP
         public int Status = 200;
         public string ContentType = "application/json; charset=utf-8";
         public byte[] Body = Array.Empty<byte>();
+        public WorldRef CaptureWorld;
+        public bool? CaptureWorldReady;
 
         public static BridgeResponse Json(object payload, int status = 200)
         {
@@ -94,9 +96,9 @@ namespace CS2MCP
             };
         }
 
-        public static BridgeResponse Png(byte[] png)
+        public static BridgeResponse Png(byte[] png, WorldRef world = null, bool? ready = null)
         {
-            return new BridgeResponse { ContentType = "image/png", Body = png };
+            return new BridgeResponse { ContentType = "image/png", Body = png, CaptureWorld = world, CaptureWorldReady = ready };
         }
     }
 }

@@ -183,6 +183,13 @@ namespace CS2MCP
             head.Append("HTTP/1.1 ").Append(response.Status).Append(response.Status == 200 ? " OK" : " Error").Append("\r\n");
             head.Append("Content-Type: ").Append(response.ContentType).Append("\r\n");
             head.Append("Content-Length: ").Append(response.Body.Length).Append("\r\n");
+            if (response.CaptureWorld != null && response.CaptureWorldReady.HasValue)
+            {
+                // Capture metadata comes from the server-owned managed world, never caller-provided header text.
+                head.Append("X-CS2MCP-Boot-Id: ").Append(response.CaptureWorld.bootId).Append("\r\n");
+                head.Append("X-CS2MCP-Epoch: ").Append(response.CaptureWorld.epoch.ToString(System.Globalization.CultureInfo.InvariantCulture)).Append("\r\n");
+                head.Append("X-CS2MCP-World-Ready: ").Append(response.CaptureWorldReady.Value ? "true" : "false").Append("\r\n");
+            }
             head.Append("Connection: close\r\n");
             head.Append("\r\n");
             byte[] headBytes = Encoding.ASCII.GetBytes(head.ToString());

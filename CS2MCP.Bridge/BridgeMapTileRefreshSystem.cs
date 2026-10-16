@@ -1,45 +1,52 @@
+using System;
 using System.Collections.Generic;
 using Game;
 using Game.Common;
 using Unity.Entities;
 using UnityEngine.Scripting;
+using CS2MCP.Core;
 
 namespace CS2MCP
 {
-    /// <summary>
-    /// Flags map tiles bought through the bridge as Updated again at the start
-    /// of the next frame. MapTilePurchaseSystem.UnlockTile flags them from the
-    /// UI phase, which runs after the area rendering (AreaBufferSystem, in
-    /// PreCulling) and is cleared by CleanUpSystem at the end of the frame, so
-    /// the owned-area border would only redraw the next time the Map Tiles
-    /// panel's selection tool runs. Flagging them in ToolUpdate, before the
-    /// modification and rendering phases, lets the area systems see the change.
-    /// </summary>
+    /// <summary>Re-flags purchased tiles in ToolUpdate, preserving the purchase world's fence.
+    /// A stale refresh is dropped without inspecting another world's ECS or undoing a purchase.</summary>
     public sealed partial class BridgeMapTileRefreshSystem : GameSystemBase
     {
-        private readonly List<Entity> m_Pending = new List<Entity>();
+        private struct PendingRefresh { internal Entity[] Tiles; internal DeferredWorldWork Work; }
+        private readonly Queue<PendingRefresh> m_Pending = new Queue<PendingRefresh>();
 
-        /// <summary>Must be called on the simulation thread.</summary>
-        public void Enqueue(IEnumerable<Entity> tiles)
+        public void Enqueue(IEnumerable<Entity> tiles, DeferredWorldWork work)
         {
-            m_Pending.AddRange(tiles);
+            if (work == null) throw new ArgumentNullException(nameof(work));
+            m_Pending.Enqueue(new PendingRefresh { Tiles = new List<Entity>(tiles).ToArray(), Work = work });
         }
 
         [Preserve]
         protected override void OnUpdate()
         {
-            if (m_Pending.Count == 0)
+            while (m_Pending.Count > 0)
             {
-                return;
-            }
-            foreach (Entity tile in m_Pending)
-            {
-                if (EntityManager.Exists(tile) && !EntityManager.HasComponent<Updated>(tile))
+                PendingRefresh pending = m_Pending.Dequeue();
+                foreach (Entity tile in pending.Tiles)
                 {
-                    EntityManager.AddComponent<Updated>(tile);
+                    if (!pending.Work.TryRun(() => EntityManager.Exists(tile), out bool exists, out var error))
+                    {
+                        Mod.Log.Warn($"deferred tile refresh stopped: {error.message}; original purchase effects were not reversed");
+                        break;
+                    }
+                    if (!exists) continue;
+                    // Recheck the component under the same original fence, and guard the write separately.
+                    if (!pending.Work.TryRun(() => EntityManager.HasComponent<Updated>(tile), out bool updated, out error) ||
+                        !updated && !pending.Work.TryRun(() => EntityManager.AddComponent<Updated>(tile), out error))
+                    {
+                        Mod.Log.Warn($"deferred tile refresh stopped: {error.message}; original purchase effects were not reversed");
+                        break;
+                    }
                 }
             }
-            m_Pending.Clear();
         }
+
+        [Preserve]
+        protected override void OnDestroy() { m_Pending.Clear(); base.OnDestroy(); }
     }
 }
