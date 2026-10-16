@@ -52,6 +52,20 @@ internal static class Program
                 ErrorCodes.OutcomeUnknown, outcome: "unknown"))["errorData"]["outcome"]));
         Check("success serialization retains null capability reason", () =>
             Equal(JTokenType.Null, Wire(BridgeResponse.Json(new { reason = (string)null }))["reason"].Type));
+        Check("detached receipt numeric values serialize as JSON scalars", () => {
+            var result = new System.Collections.Generic.Dictionary<string,object> {
+                ["cost"] = 12.5m, ["counts"] = new object[] { 123L, -4.5d }
+            };
+            var record = new OperationRecord { operationId = "b6f2a37a-5676-40ec-8b56-3553b32c28e4",
+                world = new WorldRef("boot",1), receipt = new MutationReceipt { result = CommandJson.Snapshot(result) } };
+            var wire = Wire(BridgeResponse.Json(record));
+            Equal(JTokenType.Float,wire["receipt"]["result"]["cost"].Type);
+            Equal(12.5m,(decimal)wire["receipt"]["result"]["cost"]);
+            Equal(JTokenType.Integer,wire["receipt"]["result"]["counts"][0].Type);
+            Equal(123L,(long)wire["receipt"]["result"]["counts"][0]);
+            Equal(-4.5d,(double)wire["receipt"]["result"]["counts"][1]);
+            Equal(1L,(long)wire["world"]["epoch"]);
+        });
         Console.WriteLine($"Response serialization: {passed + failed} assertions, {passed} passed, {failed} failed");
         return failed == 0 ? 0 : 1;
     }

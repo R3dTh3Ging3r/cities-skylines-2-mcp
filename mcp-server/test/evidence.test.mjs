@@ -16,8 +16,8 @@ const hash = 'a'.repeat(64);
 const definition = JSON.parse(await readFile(join(root, 'tests/native/contracts.json'), 'utf8'));
 const catalogSource = await readFile(join(root, 'CS2MCP.Bridge/EndpointCatalog.cs'), 'utf8');
 const catalogHash = createHash('sha256').update(catalogSource).digest('hex');
-const endpoints = [...catalogSource.matchAll(/new EndpointDescriptor\("([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)"\)/g)]
-  .map(([, path, access, capability, completionMechanism]) => ({ path, access, capability, completionMechanism, legacyHttpVerbs: ['GET'] }));
+const endpoints = [...catalogSource.matchAll(/new EndpointDescriptor\("([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)"(?:, "(GET|POST)")?\)/g)]
+  .map(([, path, access, capability, completionMechanism, verb = 'GET']) => ({ path, access, capability, completionMechanism, legacyHttpVerbs: [verb] }));
 const panelProbes = {
   budgetPanel: ['incomeSign', 'expenseSign', 'balance', 'monthlyPeriod', 'hourlyRefresh'],
   calendarPanel: ['rawDate', 'displayDate', 'monthBoundary', 'yearBoundary'],

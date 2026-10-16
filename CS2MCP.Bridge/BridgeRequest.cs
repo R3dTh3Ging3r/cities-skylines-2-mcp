@@ -19,6 +19,10 @@ namespace CS2MCP
         public string Path;
         public Dictionary<string, string> Query = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         public string Body;
+        // Immutable managed ingress identity; legacy callers did not supply/observe this world.
+        public WorldRef IngressWorld { get; internal set; }
+        public CommandRequest Command { get; internal set; }
+        public string OperationId { get; internal set; }
 
         private readonly TaskCompletionSource<BridgeResponse> m_Completion =
             new TaskCompletionSource<BridgeResponse>(TaskCreationOptions.RunContinuationsAsynchronously);

@@ -201,3 +201,19 @@ lifetimes before deciding ownership. Keep each group bounded by the registered
 manifest and recheck world/lease before it. No disk-full, permission damage,
 deliberate hang or developed-city experiment is authorized. Unavailable identity
 or cancellation blocks dependent capabilities, not unrelated work.
+
+## O2 managed preparation (October 16)
+
+O2 adds a managed world/epoch publisher using the retained `OnGamePreload` and
+`OnGameLoadingComplete` signatures, plus a tested observer that waits for a later
+safe update. Completion followed by further loading observations retains the
+pending completion signal. Newly observed loading and missing-preload completion
+fence conservatively. These policy tests do not prove callback thread/order,
+cardinality, reload behavior or native apply fencing against the installed game.
+
+The fixed v2 command/status/cancel routes refuse while O3 completion and O5 scoped
+lease authority are missing. No lifecycle probe has gained dispatch authority.
+The fixture descriptor includes response loss with the original operation UUID,
+exact effect/cost readback and same-save old-world rejection for a later guarded
+native collector. Those assertions and every native G1 step remain `notRun`.
+See [the O2 contract and its legacy scope](../operations.md).
