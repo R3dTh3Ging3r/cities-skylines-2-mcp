@@ -101,3 +101,37 @@ See [native source findings and limits](../native/transit-readback.md).
 
 M4 typed metrics are the next active source increment; M5 collection/comparison
 follows independent M4 review. PC packaging remains paused.
+
+## Typed metric source acceptance
+
+Source `8539b99af3acbdebc2764f8e5491597deffea63f` passed independent specification
+and quality/security review with no open Important findings. Root accepts the
+bounded M4 prerequisite. `cs2_metric_catalog` and `cs2_observe` expose sixteen
+typed population, treasury/XP, labor/jobs, signed monthly budget and selected-line
+structural metrics. Strict GET facades and O7 `metrics.read` consume the same
+typed producer. Missing Population remains unavailable while present zero stays
+zero; exact fault totals consume T1 slot assessments and refuse unassessed totals.
+
+MetricBatch retains original source frames, world, UTC, freshness and unknown
+refresh timestamps. Raw normalized clock evidence names its actual source via
+`sourceObservationId`; city output scope includes explicit `line:null`.
+Structural fingerprints cover only the bounded observed route sample. Native
+calendar conversion, panel/unit parity, complete route geometry and performance
+remain unverified. No metric has an automatic improvement direction.
+
+Final checks passed:130 exact-linked managed assertions,27 actual serializer/HTTP
+checks,61 portable Node tests and11 default-fixture tests; both canonical net472
+test builds had zero warnings/errors. Independent review reran11 default-fixture,
+27 serializer/HTTP and11 fresh-wire Node checks. The recovered stale checked-in
+fixture first failed, was regenerated from the corrected actual producer, and
+now passes both paths. Nine production C# files passed syntax-only parsing;
+this does not establish native symbol binding or game execution.
+
+The historical broader M4 attempt had60 passes and6 failures: one stale tool
+count was corrected; five PowerShell ENOENT failures were excluded from the
+resumed portable list without weakening their Windows gates. Linked managed
+execution used net8 and SDK Newtonsoft, not the installed game runtime.
+
+M5 collection/comparison source may now proceed using the accepted M4 contracts
+and the preserved history-lifecycle plan. Full M4 utility/production analytics,
+native history and G1–G4 remain open. PC packaging remains paused.
