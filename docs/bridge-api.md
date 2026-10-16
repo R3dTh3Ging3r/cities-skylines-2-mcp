@@ -1,18 +1,30 @@
-# Bridge API: release 1 capability contract
+# Bridge API
 
-This release adds `GET /capabilities` and the MCP tool `cs2_capabilities`. It reports
-`protocolVersion: 1` and `schemaVersion: 1`. Existing route and success field names
-remain available; unavailable ping evidence becomes nullable as documented below.
-Protocol 2, operation receipts, admission guards and new method
-enforcement are future work; this manifest does not advertise them.
+The current source candidate has **70 endpoint descriptors and 70 registered MCP
+tools**, verified by the catalog and offline MCP discovery tests. The legacy
+manifest retains `protocolVersion:1` / `schemaVersion:1` and advertises managed
+`operationProtocol.version:2`. Strict HTTP method/framing checks are implemented;
+the three [operation endpoints](operations.md) remain disabled pending completion
+and lease guards. [Partial C1 inspection](#bounded-explicit-construction-inspection-partial-c1)
+is a bounded read-only addition. Native G1/G2/CON-01 remain `notRun`.
+
+## Historical release 1 baseline
+
+Release 1 introduced `GET /capabilities` / `cs2_capabilities`, with 66 endpoint
+descriptors/tools. At that baseline, protocol 2 and method enforcement were future
+work. Subsequent O2 and partial C1 source changes are described above. Existing
+legacy route and success field names remain available; unavailable ping evidence
+becomes nullable as documented below.
 
 ## Discovery and exposure
 
 `/capabilities` returns `identity`, `runtime`, `endpoints`, `capabilities`,
-`nativeSupport` and `degradedReasons`. `EndpointCatalog.All` in
+`nativeSupport`, `degradedReasons`, `nativeValidation` and `operationProtocol`.
+`EndpointCatalog.All` in
 [EndpointCatalog.cs](../CS2MCP.Bridge/EndpointCatalog.cs) is the authoritative
-classification of the 66 HTTP routes. There are 66 MCP tools, including the new
-discovery tool. Each endpoint names its corresponding MCP capability.
+classification of the current 70 endpoint descriptors. There are 70 registered
+MCP tools, including discovery, three operation tools and partial C1 inspection.
+Each endpoint names its corresponding MCP capability.
 
 `capabilities[].support: supported` means the bridge implements that endpoint.
 It does not establish a loaded city, native correctness, or client visibility.
@@ -83,9 +95,11 @@ the listener thread without waiting for native dispatch.
 ## Endpoint classifications and completion boundaries
 
 Each descriptor contains `path`, `legacyHttpVerbs`, `access`, `capability` and
-`completionMechanism`. `legacyHttpVerbs: ["GET"]` documents observed legacy MCP
-usage, including writer routes. Other accidental method acceptance is not a
-supported contract. This release adds no method enforcement.
+`completionMechanism`. Despite its retained name, `legacyHttpVerbs` is enforced
+by the current strict ingress before dispatch: legacy routes and partial C1
+inventory accept GET; command submission and operation cancellation accept POST.
+Other methods reject. The historical release1 manifest only documented legacy
+MCP usage, including GET writer routes, without enforcing it.
 
 | Access | Meaning and examples |
 |---|---|
@@ -106,6 +120,7 @@ routes.
 | `off-thread-liveness` | Listener answered; native evidence is cached. |
 | `off-thread-snapshot` | Managed manifest/snapshot serialized without a native-thread wait. |
 | `sync-read` | Handler built an observation; freshness/native parity are separate. |
+| `explicit-entity-read` | Partial C1 sampled the bounded explicit refs with before/after world validation; root bounds and native verification limits remain explicit. |
 | `sync-set` | Setter/buffer write returned; some routes read back, others echo input. Native downstream effects may follow. |
 | `loan-action-queued-ack; pending` | `/city/loan/set` queued a LoanAction; effective principal remains pending until a later observation. Zero requests treasury-limited repayment and does not establish full repayment. |
 | `end-frame-ack` | UI/barrier work queued; barrier playback and downstream work are later. |
@@ -296,12 +311,21 @@ of one index reject. The encoded query is at most 4096 characters and the compac
 entity value at most 704 characters. World mismatch/loading rejects before any
 entity lookup; identity/readiness is checked again before returning.
 
-Response is `Observation<ConstructionSnapshot>` with world, `startFrame`,
-`endFrame`, `startUtc`, `endUtc`, and `value`. `value.entities` preserves request
-order including per-entity unavailable reasons; `value.requestedEntities` states
-the exact selection. Finite network cubics retain XYZ and versioned ends. Root
+Response uses the shared `Observation<ConstructionSnapshot>` shape: `data`,
+`world`, `sampledAtUtc`, `startFrame`, `endFrame`, `freshness`, and `warnings`.
+The shared contract allows null world/frame evidence; this producer requires a
+ready observed world and supplies both native frames and a UTC sample timestamp
+at the end of reading. `freshness="current"` means sampled in that ready current
+world, not native verification or complete geometry coverage. Warnings include
+`partialExplicitEntityInventory`, `rootGeometryOnly` and
+`nativeConstructionFixtureNotRun`. If start/end frames differ, it also reports
+`multiFrameReadNotAtomic`; a multi-frame read is never atomic, and equal frames
+do not establish an immutable ECS snapshot.
+
+`data.entities` preserves request order including per-entity unavailable reasons;
+`data.requestedEntities` states the exact selection. Finite network cubics retain XYZ and versioned ends. Root
 OBBs retain rotated local centers and axes, labeled `rootGeometryOnly`. Unknown
-measurements are null with reasons, never zero. `value.scope="explicitEntities"`,
+measurements are null with reasons, never zero. `data.scope="explicitEntities"`,
 `support="partial"`, `worldBounds=null`, `worldBoundsReason="notMeasured"`,
 `nextCursor=null`, `truncated=false`, `nativeVerification="CON-01:notRun"`.
 

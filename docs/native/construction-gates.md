@@ -28,9 +28,14 @@ its explicit requested refs, partial support and `CON-01:notRun`; `nextCursor` i
 null and `truncated` is false because every requested ref gets an entry.
 
 The game-thread reader validates the shared world/readiness authority before
-sampling, around each root and after end-frame capture. Observation includes
-start/end simulation frames and UTC times; it does not promise an immutable ECS
-snapshot or safety for later placement. An intervening load/readiness loss rejects
+sampling, around each root and after end-frame capture. The shared Observation
+contains `data`, `world`, `sampledAtUtc` (UTC at the end of sampling), nullable
+`startFrame`/`endFrame`, `freshness` and `warnings`. This producer supplies both
+frames and `freshness="current"` after ready-world validation. Warnings identify
+partial/root-only coverage and native validation notRun; differing frames add
+`multiFrameReadNotAtomic`. Multi-frame reads are never atomic; equal frames also
+do not prove an immutable ECS snapshot or safety for later placement. An
+intervening load/readiness loss rejects
 the observation. The listener only decodes bounded input; inventory dispatch uses
 the existing main-thread queue. The three operation routes remain disabled.
 

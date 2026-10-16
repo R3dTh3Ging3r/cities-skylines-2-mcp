@@ -40,11 +40,35 @@ namespace CS2MCP.CoreTests
                 Program.Throws<OperationException>(()=>ConstructionInventory.Read(Query(33),world,()=>9,read));Program.Equal(0,reads);
                 var stale=Query();stale["epoch"]="0";Program.Throws<OperationException>(()=>ConstructionInventory.Read(stale,world,()=>9,read));Program.Equal(0,reads);
                 world.MarkUnavailable();Program.Throws<OperationException>(()=>ConstructionInventory.Read(Query(),world,()=>9,read));Program.Equal(0,reads);world.CompleteLoad();
-                var result=ConstructionInventory.Read(Query(32),world,()=>9,read);Program.Equal(32,reads);Program.Equal(32,result.value.entities.Length);
-                Program.Equal(32,result.value.requestedEntities.Length);Program.Equal("explicitEntities",result.value.scope);Program.Equal(null,result.value.nextCursor);
-                Program.Equal(9L,result.startFrame);Program.Equal(9L,result.endFrame);Program.Equal(true,result.endUtc>=result.startUtc);
-                Program.Equal(null,result.value.worldBounds);Program.Equal("notMeasured",result.value.worldBoundsReason);
-                Program.Equal(null,result.value.entities[0].capacityEffects);Program.Equal("notMeasured",result.value.entities[0].capacityEffectsReason);
+                var result=ConstructionInventory.Read(Query(32),world,()=>9,read);Program.Equal(32,reads);Program.Equal(32,result.data.entities.Length);
+                Program.Equal(32,result.data.requestedEntities.Length);Program.Equal("explicitEntities",result.data.scope);Program.Equal(null,result.data.nextCursor);
+                Program.Equal(9L,result.startFrame);Program.Equal(9L,result.endFrame);Program.Equal("current",result.freshness);
+                Program.Equal(null,result.data.worldBounds);Program.Equal("notMeasured",result.data.worldBoundsReason);
+                Program.Equal(null,result.data.entities[0].capacityEffects);Program.Equal("notMeasured",result.data.entities[0].capacityEffectsReason);
+            });
+            Program.Check("producer uses shared Observation fields and warns that multi-frame reads are not atomic", () => {
+                var world=new WorldIdentity("boot");world.BeginLoad();world.CompleteLoad();long frame=9;
+                var before=DateTime.UtcNow;
+                object result=ConstructionInventory.Read(Query(),world,()=>frame++,e=>new ConstructionEntity{entity=e});
+                object Field(string name) {
+                    var property=result.GetType().GetProperty(name);
+                    if(property==null)throw new Exception("missing shared Observation field: "+name);
+                    return property.GetValue(result);
+                }
+                Program.Equal(true,Field("data") is ConstructionSnapshot);Program.Equal(true,WorldIdentity.Same(world.Current,(WorldRef)Field("world")));
+                Program.Equal("current",Field("freshness"));Program.Equal(9L,Field("startFrame"));Program.Equal(10L,Field("endFrame"));
+                var sampled=(DateTime)Field("sampledAtUtc");Program.Equal(DateTimeKind.Utc,sampled.Kind);
+                Program.Equal(true,sampled>=before && sampled<=DateTime.UtcNow);
+                var warnings=(string[])Field("warnings");
+                foreach(string warning in new[]{"partialExplicitEntityInventory","rootGeometryOnly","nativeConstructionFixtureNotRun","multiFrameReadNotAtomic"})
+                    Program.Equal(true,warnings.Contains(warning));
+                Program.Equal(null,result.GetType().GetProperty("value"));
+                var current=ConstructionInventory.Read(Query(),world,()=>11,e=>new ConstructionEntity{entity=e});
+                var currentWarnings=(string[])current.GetType().GetProperty("warnings").GetValue(current);
+                Program.Equal(false,currentWarnings.Contains("multiFrameReadNotAtomic"));
+                Program.Equal(true,currentWarnings.Contains("partialExplicitEntityInventory"));
+                Program.Equal(typeof(long?),result.GetType().GetProperty("startFrame").PropertyType);
+                Program.Equal(typeof(long?),result.GetType().GetProperty("endFrame").PropertyType);
             });
             Program.Check("world or readiness changes during native read prevent publication", () => {
                 foreach(bool loading in new[]{true,false}) {

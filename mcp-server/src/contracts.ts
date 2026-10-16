@@ -78,7 +78,8 @@ export interface OperationRecord {
 }
 
 export interface Observation<T> {
-  world:WorldRef; startFrame:number; endFrame:number; startUtc:string; endUtc:string; value:T;
+  data:T; world:WorldRef|null; sampledAtUtc:string; startFrame:number|null; endFrame:number|null;
+  freshness:"current"|"warming"|"unavailable"; warnings:string[];
 }
 export interface Point3 { x:number; y:number; z:number; }
 export interface CubicCurve { a:Point3; b:Point3; c:Point3; d:Point3; }

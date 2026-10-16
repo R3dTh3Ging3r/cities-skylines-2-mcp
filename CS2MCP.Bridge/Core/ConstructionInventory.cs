@@ -52,16 +52,20 @@ namespace CS2MCP.Core
         {
             ConstructionQuery request=Parse(query);
             worlds.Validate(request.world);
-            var observation=new Observation<ConstructionSnapshot>{world=request.world,startFrame=frame(),startUtc=DateTime.UtcNow};
+            var observation=new Observation<ConstructionSnapshot>{world=request.world,startFrame=frame()};
             var entities=new ConstructionEntity[request.entities.Length];
             for(int i=0;i<entities.Length;i++) {
                 worlds.Validate(request.world);
                 entities[i]=readEntity(request.entities[i]);
                 worlds.Validate(request.world);
             }
-            observation.endFrame=frame();observation.endUtc=DateTime.UtcNow;
+            observation.endFrame=frame();observation.sampledAtUtc=DateTime.UtcNow;
             worlds.Validate(request.world);
-            observation.value=new ConstructionSnapshot{requestedEntities=request.entities,entities=entities};
+            observation.data=new ConstructionSnapshot{requestedEntities=request.entities,entities=entities};
+            observation.freshness="current";
+            var warnings=new List<string>{"partialExplicitEntityInventory","rootGeometryOnly","nativeConstructionFixtureNotRun"};
+            if(observation.startFrame!=observation.endFrame)warnings.Add("multiFrameReadNotAtomic");
+            observation.warnings=warnings.ToArray();
             return observation;
         }
     }
