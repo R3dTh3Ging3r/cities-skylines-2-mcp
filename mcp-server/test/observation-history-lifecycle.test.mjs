@@ -60,3 +60,37 @@ async function actualExit(kind,admission=false){
 }
 test('actual stdio EOF aborts collection HTTP and exits before client termination fallback',()=>actualExit('eof'));
 test('actual stdio SIGTERM aborts pending admission HTTP and exits cleanly',()=>actualExit('signal',true));
+
+test('actual SDK keeps error hooks through queued onclose errors for owner and external close',async()=>{
+ for(const external of [false,true]){
+ const stdin=new PassThrough(),stdout=new PassThrough(),signals=new EventEmitter(),reported=[];
+ const server=new McpServer({name:'queued-errors',version:'1'}),transport=new StdioServerTransport(stdin,stdout);let disposed=0,settled=false,probe;
+ const observed=new Promise(resolve=>probe=resolve);
+ server.server.onclose=()=>{queueMicrotask(()=>{
+ const errors=[];for(const stream of [stdin,stdout])try{stream.emit('error',new Error('queued during close'));}catch(error){errors.push(error);}
+ probe({settled,errorCount:errors.length,listeners:stdout.listenerCount('error')});
+ });throw new Error('prior callback still contained');};
+ const lifecycle=bindObservationHistoryLifecycle({server,transport,history:{dispose:()=>disposed++},stdin,stdout,process:signals,reportError:e=>reported.push(e)});
+ await server.connect(transport);const closing=external?server.close():lifecycle.shutdown();closing.then(()=>settled=true);
+ const result=await observed;await closing;
+ assert.equal(result.settled,false);assert.equal(result.errorCount,0,'queued stream error escaped while close was pending');assert.ok(result.listeners>0);assert.equal(disposed,1);assert.equal(stdout.listenerCount('error'),0);assert.equal(signals.listenerCount('SIGTERM'),0);assert.equal(reported.length,3);
+ }
+});
+
+test('pending delayed SDK close and rejection hold error hooks without recursive close',async()=>{
+ for(const rejected of [false,true])for(const external of [false,true]){
+ const stdin=new PassThrough(),stdout=new PassThrough(),signals=new EventEmitter(),reported=[];
+ const server=new McpServer({name:'delayed-close',version:'1'}),transport=new StdioServerTransport(stdin,stdout);
+ const originalClose=server.close;let finish,entered,closeCalls=0,disposed=0;
+ const pending=new Promise(resolve=>finish=resolve),started=new Promise(resolve=>entered=resolve);
+ // Extend the public close promise around the real SDK close, without replacing protocol internals.
+ server.close=async function(){closeCalls++;await originalClose.call(this);entered();await pending;if(rejected)throw new Error('delayed close rejected');};
+ const unrelated=()=>{};stdout.on('error',unrelated);signals.on('SIGTERM',unrelated);
+ const lifecycle=bindObservationHistoryLifecycle({server,transport,history:{dispose:()=>disposed++},stdin,stdout,process:signals,reportError:e=>reported.push(e)});
+ await server.connect(transport);const closing=external?server.close():lifecycle.shutdown();const result=closing.then(()=>null,error=>error);
+ await started;assert.equal(disposed,1);assert.equal(stdout.listenerCount('error'),2);
+ for(let i=0;i<3;i++){stdin.emit('error',new Error('pending stdin'));stdout.emit('error',new Error('pending stdout'));}await Promise.resolve();assert.equal(closeCalls,1);
+ finish();const error=await result;if(external&&rejected)assert.equal(error.message,'delayed close rejected');else assert.equal(error,null);
+ await lifecycle.shutdown();assert.equal(closeCalls,1);assert.equal(stdout.listenerCount('error'),1);assert.equal(signals.listenerCount('SIGTERM'),1);assert.equal(stdin.listenerCount('error'),0);
+ }
+});

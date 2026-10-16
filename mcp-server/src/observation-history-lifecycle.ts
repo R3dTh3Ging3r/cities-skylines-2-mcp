@@ -13,8 +13,13 @@ export function bindObservationHistoryLifecycle(options: {
     try {options.reportError?.(error);} catch { /* reporting must not interrupt SDK cleanup */ }
   };
   let disposed = false;
-  let closing: Promise<void> | undefined;
+  let serverClosing: Promise<void> | undefined;
+  let transportClosing: Promise<void> | undefined;
+  let shutdownResult: Promise<void> | undefined;
+  let pendingCloses = 0;
   let removed = false;
+  const previousServerCloseMethod = server.close;
+  const previousTransportCloseMethod = transport.close;
   const dispose = () => {
     if (disposed) return;
     disposed = true;
@@ -29,12 +34,36 @@ export function bindObservationHistoryLifecycle(options: {
     stdout.off("error", onStreamError);
     signals.off("SIGINT", onDisconnect);
     signals.off("SIGTERM", onDisconnect);
+    if (server.close === closeServer) server.close = previousServerCloseMethod;
+    if (transport.close === closeTransport) transport.close = previousTransportCloseMethod;
   };
+  const trackClose = (invoke: () => Promise<void>): Promise<void> => {
+    pendingCloses++;
+    // Assign the guarded promise before invoking close: callbacks/errors can run
+    // synchronously, and onclose itself is earlier than actual promise settlement.
+    return Promise.resolve().then(invoke).finally(() => {
+      pendingCloses--;
+      if (pendingCloses === 0) remove();
+    });
+  };
+  function closeServer(): Promise<void> {
+    dispose();
+    serverClosing ??= trackClose(() => previousServerCloseMethod.call(server));
+    return serverClosing;
+  }
+  function closeTransport(): Promise<void> {
+    dispose();
+    transportClosing ??= trackClose(() => previousTransportCloseMethod.call(transport));
+    return transportClosing;
+  }
+  server.close = closeServer;
+  transport.close = closeTransport;
   const shutdown = (): Promise<void> => {
     dispose();
-    // Defer close until closing is assigned, so a synchronous close callback cannot recurse.
-    closing ??= Promise.resolve().then(() => server.close()).catch(report).finally(remove);
-    return closing;
+    // Join an external close already in flight; never recurse from onclose or a
+    // stream error. Both successful and rejected close attempts release hooks.
+    shutdownResult ??= (serverClosing ?? transportClosing ?? closeServer()).catch(report);
+    return shutdownResult;
   };
   const onDisconnect = () => {void shutdown();};
   const onStreamError = (error: unknown) => {report(error); void shutdown();};
@@ -48,7 +77,6 @@ export function bindObservationHistoryLifecycle(options: {
   server.server.onclose = () => {
     dispose();
     try {previousServerClose?.call(server.server);} catch (error) {report(error);}
-    finally {remove();}
   };
   // Keep recoverable protocol errors recoverable, including earlier reporters
   // that throw. Fatal stream events have their own synchronous disposal hook.

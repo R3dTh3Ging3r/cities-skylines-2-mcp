@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ObservationHistory } from "./observation-history.js";
-import { comparisonSchema, HistoryError, idSchema, readHistorySchema, seriesSpecSchema } from "./observation-history-contracts.js";
+import { comparisonSchema, idSchema, readHistorySchema, seriesSpecSchema } from "./observation-history-contracts.js";
 import { historyError, historyResult } from "./observation-history-results.js";
 
 export const historyToolNames = ["cs2_collect_observations", "cs2_stop_observation_collection",
@@ -9,14 +9,16 @@ export const historyToolNames = ["cs2_collect_observations", "cs2_stop_observati
 
 // SDK validation happens before our handler. Its default Zod diagnostics echo
 // unknown property names, which can themselves exceed the entire result budget.
-// Keep an actual object schema: this SDK advertises empty input for effects or
-// catch wrappers around the whole object. Catch each field instead. Cross-field
-// invariants are still checked by the production store before admission/reads.
+// Keep an actual object schema for SDK discovery. Invalid fields become a private
+// sentinel rejected by one bounded issue. Unlike a throwing catch callback, this
+// lets the JSON-schema converter probe undefined without losing requiredness.
+// Original optional/default behavior and nested schemas remain intact; the store
+// still checks cross-field invariants before admission/reads.
 function boundedInput<S extends z.ZodRawShape>(schema: z.ZodObject<S>) {
+  const invalid = Symbol("invalid history input");
   const fields = Object.fromEntries(Object.entries(schema.shape).map(([name, field]) =>
-    [name, field.catch((): never => {
-      throw new HistoryError("INVALID_ARGUMENT", "Invalid bounded history arguments");
-    })])) as {[K in keyof S]: z.ZodCatch<S[K]>};
+    [name, field.catch(() => invalid as never).refine(value => value !== invalid,
+      "Invalid bounded history arguments")])) as {[K in keyof S]: z.ZodEffects<z.ZodCatch<S[K]>>};
   return z.object(fields).strict("Invalid bounded history arguments");
 }
 
