@@ -40,8 +40,8 @@ Catalog revision is an explicit constant, initially `diagnosticMetrics.v1`; pers
 | `budget.balance` | `CityServiceBudgetSystem.GetBalance` → budget.balance | rate; `nativeMoney`; `month` | Preserve native value; convention is income + signed expenses |
 | `transit.waypointCount` | T1 completeness.waypointCount | count; `waypoints`; null | Exact reported count only when line/buffer facts complete |
 | `transit.segmentCount` | T1 completeness.segmentCount | count; `segments`; null | Same completeness requirement |
-| `transit.brokenWaypointCount` | T1 health.brokenWaypoints.length | count; `waypoints`; null | Complete inspected route; structural reference faults only |
-| `transit.invalidSegmentCount` | T1 health.invalidSegments.length | count; `segments`; null | Complete inspected route; observed structural distance/ref faults only |
+| `transit.brokenWaypointCount` | T1 waypoint structuralAssessment | count; `waypoints`; null | Complete inspected route with every waypoint assessed; count knownFault slots, including null references |
+| `transit.invalidSegmentCount` | T1 segment structuralAssessment | count; `segments`; null | Complete inspected route with every segment assessed; count knownFault slots, including null references |
 
 Count values require finite, nonnegative safe integers; invalid native counters become `{value:null,support:"unavailable",reason:"invalidNativeCount"}`. All other nonfinite values become unavailable with a specific reason. Do not clamp, silently rescale, substitute zero or recompute budget balance by subtracting signed expenses. A native expense sign contrary to the declared convention is retained with a warning rather than normalized. Every finite city projection still carries native-parity/source-refresh caveats.
 
@@ -184,3 +184,14 @@ Execution is blocked only on explicit GO and accepted O7/T1 interfaces, not a ne
 Root accepted this design's scope on October16: no T1 length metric without actual unit proof, no unused overload/scaffold, and independent checkpoints for the consumed managed metrics path followed by the client lifecycle/comparison path. Root requested T1's aggregate raw-distance field be named/qualified without premature metre authority. Await explicit source GO after T1 review.
 
 This design-only pass ran no tests, game requests, dependency installation or source edits. The only deliverable written is this handoff document outside the repository.
+
+## Accepted T1 assessment handoff
+
+T1 supplies per-slot `structuralAssessment: knownFault|noKnownFault|unassessed`.
+M4 consumes this production classification rather than duplicating its predicates
+or counting the non-null reference lists. Exact fault totals require complete
+buffer traversal and every relevant slot assessed. Null required references can
+be known faults without a reusable EntityRef. Missing PathInformation/distance is
+unassessed, while optional position/waiting metadata is separate from reference
+faults. Any unassessed relevant slot makes the exact aggregate unavailable, not
+zero. Structural assessment remains distinct from native route validity.

@@ -66,3 +66,38 @@ Selected T1 source work follows this acceptance. Its corrected design requires
 full world-bearing EntityRefs, unknown/unverifiable filter evidence, a combined
 128-entry route-buffer cap and raw distance with unknown units. M4/M5 follows
 T1 review using the preserved detailed plans. PC packaging remains paused.
+
+## Selected transit source acceptance
+
+Source `f8c0dd9f2a2311fe76b7fa092f8414a940b1a9bb` passed independent specification
+and source-quality review; root accepts the partial T1 prerequisite. New
+`cs2_transit_status` / `cs2_transit_capabilities` tools and matching GET endpoints
+inspect one full world-bearing EntityRef. `transit.selectedLine` consumes the
+same reader in O7. The combined128 waypoint/segment budget is checked before
+any indexed reads;256KiB output is a separate actual UTF8 cap with explicit
+oversize errors. No whole-city discovery or unbounded UI aggregation is added.
+
+The result preserves XYZ, direct stop ownership/attachments, mode/purpose facts,
+unknown filters and raw segment distances. Per-slot `structuralAssessment`
+distinguishes known faults from unassessed evidence; null required references
+remain known faults even without a reusable EntityRef. Missing optional metadata
+is not a broken route. Native validity remains unknown; rawLength has unknown
+units. M4 consumes the assessment rather than counting nullable reference lists.
+
+Final implementation checks:112 exact-linked managed assertions,18 actual
+HTTP/serializer checks and50 portable Node tests passed; both canonical net472
+test projects compiled cleanly. Independent review reran12 transit,13 O7,
+18 HTTP/serializer and5 Node checks, all passing, and compiled TypeScript.
+Review corrections cover unknown-vs-fault classification, null slots, bounded
+non-2xx bodies, partial capability metadata and accurate native-error handling.
+
+A full npm attempt encountered15 existing missing-PowerShell failures and2
+existing TODOs. Its stale capability-count assertion was corrected and passed
+in the final portable run. Do not repeat unavailable suites until the host has
+the required runtime. C#9 syntax parsing of6 integration files passed but does
+not establish native symbol binding. Full T1, installed-game compilation,
+committed route semantics/units, timing and native fixture remain notRun.
+See [native source findings and limits](../native/transit-readback.md).
+
+M4 typed metrics are the next active source increment; M5 collection/comparison
+follows independent M4 review. PC packaging remains paused.
