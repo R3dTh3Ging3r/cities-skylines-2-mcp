@@ -29,6 +29,16 @@ Accepted limitations: lifecycle/admission belong to O tasks; native panels/timin
 
 ## O1 boundary — review still pending
 
+**October 16 reconciliation:** The original independent Sol 6.1/high reviewer
+confirmed its review of `9ad3e67..b9871af`: no correctness or security blockers
+within O1's preparation-only scope; root accepted its specification and quality
+verdict. [PR #2](https://github.com/R3dTh3Ging3r/cities-skylines-2-mcp/pull/2)
+also records this receipt. The reviewer performed source inspection, not test
+reruns, native execution or independent reproduction of metadata evidence.
+Dispatch remains unavailable; two admission TODOs await real O2/O5 producers.
+O1 preparation is accepted; G1 investigation/release evidence remains `notRun`.
+The original pending-review record below is retained as history.
+
 Review full range `9ad3e6746cc3843958bead973fd4dd180c055a26..b9871afc85d7ed4b47c35960d2c17868aa630c57` against [operations O1](../superpowers/plans/2026-10-11-bridge-operations.md) and [decisions](IMPLEMENTATION-DECISIONS.md). The task's own report is not independent approval.
 
 O1 extends the existing F6 runner/validator with a fixed lifecycle descriptor, Collect-only opt-in and evidence-root controls, fresh-directory enforcement, retained refusal evidence, and immutable startup validation metadata. It reads only fixed `/capabilities` and `/state` in its collector. All five probes remain unverified/validationOnly with dispatchAvailable false. No native probe, load or restoration implementation exists in O1.

@@ -1,5 +1,10 @@
 # Development handoff — October 13, 2026
 
+**October 16 resume update:** Eric authorized roadmap development again. See
+[the current scope and O1 acceptance receipt](handoff/RESUME-2026-10-16.md).
+The October 13 record below is historical; its pause/review-pending statements
+are superseded only as explicitly recorded there. Broad native gates remain open.
+
 Feature implementation is paused. This handoff preserves the existing work and its review boundary; it does not release or deploy the candidate.
 
 ## Authoritative checkout and source

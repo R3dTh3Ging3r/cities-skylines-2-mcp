@@ -1,5 +1,9 @@
 # CS2 bridge improvement roadmap
 
+October 16: development resumed by Eric's instruction; O1 preparation-only source
+review is accepted. See [current bounded scope](handoff/RESUME-2026-10-16.md).
+The curve-readback native smoke pass does not close G1–G4 or the remaining tasks.
+
 October 13 execution status: see [the authoritative handoff](HANDOFF.md). F1–F6 are accepted offline; O1 awaits independent review; other tasks remain pending and native gates remain notRun. The dated proposal below is retained as planning history.
 
 October 11, 2026 · Proposed priorities · Planning only
