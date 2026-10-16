@@ -1,4 +1,5 @@
-import type { BridgeErrorData, CommandRequest, OperationRecord } from "./contracts.js";
+import { constructionQuery, type ConstructionRequest } from "./construction-query.js";
+import type { Observation, ConstructionSnapshot, BridgeErrorData, CommandRequest, OperationRecord } from "./contracts.js";
 
 /** Encode for the bridge's percent decoder, which preserves literal '+'. */
 export function encodeQuery(params: URLSearchParams): string {
@@ -54,6 +55,7 @@ function httpError(status: number, text: string): BridgeClientError {
 }
 
 export interface BridgeClient {
+  constructionInventory(request:ConstructionRequest):Promise<Observation<ConstructionSnapshot>>;
   submit(command: CommandRequest): Promise<OperationRecord>;
   operation(operationId: string): Promise<OperationRecord>;
   cancelOperation(operationId: string): Promise<OperationRecord>;
@@ -155,6 +157,7 @@ export function createBridgeClient(options: {
     }
   }
   return { getJson, getResponse,
+    constructionInventory: async request => getJson<Observation<ConstructionSnapshot>>("/v2/construction/inventory",constructionQuery(request)),
     submit: command => operationRequest("POST","/v2/commands",command.operationId,command),
     operation: operationId => operationRequest("GET",`/v2/operations/${encodeURIComponent(operationId)}`,operationId),
     cancelOperation: operationId => operationRequest("POST",`/v2/operations/${encodeURIComponent(operationId)}/cancel`,operationId),

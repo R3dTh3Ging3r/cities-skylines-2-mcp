@@ -8,7 +8,7 @@ have not acquired operation IDs, leases, verified receipts or all-writer fencing
 
 `GET /capabilities` retains protocol/schema 1 for that legacy surface and adds
 `operationProtocol.version:2`, the managed world/readiness snapshot, bounds and
-explicit disabled reasons. The three v2 capabilities remain `unverified`.
+explicit disabled reasons. The three v2 operation capabilities remain `unverified`.
 Native validation startup opt-in still grants no dispatch authority.
 
 ## Requests
@@ -36,7 +36,7 @@ unknown fields and bodies on other routes reject. Cancel POST requires
 
 The TypeScript `BridgeClient` retains `getJson`/`getResponse` and adds `submit`,
 `operation` and `cancelOperation`. The corresponding explicit MCP tools are
-`cs2_submit_command`, `cs2_operation` and `cs2_cancel_operation`. New v2 calls
+`cs2_submit_command`, `cs2_operation` and `cs2_cancel_operation`. New operation calls
 require a loopback HTTP base URL. They never retry automatically or replace the
 caller UUID; timeout, response-body loss, malformed response or transport failure
 preserve that UUID in typed error data. An unknown outcome requires reconciliation
@@ -88,3 +88,10 @@ retained UUID, intentional response loss, query of that same UUID, exact final
 entity count/cost readback, and an old-world rejection after same-save reload.
 Its collector remains read-only and refuses mutation dispatch. All native steps
 remain `notRun`; descriptor assertions are preparation, not execution evidence.
+
+The separate partial C1 `GET /v2/construction/inventory` read uses the main-thread
+queue and explicitly validates caller-observed world/readiness before and after
+its bounded entity reads. Only the three fixed operation routes use listener-side
+managed refusal. Inventory supports query parameters as documented in
+[the bridge API](bridge-api.md#bounded-explicit-construction-inspection-partial-c1);
+operation routes still reject them. It supplies no writer or lease authority.

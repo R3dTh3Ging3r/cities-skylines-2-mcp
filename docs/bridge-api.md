@@ -266,3 +266,47 @@ bridge. Required failed/notRun observations return incomplete evidence, and
 unknown game/build/world identity cannot claim compatibility. Current loaded
 module hash and WorldRef are unavailable, so automatic collection leaves native
 identity/panel checks notRun. No existing endpoint or nativeSupport claim changes.
+
+## Bounded explicit construction inspection (partial C1)
+
+Observe `operationProtocol.world` and readiness from `GET /capabilities`, then
+supply that exact identity and already discovered versioned entity refs. This
+read-only surface does not discover IDs or establish native placement safety.
+For this illustrative observed world/ref:
+
+```json
+{"world":{"bootId":"example-boot","epoch":7},"entities":[{"world":{"bootId":"example-boot","epoch":7},"index":123,"version":4}]}
+```
+
+call MCP `cs2_construction_inventory` with the object above, or issue the exact
+compact GET equivalent (substitute live observed values):
+
+```text
+GET /v2/construction/inventory?bootId=example-boot&epoch=7&entities=123%3A4
+```
+
+Multiple refs use a percent-encoded comma-separated `index:version` list.
+The typed client uses the shared query encoder, preserving spaces and literal
+plus signs. Only `bootId`, `epoch`, and `entities` query keys are accepted;
+duplicate decoded keys, malformed escapes, unknown keys, spatial/cursor/family
+expansion/limit options and bodies reject. Decoded boot ID is 1–128 characters
+and nonblank; epoch is an integer from 0 through 9007199254740991. Index/version
+are positive Int32 integers. Require 1–32 distinct indices; even two versions
+of one index reject. The encoded query is at most 4096 characters and the compact
+entity value at most 704 characters. World mismatch/loading rejects before any
+entity lookup; identity/readiness is checked again before returning.
+
+Response is `Observation<ConstructionSnapshot>` with world, `startFrame`,
+`endFrame`, `startUtc`, `endUtc`, and `value`. `value.entities` preserves request
+order including per-entity unavailable reasons; `value.requestedEntities` states
+the exact selection. Finite network cubics retain XYZ and versioned ends. Root
+OBBs retain rotated local centers and axes, labeled `rootGeometryOnly`. Unknown
+measurements are null with reasons, never zero. `value.scope="explicitEntities"`,
+`support="partial"`, `worldBounds=null`, `worldBoundsReason="notMeasured"`,
+`nextCursor=null`, `truncated=false`, `nativeVerification="CON-01:notRun"`.
+
+The capability is read-only / `degraded` (`explicitEntitiesOnlyRootGeometryNativeNotRun`);
+its native support is `unverified`. Full C1 and native G1/G2/CON-01 remain open.
+See [supported fields and deferred evidence](native/construction-gates.md).
+Existing `PrefabInfo` and `RoadGraph` payloads and midpoint-filter defaults retain
+their current behavior.

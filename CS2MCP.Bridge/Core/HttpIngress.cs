@@ -58,7 +58,7 @@ namespace CS2MCP.Core
             if (endpoint == null) throw Reject("unknown route", 404);
             if (!endpoint.legacyHttpVerbs.Contains(first[0])) throw Reject("unsupported method", 405);
             bool command = path == "/v2/commands";
-            if (path.StartsWith("/v2/", StringComparison.Ordinal) && query >= 0) throw Reject("v2 query parameters unsupported");
+            if (CS2MCP.EndpointCatalog.IsOperationEndpoint(endpoint) && query >= 0) throw Reject("v2 query parameters unsupported");
             if (!command && length != 0) throw Reject("this route accepts no body");
             if (first[0] == "POST" && !headers.ContainsKey("Content-Length")) throw Reject("Content-Length required");
             if (command && (!headers.TryGetValue("Content-Type", out string contentType) ||

@@ -41,6 +41,8 @@ namespace CS2MCP
         /// </summary>
         public bool SimulationHasTickedSinceLoad { get; private set; } = true;
 
+        internal uint CurrentFrame => m_SimulationSystem.frameIndex;
+
         /// <summary>Frame at which the simulation auto-pauses (0 = disabled).</summary>
         public uint AutoPauseTargetFrame { get; private set; }
 

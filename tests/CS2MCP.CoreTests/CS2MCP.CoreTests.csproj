@@ -9,6 +9,9 @@
     <Reference Include="System.Web.Extensions" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
     <Compile Include="Program.cs" />
+    <Compile Include="ConstructionInventoryTests.cs" />
+    <Compile Include="HttpServerTestDependencies.cs" />
+    <Compile Include="../../CS2MCP.Bridge/HttpBridgeServer.cs" Link="HttpBridgeServer.cs" />
     <Compile Include="OperationTests.cs" />
     <Compile Include="../../CS2MCP.Bridge/Core/OperationRegistry.cs" Link="Core/OperationRegistry.cs" />
     <Compile Include="../../CS2MCP.Bridge/Core/WorldIdentity.cs" Link="Core/WorldIdentity.cs" />
@@ -23,5 +26,7 @@
     <Compile Include="../../CS2MCP.Bridge/Core/MetricContracts.cs" Link="Core/MetricContracts.cs" />
     <Compile Include="../../CS2MCP.Bridge/Core/ErrorCodes.cs" Link="Core/ErrorCodes.cs" />
     <Compile Include="../../CS2MCP.Bridge/EndpointCatalog.cs" Link="EndpointCatalog.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/ConstructionContracts.cs" Link="Core/ConstructionContracts.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/ConstructionInventory.cs" Link="Core/ConstructionInventory.cs" />
   </ItemGroup>
 </Project>
