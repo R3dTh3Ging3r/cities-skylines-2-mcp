@@ -96,3 +96,14 @@ completion/lease/preview and native gates. Keep developing supported work withou
 inventing APIs or enabling unverified native mutations to satisfy a date.
 Depth1 infrastructure relationship expansion is a useful later C1 extension;
 prioritize the consumed M4/M5 metrics workflow before adding it to this batch.
+
+## Preserved implementation details
+
+The reviewed execution scope is expanded in the
+[selected transit design](2026-10-16-selected-transit-detail.md) and
+[metric/history design](2026-10-16-metrics-history-detail.md). These preserve full
+world-bearing EntityRefs, unknown filter evidence, raw segment-distance units,
+fixed metric definitions, exact cohorts and compatible observed time windows.
+Their design-only status means source work awaits the dependency review/explicit
+root task assignment; it does not require a new user approval for this authorized
+batch. Actual completed source and checks are recorded in the handoff receipt.
