@@ -21,6 +21,9 @@ optional; admission always captures the original ready world. Every item is
 validated before reserving any work. Require 1–64 unique IDs, each 1–128 UTF-16
 characters. Only the names below and their exact arguments are accepted; unknown
 fields, writers, URLs, dependencies and leases reject the whole request.
+MCP discovery advertises this strict object and every typed catalog branch,
+including the optional inventory relationship literal. SDK validation errors
+are bounded to256KiB; this error limit does not replace the4MiB group result limit.
 
 | Fixed name | Arguments and source scope |
 | --- | --- |
@@ -29,7 +32,7 @@ fields, writers, URLs, dependencies and leases reject the whole request.
 | `city.services` | `{}`; cached electricity, water and garbage aggregates, not individual facility capacity/coverage. |
 | `city.labor` | `{}`; household counters and two education-counter structs, no entity query. |
 | `city.budget` | `{}`; existing signed monthly/hourly budget data. Both enum counts must be 0–128 before loops; category names at most128 characters. |
-| `construction.inventory` | Existing strict `{world,entities}` with 1–32 same-world versioned refs; all refs must match the group's captured world. Root-only C1 scope/warnings remain intact. |
+| `construction.inventory` | Strict `{world,entities,relationships?}` with 1–32 same-world versioned refs; optional literal `directDepth1` shares the same bounded inventory producer. Global128 direct slots are counted before dereference; at most128 additional exact targets, no recursion. All refs match the captured world; root-only geometry/full-envelope/native-notRun caveats remain intact. |
 | `transit.selectedLine` | Strict `{line:EntityRef,mode?,purpose?}`; one full versioned line with its own original world, shared128 waypoint/segment entry budget and structural-only T1 evidence. |
 | `metrics.read` | Strict `{world,scope,queries}`; the fixed typed [M4 producer](bridge-api.md#typed-diagnostic-metrics-partial-m4). Explicit city or one full-line scope, distinct known keys and empty parameter maps. Returns MetricBatch with original source/clock/member evidence. |
 

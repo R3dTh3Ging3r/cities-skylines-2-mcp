@@ -66,6 +66,7 @@ internal static class Program
             Equal(-4.5d,(double)wire["receipt"]["result"]["counts"][1]);
             Equal(1L,(long)wire["world"]["epoch"]);
         });
+        ConstructionWireTests.Run(Check);
         ObservationHttpTests.Run(Check);
         TransitWireTests.Run(Check);
         DiagnosticMetricWireTests.Run(Check);

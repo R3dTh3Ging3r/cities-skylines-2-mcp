@@ -1,7 +1,8 @@
 import {metricFamilySchema,metricCatalogSchema,metricReadRequestSchema,metricQuery,parseMetricObservation,type MetricDefinition,type MetricReadRequest} from "./diagnostic-metric-contracts.js";
 import {transitRequestSchema,transitQuery,parseTransitObservation,transitCapabilitiesSchema,type TransitRequest,type TransitPage,type TransitCapabilities} from "./features/transit-contracts.js";
 import {observationRequestSchema,parseObservationResult} from "./observation-contracts.js";
-import { constructionQuery, type ConstructionRequest } from "./construction-query.js";
+import {parseConstructionObservation} from "./construction-contracts.js";
+import { constructionRequestSchema, constructionQuery, type ConstructionRequest } from "./construction-query.js";
 import type { ObservationBatchRequest, ObservationBatchResult, Observation, ConstructionSnapshot, BridgeErrorData, CommandRequest, OperationRecord } from "./contracts.js";
 
 /** Encode for the bridge's percent decoder, which preserves literal '+'. */
@@ -314,7 +315,12 @@ export function createBridgeClient(options: {
   }
   return { getJson, getResponse, observe, transitStatus, readMetrics,metricCatalog,
     transitCapabilities: async () => transitCapabilitiesSchema.parse(await boundedTransit("/v2/transit/capabilities")),
-    constructionInventory: async request => getJson<Observation<ConstructionSnapshot>>("/v2/construction/inventory",constructionQuery(request)),
+    constructionInventory: async input => {
+      let request:ConstructionRequest;
+      try {request=constructionRequestSchema.parse(input);}catch {throw new BridgeClientError({code:"INVALID_ARGUMENT",message:"invalid bounded inventory request",retryable:false,outcome:"notApplied"});}
+      try{return parseConstructionObservation(await boundedTransit("/v2/construction/inventory",constructionQuery(request)),request);}
+      catch(error){if(error instanceof BridgeClientError)throw error;throw new BridgeClientError({code:"PROTOCOL_ERROR",message:"invalid bounded inventory observation",retryable:false,outcome:"notApplied"});}
+    },
     submit: command => operationRequest("POST","/v2/commands",command.operationId,command),
     operation: operationId => operationRequest("GET",`/v2/operations/${encodeURIComponent(operationId)}`,operationId),
     cancelOperation: operationId => operationRequest("POST",`/v2/operations/${encodeURIComponent(operationId)}/cancel`,operationId),

@@ -164,3 +164,13 @@ large complete comparisons explicitly require narrower ranges. Disconnect/EOF
 and shutdown abort pending collection reads without affecting simulation or
 writer operations. Native history, calendar conversion, source refresh and
 performance remain unverified.
+
+To inspect a selected stop or facility before proposing construction, call
+`cs2_construction_inventory` with its exact observed world/ref and optional
+`relationships:"directDepth1"`. Owner/Attached and four fixed instance buffers
+lead to deduplicated related building root bounds/network curves, with explicit
+unsupported or missing targets. The global128 slot budget includes null and
+duplicate entries; exceeding it refuses before dereference. Source-slot
+completeness is distinct from complete facility/platform/approach geometry,
+upgrade effects and connectivity, which remain unverified. The same literal
+works in the fixed O7 inventory entry; no scan, recursion or writer is added.

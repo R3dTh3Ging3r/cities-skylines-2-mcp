@@ -1,0 +1,1783 @@
+{
+  "request": {
+    "world": {
+      "bootId": "boot",
+      "epoch": 1
+    },
+    "entities": [
+      {
+        "world": {
+          "bootId": "boot",
+          "epoch": 1
+        },
+        "index": 1,
+        "version": 1
+      },
+      {
+        "world": {
+          "bootId": "boot",
+          "epoch": 1
+        },
+        "index": 2,
+        "version": 1
+      }
+    ],
+    "relationships": "directDepth1"
+  },
+  "direct": {
+    "data": {
+      "scope": "explicitEntities",
+      "requestedEntities": [
+        {
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "index": 1,
+          "version": 1
+        },
+        {
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "index": 2,
+          "version": 1
+        }
+      ],
+      "entities": [
+        {
+          "entity": {
+            "world": {
+              "bootId": "boot",
+              "epoch": 1
+            },
+            "index": 1,
+            "version": 1
+          },
+          "kind": null,
+          "unavailableReason": "unsupportedEntityKind",
+          "assetKey": null,
+          "assetKeyReason": "prefabUnavailable",
+          "owner": {
+            "world": {
+              "bootId": "boot",
+              "epoch": 1
+            },
+            "index": 2,
+            "version": 1
+          },
+          "ownerReason": null,
+          "network": null,
+          "networkReason": "notNetworkEdge",
+          "rootBounds": null,
+          "rootBoundsReason": "notBuilding",
+          "family": null,
+          "familyReason": "notVerified",
+          "compatibleFamilies": null,
+          "compatibleFamiliesReason": "notVerified",
+          "installedUpgrades": null,
+          "installedUpgradesReason": "fullUpgradeDescriptionNotMeasured",
+          "facilityEnvelope": null,
+          "facilityEnvelopeReason": "notMeasured",
+          "childEnvelope": null,
+          "childEnvelopeReason": "notMeasured",
+          "platformEnvelope": null,
+          "platformEnvelopeReason": "notMeasured",
+          "approachEnvelope": null,
+          "approachEnvelopeReason": "notMeasured",
+          "connectors": null,
+          "connectorsReason": "notMeasured",
+          "costs": null,
+          "costsReason": "notMeasured",
+          "prerequisites": null,
+          "prerequisitesReason": "notVerified",
+          "capacityEffects": null,
+          "capacityEffectsReason": "notMeasured"
+        },
+        {
+          "entity": {
+            "world": {
+              "bootId": "boot",
+              "epoch": 1
+            },
+            "index": 2,
+            "version": 1
+          },
+          "kind": "building",
+          "unavailableReason": null,
+          "assetKey": "asset-2",
+          "assetKeyReason": null,
+          "owner": null,
+          "ownerReason": "noOwnerComponent",
+          "network": null,
+          "networkReason": "notNetworkEdge",
+          "rootBounds": {
+            "center": {
+              "x": 10.0,
+              "y": 23.0,
+              "z": 27.0
+            },
+            "halfExtents": {
+              "x": 2.0,
+              "y": 3.0,
+              "z": 2.0
+            },
+            "axisX": {
+              "x": 2.220446049250313E-16,
+              "y": 0.0,
+              "z": -0.9999999999999998
+            },
+            "axisY": {
+              "x": 0.0,
+              "y": 1.0,
+              "z": 0.0
+            },
+            "axisZ": {
+              "x": 0.9999999999999998,
+              "y": 0.0,
+              "z": 2.220446049250313E-16
+            },
+            "scope": "rootGeometryOnly"
+          },
+          "rootBoundsReason": null,
+          "family": null,
+          "familyReason": "notVerified",
+          "compatibleFamilies": null,
+          "compatibleFamiliesReason": "notVerified",
+          "installedUpgrades": null,
+          "installedUpgradesReason": "fullUpgradeDescriptionNotMeasured",
+          "facilityEnvelope": null,
+          "facilityEnvelopeReason": "notMeasured",
+          "childEnvelope": null,
+          "childEnvelopeReason": "notMeasured",
+          "platformEnvelope": null,
+          "platformEnvelopeReason": "notMeasured",
+          "approachEnvelope": null,
+          "approachEnvelopeReason": "notMeasured",
+          "connectors": null,
+          "connectorsReason": "notMeasured",
+          "costs": null,
+          "costsReason": "notMeasured",
+          "prerequisites": null,
+          "prerequisitesReason": "notVerified",
+          "capacityEffects": null,
+          "capacityEffectsReason": "notMeasured"
+        }
+      ],
+      "relationships": {
+        "scope": "directDepth1",
+        "coverage": "directSourceSlotsOnly",
+        "limits": {
+          "maxRoots": 32,
+          "maxSlots": 128,
+          "maxAdditionalTargets": 128
+        },
+        "rootReads": 2,
+        "headerReads": 2,
+        "visitedSlots": 9,
+        "additionalTargetReads": 4,
+        "sources": [
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 1,
+              "version": 1
+            },
+            "kind": "owner",
+            "present": true,
+            "status": "present",
+            "observedCount": 1,
+            "visitedCount": 1,
+            "coverageComplete": true,
+            "reason": null
+          },
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 1,
+              "version": 1
+            },
+            "kind": "attached",
+            "present": true,
+            "status": "present",
+            "observedCount": 1,
+            "visitedCount": 1,
+            "coverageComplete": true,
+            "reason": null
+          },
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 1,
+              "version": 1
+            },
+            "kind": "subObject",
+            "present": false,
+            "status": "absent",
+            "observedCount": null,
+            "visitedCount": 0,
+            "coverageComplete": false,
+            "reason": "noBuffer"
+          },
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 1,
+              "version": 1
+            },
+            "kind": "installedUpgrade",
+            "present": false,
+            "status": "absent",
+            "observedCount": null,
+            "visitedCount": 0,
+            "coverageComplete": false,
+            "reason": "noBuffer"
+          },
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 1,
+              "version": 1
+            },
+            "kind": "subNet",
+            "present": false,
+            "status": "absent",
+            "observedCount": null,
+            "visitedCount": 0,
+            "coverageComplete": false,
+            "reason": "noBuffer"
+          },
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 1,
+              "version": 1
+            },
+            "kind": "subArea",
+            "present": false,
+            "status": "absent",
+            "observedCount": null,
+            "visitedCount": 0,
+            "coverageComplete": false,
+            "reason": "noBuffer"
+          },
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 2,
+              "version": 1
+            },
+            "kind": "owner",
+            "present": false,
+            "status": "absent",
+            "observedCount": null,
+            "visitedCount": 0,
+            "coverageComplete": false,
+            "reason": "noComponent"
+          },
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 2,
+              "version": 1
+            },
+            "kind": "attached",
+            "present": false,
+            "status": "absent",
+            "observedCount": null,
+            "visitedCount": 0,
+            "coverageComplete": false,
+            "reason": "noComponent"
+          },
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 2,
+              "version": 1
+            },
+            "kind": "subObject",
+            "present": true,
+            "status": "present",
+            "observedCount": 4,
+            "visitedCount": 4,
+            "coverageComplete": true,
+            "reason": null
+          },
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 2,
+              "version": 1
+            },
+            "kind": "installedUpgrade",
+            "present": true,
+            "status": "present",
+            "observedCount": 1,
+            "visitedCount": 1,
+            "coverageComplete": true,
+            "reason": null
+          },
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 2,
+              "version": 1
+            },
+            "kind": "subNet",
+            "present": true,
+            "status": "present",
+            "observedCount": 1,
+            "visitedCount": 1,
+            "coverageComplete": true,
+            "reason": null
+          },
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 2,
+              "version": 1
+            },
+            "kind": "subArea",
+            "present": true,
+            "status": "present",
+            "observedCount": 1,
+            "visitedCount": 1,
+            "coverageComplete": true,
+            "reason": null
+          }
+        ],
+        "links": [
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 1,
+              "version": 1
+            },
+            "kind": "owner",
+            "slot": 0,
+            "target": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 2,
+              "version": 1
+            },
+            "rawIndex": null,
+            "rawVersion": null,
+            "targetIndex": 0,
+            "status": "available",
+            "reason": null
+          },
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 1,
+              "version": 1
+            },
+            "kind": "attached",
+            "slot": 0,
+            "target": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 3,
+              "version": 1
+            },
+            "rawIndex": null,
+            "rawVersion": null,
+            "targetIndex": 1,
+            "status": "available",
+            "reason": null
+          },
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 2,
+              "version": 1
+            },
+            "kind": "subObject",
+            "slot": 0,
+            "target": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 5,
+              "version": 1
+            },
+            "rawIndex": null,
+            "rawVersion": null,
+            "targetIndex": 2,
+            "status": "available",
+            "reason": null
+          },
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 2,
+              "version": 1
+            },
+            "kind": "subObject",
+            "slot": 1,
+            "target": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 5,
+              "version": 1
+            },
+            "rawIndex": null,
+            "rawVersion": null,
+            "targetIndex": 2,
+            "status": "available",
+            "reason": null
+          },
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 2,
+              "version": 1
+            },
+            "kind": "subObject",
+            "slot": 2,
+            "target": null,
+            "rawIndex": null,
+            "rawVersion": null,
+            "targetIndex": null,
+            "status": "unavailable",
+            "reason": "nullReference"
+          },
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 2,
+              "version": 1
+            },
+            "kind": "subObject",
+            "slot": 3,
+            "target": null,
+            "rawIndex": -3,
+            "rawVersion": 2,
+            "targetIndex": null,
+            "status": "unavailable",
+            "reason": "invalidNativeReference"
+          },
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 2,
+              "version": 1
+            },
+            "kind": "installedUpgrade",
+            "slot": 0,
+            "target": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 4,
+              "version": 1
+            },
+            "rawIndex": null,
+            "rawVersion": null,
+            "targetIndex": 3,
+            "status": "unavailable",
+            "reason": "missingDeletedOrRecycled"
+          },
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 2,
+              "version": 1
+            },
+            "kind": "subNet",
+            "slot": 0,
+            "target": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 3,
+              "version": 1
+            },
+            "rawIndex": null,
+            "rawVersion": null,
+            "targetIndex": 1,
+            "status": "available",
+            "reason": null
+          },
+          {
+            "source": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 2,
+              "version": 1
+            },
+            "kind": "subArea",
+            "slot": 0,
+            "target": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 6,
+              "version": 1
+            },
+            "rawIndex": null,
+            "rawVersion": null,
+            "targetIndex": 4,
+            "status": "unavailable",
+            "reason": "unsupportedEntityKind"
+          }
+        ],
+        "targets": [
+          {
+            "entity": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 2,
+              "version": 1
+            },
+            "kind": "building",
+            "unavailableReason": null,
+            "assetKey": "asset-2",
+            "assetKeyReason": null,
+            "network": null,
+            "networkReason": "notNetworkEdge",
+            "rootBounds": {
+              "center": {
+                "x": 10.0,
+                "y": 23.0,
+                "z": 27.0
+              },
+              "halfExtents": {
+                "x": 2.0,
+                "y": 3.0,
+                "z": 2.0
+              },
+              "axisX": {
+                "x": 2.220446049250313E-16,
+                "y": 0.0,
+                "z": -0.9999999999999998
+              },
+              "axisY": {
+                "x": 0.0,
+                "y": 1.0,
+                "z": 0.0
+              },
+              "axisZ": {
+                "x": 0.9999999999999998,
+                "y": 0.0,
+                "z": 2.220446049250313E-16
+              },
+              "scope": "rootGeometryOnly"
+            },
+            "rootBoundsReason": null
+          },
+          {
+            "entity": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 3,
+              "version": 1
+            },
+            "kind": "networkEdge",
+            "unavailableReason": null,
+            "assetKey": "asset-3",
+            "assetKeyReason": null,
+            "network": {
+              "curve": {
+                "a": {
+                  "x": 1.0,
+                  "y": 2.0,
+                  "z": 3.0
+                },
+                "b": {
+                  "x": 4.0,
+                  "y": 20.0,
+                  "z": 6.0
+                },
+                "c": {
+                  "x": 7.0,
+                  "y": -5.0,
+                  "z": 9.0
+                },
+                "d": {
+                  "x": 10.0,
+                  "y": 11.0,
+                  "z": 12.0
+                }
+              },
+              "start": {
+                "world": {
+                  "bootId": "boot",
+                  "epoch": 1
+                },
+                "index": 21,
+                "version": 1
+              },
+              "end": {
+                "world": {
+                  "bootId": "boot",
+                  "epoch": 1
+                },
+                "index": 22,
+                "version": 1
+              },
+              "length": 30.0,
+              "direction": "startToEndNotLaneDirection",
+              "coordinates": "worldXYZ",
+              "width": 12.0,
+              "widthReason": null,
+              "requiredLayers": "Road",
+              "connectLayers": "Road",
+              "layersReason": null,
+              "elevationMode": null,
+              "elevationModeReason": "notVerified",
+              "laneDirections": null,
+              "laneDirectionsReason": "notMeasured"
+            },
+            "networkReason": null,
+            "rootBounds": null,
+            "rootBoundsReason": "notBuilding"
+          },
+          {
+            "entity": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 5,
+              "version": 1
+            },
+            "kind": "building",
+            "unavailableReason": null,
+            "assetKey": "asset-5",
+            "assetKeyReason": null,
+            "network": null,
+            "networkReason": "notNetworkEdge",
+            "rootBounds": {
+              "center": {
+                "x": 10.0,
+                "y": 23.0,
+                "z": 27.0
+              },
+              "halfExtents": {
+                "x": 2.0,
+                "y": 3.0,
+                "z": 2.0
+              },
+              "axisX": {
+                "x": 2.220446049250313E-16,
+                "y": 0.0,
+                "z": -0.9999999999999998
+              },
+              "axisY": {
+                "x": 0.0,
+                "y": 1.0,
+                "z": 0.0
+              },
+              "axisZ": {
+                "x": 0.9999999999999998,
+                "y": 0.0,
+                "z": 2.220446049250313E-16
+              },
+              "scope": "rootGeometryOnly"
+            },
+            "rootBoundsReason": null
+          },
+          {
+            "entity": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 4,
+              "version": 1
+            },
+            "kind": null,
+            "unavailableReason": "missingDeletedOrRecycled",
+            "assetKey": null,
+            "assetKeyReason": "prefabUnavailable",
+            "network": null,
+            "networkReason": "notNetworkEdge",
+            "rootBounds": null,
+            "rootBoundsReason": "notBuilding"
+          },
+          {
+            "entity": {
+              "world": {
+                "bootId": "boot",
+                "epoch": 1
+              },
+              "index": 6,
+              "version": 1
+            },
+            "kind": null,
+            "unavailableReason": "unsupportedEntityKind",
+            "assetKey": null,
+            "assetKeyReason": "prefabUnavailable",
+            "network": null,
+            "networkReason": "notNetworkEdge",
+            "rootBounds": null,
+            "rootBoundsReason": "notBuilding"
+          }
+        ],
+        "nativeVerification": "CON-01:notRun"
+      },
+      "worldBounds": null,
+      "worldBoundsReason": "notMeasured",
+      "nextCursor": null,
+      "truncated": false,
+      "support": "partial",
+      "nativeVerification": "CON-01:notRun"
+    },
+    "world": {
+      "bootId": "boot",
+      "epoch": 1
+    },
+    "sampledAtUtc": "2026-10-16T23:08:55.9792335Z",
+    "startFrame": 10,
+    "endFrame": 10,
+    "freshness": "current",
+    "warnings": [
+      "partialExplicitEntityInventory",
+      "rootGeometryOnly",
+      "nativeConstructionFixtureNotRun",
+      "directRelationshipsNotCompleteFacilityGeometry"
+    ]
+  },
+  "o7": {
+    "world": {
+      "bootId": "boot",
+      "epoch": 1
+    },
+    "startFrame": 10,
+    "endFrame": 10,
+    "worldChanged": false,
+    "results": [
+      {
+        "id": "i",
+        "observation": {
+          "data": {
+            "scope": "explicitEntities",
+            "requestedEntities": [
+              {
+                "world": {
+                  "bootId": "boot",
+                  "epoch": 1
+                },
+                "index": 1,
+                "version": 1
+              },
+              {
+                "world": {
+                  "bootId": "boot",
+                  "epoch": 1
+                },
+                "index": 2,
+                "version": 1
+              }
+            ],
+            "entities": [
+              {
+                "entity": {
+                  "world": {
+                    "bootId": "boot",
+                    "epoch": 1
+                  },
+                  "index": 1,
+                  "version": 1
+                },
+                "kind": null,
+                "unavailableReason": "unsupportedEntityKind",
+                "assetKey": null,
+                "assetKeyReason": "prefabUnavailable",
+                "owner": {
+                  "world": {
+                    "bootId": "boot",
+                    "epoch": 1
+                  },
+                  "index": 2,
+                  "version": 1
+                },
+                "ownerReason": null,
+                "network": null,
+                "networkReason": "notNetworkEdge",
+                "rootBounds": null,
+                "rootBoundsReason": "notBuilding",
+                "family": null,
+                "familyReason": "notVerified",
+                "compatibleFamilies": null,
+                "compatibleFamiliesReason": "notVerified",
+                "installedUpgrades": null,
+                "installedUpgradesReason": "fullUpgradeDescriptionNotMeasured",
+                "facilityEnvelope": null,
+                "facilityEnvelopeReason": "notMeasured",
+                "childEnvelope": null,
+                "childEnvelopeReason": "notMeasured",
+                "platformEnvelope": null,
+                "platformEnvelopeReason": "notMeasured",
+                "approachEnvelope": null,
+                "approachEnvelopeReason": "notMeasured",
+                "connectors": null,
+                "connectorsReason": "notMeasured",
+                "costs": null,
+                "costsReason": "notMeasured",
+                "prerequisites": null,
+                "prerequisitesReason": "notVerified",
+                "capacityEffects": null,
+                "capacityEffectsReason": "notMeasured"
+              },
+              {
+                "entity": {
+                  "world": {
+                    "bootId": "boot",
+                    "epoch": 1
+                  },
+                  "index": 2,
+                  "version": 1
+                },
+                "kind": "building",
+                "unavailableReason": null,
+                "assetKey": "asset-2",
+                "assetKeyReason": null,
+                "owner": null,
+                "ownerReason": "noOwnerComponent",
+                "network": null,
+                "networkReason": "notNetworkEdge",
+                "rootBounds": {
+                  "center": {
+                    "x": 10.0,
+                    "y": 23.0,
+                    "z": 27.0
+                  },
+                  "halfExtents": {
+                    "x": 2.0,
+                    "y": 3.0,
+                    "z": 2.0
+                  },
+                  "axisX": {
+                    "x": 2.220446049250313E-16,
+                    "y": 0.0,
+                    "z": -0.9999999999999998
+                  },
+                  "axisY": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                  },
+                  "axisZ": {
+                    "x": 0.9999999999999998,
+                    "y": 0.0,
+                    "z": 2.220446049250313E-16
+                  },
+                  "scope": "rootGeometryOnly"
+                },
+                "rootBoundsReason": null,
+                "family": null,
+                "familyReason": "notVerified",
+                "compatibleFamilies": null,
+                "compatibleFamiliesReason": "notVerified",
+                "installedUpgrades": null,
+                "installedUpgradesReason": "fullUpgradeDescriptionNotMeasured",
+                "facilityEnvelope": null,
+                "facilityEnvelopeReason": "notMeasured",
+                "childEnvelope": null,
+                "childEnvelopeReason": "notMeasured",
+                "platformEnvelope": null,
+                "platformEnvelopeReason": "notMeasured",
+                "approachEnvelope": null,
+                "approachEnvelopeReason": "notMeasured",
+                "connectors": null,
+                "connectorsReason": "notMeasured",
+                "costs": null,
+                "costsReason": "notMeasured",
+                "prerequisites": null,
+                "prerequisitesReason": "notVerified",
+                "capacityEffects": null,
+                "capacityEffectsReason": "notMeasured"
+              }
+            ],
+            "relationships": {
+              "scope": "directDepth1",
+              "coverage": "directSourceSlotsOnly",
+              "limits": {
+                "maxRoots": 32,
+                "maxSlots": 128,
+                "maxAdditionalTargets": 128
+              },
+              "rootReads": 2,
+              "headerReads": 2,
+              "visitedSlots": 9,
+              "additionalTargetReads": 4,
+              "sources": [
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 1,
+                    "version": 1
+                  },
+                  "kind": "owner",
+                  "present": true,
+                  "status": "present",
+                  "observedCount": 1,
+                  "visitedCount": 1,
+                  "coverageComplete": true,
+                  "reason": null
+                },
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 1,
+                    "version": 1
+                  },
+                  "kind": "attached",
+                  "present": true,
+                  "status": "present",
+                  "observedCount": 1,
+                  "visitedCount": 1,
+                  "coverageComplete": true,
+                  "reason": null
+                },
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 1,
+                    "version": 1
+                  },
+                  "kind": "subObject",
+                  "present": false,
+                  "status": "absent",
+                  "observedCount": null,
+                  "visitedCount": 0,
+                  "coverageComplete": false,
+                  "reason": "noBuffer"
+                },
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 1,
+                    "version": 1
+                  },
+                  "kind": "installedUpgrade",
+                  "present": false,
+                  "status": "absent",
+                  "observedCount": null,
+                  "visitedCount": 0,
+                  "coverageComplete": false,
+                  "reason": "noBuffer"
+                },
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 1,
+                    "version": 1
+                  },
+                  "kind": "subNet",
+                  "present": false,
+                  "status": "absent",
+                  "observedCount": null,
+                  "visitedCount": 0,
+                  "coverageComplete": false,
+                  "reason": "noBuffer"
+                },
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 1,
+                    "version": 1
+                  },
+                  "kind": "subArea",
+                  "present": false,
+                  "status": "absent",
+                  "observedCount": null,
+                  "visitedCount": 0,
+                  "coverageComplete": false,
+                  "reason": "noBuffer"
+                },
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 2,
+                    "version": 1
+                  },
+                  "kind": "owner",
+                  "present": false,
+                  "status": "absent",
+                  "observedCount": null,
+                  "visitedCount": 0,
+                  "coverageComplete": false,
+                  "reason": "noComponent"
+                },
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 2,
+                    "version": 1
+                  },
+                  "kind": "attached",
+                  "present": false,
+                  "status": "absent",
+                  "observedCount": null,
+                  "visitedCount": 0,
+                  "coverageComplete": false,
+                  "reason": "noComponent"
+                },
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 2,
+                    "version": 1
+                  },
+                  "kind": "subObject",
+                  "present": true,
+                  "status": "present",
+                  "observedCount": 4,
+                  "visitedCount": 4,
+                  "coverageComplete": true,
+                  "reason": null
+                },
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 2,
+                    "version": 1
+                  },
+                  "kind": "installedUpgrade",
+                  "present": true,
+                  "status": "present",
+                  "observedCount": 1,
+                  "visitedCount": 1,
+                  "coverageComplete": true,
+                  "reason": null
+                },
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 2,
+                    "version": 1
+                  },
+                  "kind": "subNet",
+                  "present": true,
+                  "status": "present",
+                  "observedCount": 1,
+                  "visitedCount": 1,
+                  "coverageComplete": true,
+                  "reason": null
+                },
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 2,
+                    "version": 1
+                  },
+                  "kind": "subArea",
+                  "present": true,
+                  "status": "present",
+                  "observedCount": 1,
+                  "visitedCount": 1,
+                  "coverageComplete": true,
+                  "reason": null
+                }
+              ],
+              "links": [
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 1,
+                    "version": 1
+                  },
+                  "kind": "owner",
+                  "slot": 0,
+                  "target": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 2,
+                    "version": 1
+                  },
+                  "rawIndex": null,
+                  "rawVersion": null,
+                  "targetIndex": 0,
+                  "status": "available",
+                  "reason": null
+                },
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 1,
+                    "version": 1
+                  },
+                  "kind": "attached",
+                  "slot": 0,
+                  "target": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 3,
+                    "version": 1
+                  },
+                  "rawIndex": null,
+                  "rawVersion": null,
+                  "targetIndex": 1,
+                  "status": "available",
+                  "reason": null
+                },
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 2,
+                    "version": 1
+                  },
+                  "kind": "subObject",
+                  "slot": 0,
+                  "target": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 5,
+                    "version": 1
+                  },
+                  "rawIndex": null,
+                  "rawVersion": null,
+                  "targetIndex": 2,
+                  "status": "available",
+                  "reason": null
+                },
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 2,
+                    "version": 1
+                  },
+                  "kind": "subObject",
+                  "slot": 1,
+                  "target": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 5,
+                    "version": 1
+                  },
+                  "rawIndex": null,
+                  "rawVersion": null,
+                  "targetIndex": 2,
+                  "status": "available",
+                  "reason": null
+                },
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 2,
+                    "version": 1
+                  },
+                  "kind": "subObject",
+                  "slot": 2,
+                  "target": null,
+                  "rawIndex": null,
+                  "rawVersion": null,
+                  "targetIndex": null,
+                  "status": "unavailable",
+                  "reason": "nullReference"
+                },
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 2,
+                    "version": 1
+                  },
+                  "kind": "subObject",
+                  "slot": 3,
+                  "target": null,
+                  "rawIndex": -3,
+                  "rawVersion": 2,
+                  "targetIndex": null,
+                  "status": "unavailable",
+                  "reason": "invalidNativeReference"
+                },
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 2,
+                    "version": 1
+                  },
+                  "kind": "installedUpgrade",
+                  "slot": 0,
+                  "target": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 4,
+                    "version": 1
+                  },
+                  "rawIndex": null,
+                  "rawVersion": null,
+                  "targetIndex": 3,
+                  "status": "unavailable",
+                  "reason": "missingDeletedOrRecycled"
+                },
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 2,
+                    "version": 1
+                  },
+                  "kind": "subNet",
+                  "slot": 0,
+                  "target": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 3,
+                    "version": 1
+                  },
+                  "rawIndex": null,
+                  "rawVersion": null,
+                  "targetIndex": 1,
+                  "status": "available",
+                  "reason": null
+                },
+                {
+                  "source": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 2,
+                    "version": 1
+                  },
+                  "kind": "subArea",
+                  "slot": 0,
+                  "target": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 6,
+                    "version": 1
+                  },
+                  "rawIndex": null,
+                  "rawVersion": null,
+                  "targetIndex": 4,
+                  "status": "unavailable",
+                  "reason": "unsupportedEntityKind"
+                }
+              ],
+              "targets": [
+                {
+                  "entity": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 2,
+                    "version": 1
+                  },
+                  "kind": "building",
+                  "unavailableReason": null,
+                  "assetKey": "asset-2",
+                  "assetKeyReason": null,
+                  "network": null,
+                  "networkReason": "notNetworkEdge",
+                  "rootBounds": {
+                    "center": {
+                      "x": 10.0,
+                      "y": 23.0,
+                      "z": 27.0
+                    },
+                    "halfExtents": {
+                      "x": 2.0,
+                      "y": 3.0,
+                      "z": 2.0
+                    },
+                    "axisX": {
+                      "x": 2.220446049250313E-16,
+                      "y": 0.0,
+                      "z": -0.9999999999999998
+                    },
+                    "axisY": {
+                      "x": 0.0,
+                      "y": 1.0,
+                      "z": 0.0
+                    },
+                    "axisZ": {
+                      "x": 0.9999999999999998,
+                      "y": 0.0,
+                      "z": 2.220446049250313E-16
+                    },
+                    "scope": "rootGeometryOnly"
+                  },
+                  "rootBoundsReason": null
+                },
+                {
+                  "entity": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 3,
+                    "version": 1
+                  },
+                  "kind": "networkEdge",
+                  "unavailableReason": null,
+                  "assetKey": "asset-3",
+                  "assetKeyReason": null,
+                  "network": {
+                    "curve": {
+                      "a": {
+                        "x": 1.0,
+                        "y": 2.0,
+                        "z": 3.0
+                      },
+                      "b": {
+                        "x": 4.0,
+                        "y": 20.0,
+                        "z": 6.0
+                      },
+                      "c": {
+                        "x": 7.0,
+                        "y": -5.0,
+                        "z": 9.0
+                      },
+                      "d": {
+                        "x": 10.0,
+                        "y": 11.0,
+                        "z": 12.0
+                      }
+                    },
+                    "start": {
+                      "world": {
+                        "bootId": "boot",
+                        "epoch": 1
+                      },
+                      "index": 21,
+                      "version": 1
+                    },
+                    "end": {
+                      "world": {
+                        "bootId": "boot",
+                        "epoch": 1
+                      },
+                      "index": 22,
+                      "version": 1
+                    },
+                    "length": 30.0,
+                    "direction": "startToEndNotLaneDirection",
+                    "coordinates": "worldXYZ",
+                    "width": 12.0,
+                    "widthReason": null,
+                    "requiredLayers": "Road",
+                    "connectLayers": "Road",
+                    "layersReason": null,
+                    "elevationMode": null,
+                    "elevationModeReason": "notVerified",
+                    "laneDirections": null,
+                    "laneDirectionsReason": "notMeasured"
+                  },
+                  "networkReason": null,
+                  "rootBounds": null,
+                  "rootBoundsReason": "notBuilding"
+                },
+                {
+                  "entity": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 5,
+                    "version": 1
+                  },
+                  "kind": "building",
+                  "unavailableReason": null,
+                  "assetKey": "asset-5",
+                  "assetKeyReason": null,
+                  "network": null,
+                  "networkReason": "notNetworkEdge",
+                  "rootBounds": {
+                    "center": {
+                      "x": 10.0,
+                      "y": 23.0,
+                      "z": 27.0
+                    },
+                    "halfExtents": {
+                      "x": 2.0,
+                      "y": 3.0,
+                      "z": 2.0
+                    },
+                    "axisX": {
+                      "x": 2.220446049250313E-16,
+                      "y": 0.0,
+                      "z": -0.9999999999999998
+                    },
+                    "axisY": {
+                      "x": 0.0,
+                      "y": 1.0,
+                      "z": 0.0
+                    },
+                    "axisZ": {
+                      "x": 0.9999999999999998,
+                      "y": 0.0,
+                      "z": 2.220446049250313E-16
+                    },
+                    "scope": "rootGeometryOnly"
+                  },
+                  "rootBoundsReason": null
+                },
+                {
+                  "entity": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 4,
+                    "version": 1
+                  },
+                  "kind": null,
+                  "unavailableReason": "missingDeletedOrRecycled",
+                  "assetKey": null,
+                  "assetKeyReason": "prefabUnavailable",
+                  "network": null,
+                  "networkReason": "notNetworkEdge",
+                  "rootBounds": null,
+                  "rootBoundsReason": "notBuilding"
+                },
+                {
+                  "entity": {
+                    "world": {
+                      "bootId": "boot",
+                      "epoch": 1
+                    },
+                    "index": 6,
+                    "version": 1
+                  },
+                  "kind": null,
+                  "unavailableReason": "unsupportedEntityKind",
+                  "assetKey": null,
+                  "assetKeyReason": "prefabUnavailable",
+                  "network": null,
+                  "networkReason": "notNetworkEdge",
+                  "rootBounds": null,
+                  "rootBoundsReason": "notBuilding"
+                }
+              ],
+              "nativeVerification": "CON-01:notRun"
+            },
+            "worldBounds": null,
+            "worldBoundsReason": "notMeasured",
+            "nextCursor": null,
+            "truncated": false,
+            "support": "partial",
+            "nativeVerification": "CON-01:notRun"
+          },
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "sampledAtUtc": "2026-10-16T23:08:55.9750688Z",
+          "startFrame": 10,
+          "endFrame": 10,
+          "freshness": "current",
+          "warnings": [
+            "partialExplicitEntityInventory",
+            "rootGeometryOnly",
+            "nativeConstructionFixtureNotRun",
+            "directRelationshipsNotCompleteFacilityGeometry"
+          ]
+        }
+      }
+    ]
+  },
+  "baseline": {
+    "data": {
+      "scope": "explicitEntities",
+      "requestedEntities": [
+        {
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "index": 1,
+          "version": 1
+        },
+        {
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "index": 2,
+          "version": 1
+        }
+      ],
+      "entities": [
+        {
+          "entity": {
+            "world": {
+              "bootId": "boot",
+              "epoch": 1
+            },
+            "index": 1,
+            "version": 1
+          },
+          "kind": null,
+          "unavailableReason": "unsupportedEntityKind",
+          "assetKey": null,
+          "assetKeyReason": "prefabUnavailable",
+          "owner": null,
+          "ownerReason": "noOwnerComponent",
+          "network": null,
+          "networkReason": "notNetworkEdge",
+          "rootBounds": null,
+          "rootBoundsReason": "notBuilding",
+          "family": null,
+          "familyReason": "notVerified",
+          "compatibleFamilies": null,
+          "compatibleFamiliesReason": "notVerified",
+          "installedUpgrades": null,
+          "installedUpgradesReason": "notMeasured",
+          "facilityEnvelope": null,
+          "facilityEnvelopeReason": "notMeasured",
+          "childEnvelope": null,
+          "childEnvelopeReason": "notMeasured",
+          "platformEnvelope": null,
+          "platformEnvelopeReason": "notMeasured",
+          "approachEnvelope": null,
+          "approachEnvelopeReason": "notMeasured",
+          "connectors": null,
+          "connectorsReason": "notMeasured",
+          "costs": null,
+          "costsReason": "notMeasured",
+          "prerequisites": null,
+          "prerequisitesReason": "notVerified",
+          "capacityEffects": null,
+          "capacityEffectsReason": "notMeasured"
+        },
+        {
+          "entity": {
+            "world": {
+              "bootId": "boot",
+              "epoch": 1
+            },
+            "index": 2,
+            "version": 1
+          },
+          "kind": "building",
+          "unavailableReason": null,
+          "assetKey": "asset-2",
+          "assetKeyReason": null,
+          "owner": null,
+          "ownerReason": "noOwnerComponent",
+          "network": null,
+          "networkReason": "notNetworkEdge",
+          "rootBounds": {
+            "center": {
+              "x": 10.0,
+              "y": 23.0,
+              "z": 27.0
+            },
+            "halfExtents": {
+              "x": 2.0,
+              "y": 3.0,
+              "z": 2.0
+            },
+            "axisX": {
+              "x": 2.220446049250313E-16,
+              "y": 0.0,
+              "z": -0.9999999999999998
+            },
+            "axisY": {
+              "x": 0.0,
+              "y": 1.0,
+              "z": 0.0
+            },
+            "axisZ": {
+              "x": 0.9999999999999998,
+              "y": 0.0,
+              "z": 2.220446049250313E-16
+            },
+            "scope": "rootGeometryOnly"
+          },
+          "rootBoundsReason": null,
+          "family": null,
+          "familyReason": "notVerified",
+          "compatibleFamilies": null,
+          "compatibleFamiliesReason": "notVerified",
+          "installedUpgrades": null,
+          "installedUpgradesReason": "notMeasured",
+          "facilityEnvelope": null,
+          "facilityEnvelopeReason": "notMeasured",
+          "childEnvelope": null,
+          "childEnvelopeReason": "notMeasured",
+          "platformEnvelope": null,
+          "platformEnvelopeReason": "notMeasured",
+          "approachEnvelope": null,
+          "approachEnvelopeReason": "notMeasured",
+          "connectors": null,
+          "connectorsReason": "notMeasured",
+          "costs": null,
+          "costsReason": "notMeasured",
+          "prerequisites": null,
+          "prerequisitesReason": "notVerified",
+          "capacityEffects": null,
+          "capacityEffectsReason": "notMeasured"
+        }
+      ],
+      "relationships": null,
+      "worldBounds": null,
+      "worldBoundsReason": "notMeasured",
+      "nextCursor": null,
+      "truncated": false,
+      "support": "partial",
+      "nativeVerification": "CON-01:notRun"
+    },
+    "world": {
+      "bootId": "boot",
+      "epoch": 1
+    },
+    "sampledAtUtc": "2026-10-16T23:08:55.9693618Z",
+    "startFrame": 10,
+    "endFrame": 10,
+    "freshness": "current",
+    "warnings": [
+      "partialExplicitEntityInventory",
+      "rootGeometryOnly",
+      "nativeConstructionFixtureNotRun"
+    ]
+  }
+}

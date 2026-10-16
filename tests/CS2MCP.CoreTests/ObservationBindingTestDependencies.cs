@@ -14,6 +14,8 @@ namespace CS2MCP {
         object ReadServicesData()=>Record("city.services");
         CityLaborData ReadLaborData(){Record("city.labor");return new CityLaborData();}
         CityBudgetData ReadBudgetData(){Record("city.budget");return new CityBudgetData();}
+#if !CONSTRUCTION_NATIVE_BINDING
         Observation<ConstructionSnapshot> ReadConstructionInventory(IDictionary<string,string> query){BoundCalls.Add("construction.inventory");var world=new WorldIdentity("boot");world.BeginLoad();world.CompleteLoad();return ConstructionInventory.Read(query,world,()=>10,e=>new ConstructionEntity{entity=e,unavailableReason="missingDeletedOrRecycled"});}
+#endif
     }
 }

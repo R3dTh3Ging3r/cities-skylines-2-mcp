@@ -1,3 +1,4 @@
+import type {ConstructionRelationshipSnapshot} from "./construction-contracts.js";
 import type {MetricReadRequest} from "./diagnostic-metric-contracts.js";
 import type {TransitRequest} from "./features/transit-contracts.js";
 /** Additive wire contracts; legacy success payloads keep their existing fields. */
@@ -108,6 +109,7 @@ export interface ConstructionSnapshot {
   scope:"explicitEntities"; requestedEntities:EntityRef[]; entities:ConstructionEntity[];
   worldBounds:null; worldBoundsReason:"notMeasured"; nextCursor:null; truncated:false;
   support:"partial"; nativeVerification:"CON-01:notRun";
+  relationships?:ConstructionRelationshipSnapshot|null;
 }
 
 export type ObservationBatchItem = {id:string;name:"metrics.read";args:MetricReadRequest} | {
@@ -120,6 +122,7 @@ export type ObservationBatchItem = {id:string;name:"metrics.read";args:MetricRea
     args: {
         world: WorldRef;
         entities: EntityRef[];
+        relationships?:"directDepth1";
     };
 } | {id:string;name:"transit.selectedLine";args:TransitRequest};
 export interface ObservationBatchRequest {
