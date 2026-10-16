@@ -40,3 +40,45 @@ test("offline screenshot keeps PNG bytes and default/explicit widths", async () 
     try { await mcp?.close(); } finally { await bridge.close(); }
   }
 });
+
+test("screenshot carries captured world and diagnostic readiness without changing PNG", async () => {
+  const { createServer } = await import("node:http");
+  const server = createServer((req,res) => {
+    res.writeHead(200,{"content-type":"image/png","X-CS2MCP-Boot-Id":"captured-boot","X-CS2MCP-Epoch":"7","X-CS2MCP-World-Ready":"false"});
+    res.end(screenshotPng);
+  });
+  await new Promise(resolve=>server.listen(0,"127.0.0.1",resolve)); let mcp;
+  try {
+    mcp=await startOfflineMcp(`http://127.0.0.1:${server.address().port}`);
+    const result=await mcp.client.callTool({name:"cs2_screenshot",arguments:{}});
+    assert.equal(result.isError,undefined);
+    assert.deepEqual(result.structuredContent,{captureWorld:{bootId:"captured-boot",epoch:7},captureWorldReady:false});
+    assert.deepEqual(Buffer.from(result.content[0].data,"base64"),screenshotPng);
+  } finally {
+    await mcp?.close(); server.closeAllConnections(); await new Promise(resolve=>server.close(resolve));
+  }
+});
+
+test("screenshot refuses malformed or partial capture-world metadata", async () => {
+  const { createServer } = await import("node:http");
+  const cases = [
+    {"X-CS2MCP-Boot-Id":"boot","X-CS2MCP-Epoch":"NaN","X-CS2MCP-World-Ready":"true"},
+    {"X-CS2MCP-Boot-Id":"boot","X-CS2MCP-Epoch":"9007199254740992","X-CS2MCP-World-Ready":"true"},
+    {"X-CS2MCP-Boot-Id":"boot"},
+  ];
+  let index = 0;
+  const server = createServer((req,res) => {
+    res.writeHead(200,{"content-type":"image/png",...cases[index++]});res.end(screenshotPng);
+  });
+  await new Promise(resolve=>server.listen(0,"127.0.0.1",resolve));let mcp;
+  try {
+    mcp=await startOfflineMcp(`http://127.0.0.1:${server.address().port}`);
+    for(let i=0;i<cases.length;i++) {
+      const result=await mcp.client.callTool({name:"cs2_screenshot",arguments:{}});
+      assert.equal(result.isError,true);assert.equal(result.structuredContent.errorData.code,"PROTOCOL_ERROR");
+      assert.ok(result.content.every(item=>item.type!=="image"));
+    }
+  } finally {
+    await mcp?.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));
+  }
+});

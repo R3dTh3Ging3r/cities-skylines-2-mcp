@@ -16,10 +16,13 @@ export function compareExposure(server: Capability[], registeredTools: string[],
 }
 
 export function withMcpExposure(manifest: CapabilityManifest, mcpVersion: string,
-  registeredTools: string[], clientTools?: string[]) {
+  registeredTools: string[], clientTools?: string[], clientOnlyTools: readonly string[] = []) {
   return {
     ...manifest,
     identity: { ...manifest.identity, mcpVersion },
     exposure: compareExposure(manifest.capabilities, registeredTools, clientTools),
+    // These are managed MCP operations, not native bridge endpoint descriptors.
+    clientOnlyCapabilities: compareExposure(clientOnlyTools.map(name => ({name,
+      support: "supported", reason: "boundedProcessLocalHistory"})), registeredTools, clientTools).capabilities,
   };
 }

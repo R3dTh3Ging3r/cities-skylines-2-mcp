@@ -4,15 +4,12 @@ using Game;
 using Game.UI;
 using Unity.Entities;
 using UnityEngine.Scripting;
+using CS2MCP.Core;
 
 namespace CS2MCP
 {
-    /// <summary>
-    /// Names lines created by BridgeTransitToolSystem, then answers their
-    /// requests. NameSystem writes through EndFrameBarrier, which refuses new
-    /// command buffers during the tool phase, so the rename runs here in the UI
-    /// phase, where the transportation panel renames lines too.
-    /// </summary>
+    /// <summary>Deferred naming retains the creation world's fence, including its response closure.
+    /// SetCustomName acknowledgment is not proof of end-frame playback or full tool cleanup.</summary>
     public sealed partial class BridgeTransitRenameSystem : GameSystemBase
     {
         private struct PendingRename
@@ -21,15 +18,17 @@ namespace CS2MCP
             public string Name;
             public BridgeRequest Request;
             public Func<string, BridgeResponse> BuildResponse;
+            public DeferredWorldWork Work;
         }
-
         private readonly Queue<PendingRename> m_Pending = new Queue<PendingRename>();
         private NameSystem m_NameSystem;
 
-        /// <summary>Must be called on the simulation thread.</summary>
-        public void Enqueue(Entity line, string name, BridgeRequest request, Func<string, BridgeResponse> buildResponse)
+        public void Enqueue(Entity line, string name, BridgeRequest request,
+            Func<string, BridgeResponse> buildResponse, DeferredWorldWork work)
         {
-            m_Pending.Enqueue(new PendingRename { Line = line, Name = name, Request = request, BuildResponse = buildResponse });
+            if (work == null) throw new ArgumentNullException(nameof(work));
+            m_Pending.Enqueue(new PendingRename { Line = line, Name = name, Request = request,
+                BuildResponse = buildResponse, Work = work });
         }
 
         [Preserve]
@@ -45,34 +44,40 @@ namespace CS2MCP
             while (m_Pending.Count > 0)
             {
                 PendingRename pending = m_Pending.Dequeue();
-                string nameWarning = null;
-                try
+                if (!pending.Work.TryRun(() => m_NameSystem.SetCustomName(pending.Line, pending.Name), out var error) ||
+                    !pending.Work.TryRun(() => base.World.GetExistingSystemManaged<Game.UI.InGame.TransportationOverviewUISystem>()?.RequestUpdate(), out error))
                 {
-                    // Same call the transportation panel uses to rename a line.
-                    m_NameSystem.SetCustomName(pending.Line, pending.Name);
-                    base.World.GetExistingSystemManaged<Game.UI.InGame.TransportationOverviewUISystem>()?.RequestUpdate();
+                    Fail(pending.Request, error);
+                    continue;
                 }
-                catch (Exception e)
+                // The builder reads SafeLabel. Guard it separately after the native setter/UI callback.
+                if (!pending.Work.TryRun(() => pending.BuildResponse(null) ?? throw new InvalidOperationException("line response builder returned no response"),
+                    out BridgeResponse response, out error))
                 {
-                    Mod.Log.Warn($"renaming line {pending.Line} failed: {e}");
-                    nameWarning = $"the line was created but naming it failed ({e.GetType().Name}: {e.Message}); " +
-                                  "rename it in the transportation panel";
-                }
-
-                BridgeResponse response;
-                try
-                {
-                    response = pending.BuildResponse(nameWarning);
-                }
-                catch (Exception e)
-                {
-                    Mod.Log.Warn($"building the reply for line {pending.Line} failed: {e}");
-                    response = BridgeResponse.Error(500,
-                        $"the line was created, but building the reply failed ({e.GetType().Name}: {e.Message}); " +
-                        "check cs2_list_transit_lines");
+                    Fail(pending.Request, error);
+                    continue;
                 }
                 pending.Request?.Complete(response);
             }
+        }
+
+        private static void Fail(BridgeRequest request, BridgeErrorData error)
+        {
+            Mod.Log.Warn($"deferred transit naming stopped: {error.message}; the original line may already exist");
+            request?.Complete(BridgeResponse.Error(error.httpStatus ?? 500, error.message + "; the original line may already exist; do not blindly create it again",
+                error.code, retryable: false, outcome: error.outcome, operationId: error.operationId));
+        }
+
+        [Preserve]
+        protected override void OnDestroy()
+        {
+            while (m_Pending.Count > 0)
+            {
+                var pending = m_Pending.Dequeue();
+                Fail(pending.Request, new BridgeErrorData(ErrorCodes.WorldMismatch,
+                    "line naming system was destroyed before completion", outcome: "partial", operationId: pending.Request?.OperationId));
+            }
+            base.OnDestroy();
         }
     }
 }

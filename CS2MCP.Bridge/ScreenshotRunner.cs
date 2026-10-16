@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using CS2MCP.Core;
 
 namespace CS2MCP
 {
@@ -30,57 +31,75 @@ namespace CS2MCP
 
         public void Capture(BridgeRequest request)
         {
-            StartCoroutine(CaptureRoutine(request));
+            // Retain the HTTP ingress world. Readiness selects diagnostic vs city capture, never a new identity.
+            WorldSnapshot snapshot = Mod.Worlds.Snapshot;
+            var work = new DeferredWorldWork(Mod.Worlds, request.IngressWorld, snapshot.ready, "notApplied", request.OperationId);
+            StartCoroutine(CaptureRoutine(request, work));
         }
 
-        private IEnumerator CaptureRoutine(BridgeRequest request)
+        private IEnumerator CaptureRoutine(BridgeRequest request, DeferredWorldWork work)
         {
+            if (!work.TryRun(() => { }, out var error))
+            {
+                Fail(request, error);
+                yield break;
+            }
             yield return new WaitForEndOfFrame();
+            CaptureAfterEndOfFrame(request, work);
+        }
 
+        private static void CaptureAfterEndOfFrame(BridgeRequest request, DeferredWorldWork work)
+        {
             Texture2D captured = null;
             Texture2D output = null;
             try
             {
-                captured = ScreenCapture.CaptureScreenshotAsTexture();
-                if (captured == null)
+                // TryRun checks after the yield, before capture, and after capture/encoding. The body also
+                // fences its native stages so a synchronous invalidation cannot advance to another stage.
+                if (!work.TryRun(() => {
+                    captured = ScreenCapture.CaptureScreenshotAsTexture();
+                    work.ThrowIfInvalid();
+                    if (captured == null)
+                    {
+                        captured = new Texture2D(Screen.width, Screen.height, TextureFormat.RGB24, false);
+                        work.ThrowIfInvalid();
+                        captured.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0);
+                        work.ThrowIfInvalid();
+                        captured.Apply();
+                    }
+                    work.ThrowIfInvalid();
+                    output = captured;
+                    if (request.TryGetInt("width", out int width) && width > 0 && width < captured.width)
+                        output = Downscale(captured, width);
+                    work.ThrowIfInvalid();
+                    byte[] bytes = ImageConversion.EncodeToPNG(output);
+                    if (bytes == null || bytes.Length == 0) throw new InvalidOperationException("PNG encode failed");
+                    return bytes;
+                }, out byte[] png, out var error))
                 {
-                    // Fallback: read the back buffer directly.
-                    captured = new Texture2D(Screen.width, Screen.height, TextureFormat.RGB24, false);
-                    captured.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0);
-                    captured.Apply();
+                    Fail(request, error);
+                    return;
                 }
-
-                output = captured;
-                if (request.TryGetInt("width", out int width) && width > 0 && width < captured.width)
+                // Publication is separate from capture: stale bytes never become a successful image.
+                if (!work.TryRun(() => BridgeResponse.Png(png, work.World, work.Ready), out BridgeResponse response, out error))
                 {
-                    output = Downscale(captured, width);
+                    Fail(request, error);
+                    return;
                 }
-
-                byte[] png = ImageConversion.EncodeToPNG(output);
-                if (png == null || png.Length == 0)
-                {
-                    request.Complete(BridgeResponse.Error(500, "PNG encode failed"));
-                }
-                else
-                {
-                    request.Complete(BridgeResponse.Png(png));
-                }
-            }
-            catch (Exception e)
-            {
-                request.Complete(BridgeResponse.Error(500, $"screenshot failed: {e.GetType().Name}: {e.Message}"));
+                request.Complete(response);
             }
             finally
             {
-                if (output != null && !ReferenceEquals(output, captured))
-                {
-                    Destroy(output);
-                }
-                if (captured != null)
-                {
-                    Destroy(captured);
-                }
+                // Only resources allocated by this capture are released; no old-world ECS reconciliation.
+                if (output != null && !ReferenceEquals(output, captured)) Destroy(output);
+                if (captured != null) Destroy(captured);
             }
+        }
+
+        private static void Fail(BridgeRequest request, BridgeErrorData error)
+        {
+            request.Complete(BridgeResponse.Error(error.httpStatus ?? 500, error.message, error.code,
+                retryable: false, outcome: error.outcome, operationId: error.operationId));
         }
 
         private static Texture2D Downscale(Texture2D source, int targetWidth)

@@ -1,4 +1,9 @@
 #!/usr/bin/env node
+import { ObservationHistory } from "./observation-history.js";
+import { registerHistoryTools, historyToolNames } from "./observation-history-tools.js";
+import { bindObservationHistoryLifecycle } from "./observation-history-lifecycle.js";
+import {registerDiagnosticMetricTools} from "./diagnostic-metrics.js";
+import {registerTransitTools} from "./features/transit.js";
 /**
  * cs2-mcp - MCP server for Cities: Skylines II.
  *
@@ -10,8 +15,9 @@ import "dotenv/config";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { createBridgeClient } from "./bridge-client.js";
+import { BridgeClientError, createBridgeClient } from "./bridge-client.js";
 import { errorResult, jsonResult } from "./tool-results.js";
+import {registerObservationTools} from "./observations.js";
 import { registerConstructionTools } from "./construction.js";
 import { registerOperationTools } from "./operations.js";
 import { withMcpExposure } from "./capabilities.js";
@@ -37,6 +43,11 @@ const registerTool = new Proxy(server.registerTool.bind(server), {
 
 registerOperationTools(registerTool, bridgeClient);
 registerConstructionTools(registerTool, bridgeClient);
+registerObservationTools(registerTool,bridgeClient);
+registerTransitTools(registerTool,bridgeClient);
+registerDiagnosticMetricTools(registerTool,bridgeClient);
+const observationHistory = new ObservationHistory(bridgeClient);
+registerHistoryTools(registerTool, observationHistory);
 
 registerTool(
   "cs2_capabilities",
@@ -50,7 +61,7 @@ registerTool(
   async ({ clientTools }) => {
     try {
       const manifest = await bridgeJson("/capabilities", undefined, 3_000) as CapabilityManifest;
-      return jsonResult(withMcpExposure(manifest, MCP_VERSION, registeredTools, clientTools));
+      return jsonResult(withMcpExposure(manifest, MCP_VERSION, registeredTools, clientTools, historyToolNames));
     } catch (err) {
       return errorResult(err);
     }
@@ -186,10 +197,23 @@ registerTool(
     try {
       const res = await bridgeFetch("/screenshot", new URLSearchParams({ width: String(w) }), 30_000);
       const buffer = Buffer.from(await res.arrayBuffer());
+      const bootId = res.headers.get("X-CS2MCP-Boot-Id");
+      const epoch = res.headers.get("X-CS2MCP-Epoch");
+      const ready = res.headers.get("X-CS2MCP-World-Ready");
+      let captureMetadata;
+      if (bootId !== null || epoch !== null || ready !== null) {
+        if (!bootId || bootId.length > 128 || !epoch || !/^(0|[1-9][0-9]*)$/.test(epoch) ||
+            !Number.isSafeInteger(Number(epoch)) || !["true", "false"].includes(ready ?? "")) {
+          throw new BridgeClientError({code:"PROTOCOL_ERROR",message:"screenshot returned invalid capture-world metadata",
+            retryable:false,outcome:"notApplied"});
+        }
+        captureMetadata = {captureWorld:{bootId,epoch:Number(epoch)},captureWorldReady:ready === "true"};
+      }
       return {
         content: [
           { type: "image" as const, data: buffer.toString("base64"), mimeType: "image/png" },
         ],
+        ...(captureMetadata ? {structuredContent:captureMetadata} : {}),
       };
     } catch (err) {
       return errorResult(err);
@@ -1643,5 +1667,13 @@ registerTool(
 );
 
 const transport = new StdioServerTransport();
-await server.connect(transport);
+const historyLifecycle = bindObservationHistoryLifecycle({server, transport, history: observationHistory,
+  stdin: process.stdin, stdout: process.stdout, process,
+  reportError: error => console.error("cs2-mcp history lifecycle:", error)});
+try {
+  await server.connect(transport);
+} catch (error) {
+  await historyLifecycle.shutdown();
+  throw error;
+}
 console.error(`cs2-mcp 0.8.0 running on stdio (bridge: ${BRIDGE_URL})`);

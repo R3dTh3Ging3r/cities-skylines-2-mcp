@@ -94,9 +94,13 @@ namespace CS2MCP
                     {
                         HttpIngress.ReadAndDispatch(stream, parsed => {
                             var request = new BridgeRequest { Method = parsed.Method, Path = parsed.Path, Body = parsed.Body,
-                                Command = parsed.Command, OperationId = parsed.OperationId, IngressWorld = m_World.Current };
-                            ParseUrl(parsed.RawTarget, request);
-                            WriteResponse(stream, Dispatch(request));
+                                Metrics = parsed.Metrics, MetricCatalog = parsed.MetricCatalog, Command = parsed.Command, OperationId = parsed.OperationId, IngressWorld = m_World.Current,
+                                Observations = parsed.Observations,
+                                ConnectionClosed = () => client.Client.Poll(0, SelectMode.SelectRead) && client.Client.Available == 0 };
+                            try {
+                                ParseUrl(parsed.RawTarget, request);
+                                WriteResponse(stream, Dispatch(request));
+                            } finally { if(request.Observations!=null)request.DetachObservation(); }
                         });
                     }
                     catch (OperationException error)
@@ -129,6 +133,7 @@ namespace CS2MCP
             if (EndpointCatalog.IsOperationRoute(request.Path)) return m_Operations(request);
             if (!m_EnqueueToMainThread(request)) return BridgeResponse.Error(409, "pending queue is full", ErrorCodes.BridgeBusy);
             BridgeResponse response = request.WaitForResponse(MainThreadTimeoutMs);
+            if(response==null && request.Observations!=null){request.DetachObservation();return BridgeResponse.Error(503,"observation transport expired", "READ_CANCELLED");}
             return response ?? BridgeResponse.Error(503,
                 "simulation thread did not respond within 10s (game still loading, or bridge system disabled)",
                 ErrorCodes.OutcomeUnknown, retryable: false, outcome: "unknown");
@@ -151,6 +156,7 @@ namespace CS2MCP
 
         private static void ParseUrl(string rawUrl, BridgeRequest request)
         {
+            if(request.Path=="/v2/metrics"||request.Path=="/v2/metrics/catalog") return;
             int questionMark = rawUrl.IndexOf('?');
             if (questionMark < 0)
             {
@@ -164,6 +170,12 @@ namespace CS2MCP
                 request.Query = ConstructionInventory.DecodeQuery(queryText);
                 return;
             }
+            if (request.Path == "/v2/transit/status")
+            {
+                request.Query = TransitQuery.DecodeQuery(queryText).Compact();
+                return;
+            }
+            if (request.Path == "/v2/transit/capabilities") throw CommandJson.Invalid("transit capabilities accepts no query");
             foreach (string pair in queryText.Split('&'))
             {
                 if (pair.Length == 0)
@@ -183,6 +195,13 @@ namespace CS2MCP
             head.Append("HTTP/1.1 ").Append(response.Status).Append(response.Status == 200 ? " OK" : " Error").Append("\r\n");
             head.Append("Content-Type: ").Append(response.ContentType).Append("\r\n");
             head.Append("Content-Length: ").Append(response.Body.Length).Append("\r\n");
+            if (response.CaptureWorld != null && response.CaptureWorldReady.HasValue)
+            {
+                // Capture metadata comes from the server-owned managed world, never caller-provided header text.
+                head.Append("X-CS2MCP-Boot-Id: ").Append(response.CaptureWorld.bootId).Append("\r\n");
+                head.Append("X-CS2MCP-Epoch: ").Append(response.CaptureWorld.epoch.ToString(System.Globalization.CultureInfo.InvariantCulture)).Append("\r\n");
+                head.Append("X-CS2MCP-World-Ready: ").Append(response.CaptureWorldReady.Value ? "true" : "false").Append("\r\n");
+            }
             head.Append("Connection: close\r\n");
             head.Append("\r\n");
             byte[] headBytes = Encoding.ASCII.GetBytes(head.ToString());

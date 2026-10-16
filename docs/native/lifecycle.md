@@ -217,3 +217,25 @@ The fixture descriptor includes response loss with the original operation UUID,
 exact effect/cost readback and same-save old-world rejection for a later guarded
 native collector. Those assertions and every native G1 step remain `notRun`.
 See [the O2 contract and its legacy scope](../operations.md).
+
+## Bounded O3 deferred-world safety (October 16)
+
+The next source slice attaches the original ingress world to pending line
+naming, tile refresh, screenshots and the legacy auto-pause target. The real
+native callback sites consume a shared managed fence. It refuses stale callbacks
+before ECS/native reads or writes, checks again after callbacks, and permanently
+discards failed continuations. Line finish/idle restoration is also guarded;
+managed state clearing is never reported as native cleanup or verified writer
+readiness. Delayed response label exceptions reach typed partial errors instead
+of being swallowed into an unqualified creation reply.
+
+Main-menu screenshot behavior remains diagnostic, with captured world/readiness
+metadata passed through PNG headers and MCP structured content. Delayed captures
+cannot publish success after observed invalidation. Only screenshot-owned texture
+cleanup is retained; no save-preview or tool ownership inference was added.
+
+Portable assertions cover counted callback boundaries, readiness recovery after
+discard and world-bound timer behavior. Generic tool creation/apply, transit
+pre-apply/pathfinding/stop callbacks, actual end-frame name playback and native
+cleanup order remain unverified. The lifecycle descriptor records the required
+native checks, all still **notRun**. No new native mutation capability is enabled.

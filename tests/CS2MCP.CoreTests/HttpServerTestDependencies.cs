@@ -8,7 +8,11 @@ namespace CS2MCP
     public sealed class BridgeRequest
     {
         public string Method, Path, Body, OperationId;
+        public MetricReadRequest Metrics;public Dictionary<string,string> MetricCatalog;
         public CommandRequest Command;
+        public ValidatedObservationBatch Observations;
+        internal Func<bool> ConnectionClosed;
+        internal void DetachObservation(){}
         public WorldRef IngressWorld;
         public Dictionary<string,string> Query=new Dictionary<string,string>();
         private BridgeResponse response;
@@ -17,12 +21,15 @@ namespace CS2MCP
     }
     public sealed class BridgeResponse
     {
+        public WorldRef CaptureWorld; public bool? CaptureWorldReady;
         public int Status=200;public string ContentType="application/json";public byte[] Body=new byte[0];
         public static BridgeResponse Json(object payload){return new BridgeResponse();}
         public static BridgeResponse Error(int status,string message,string code,bool retryable=false,string outcome="notApplied",string operationId=null){return new BridgeResponse{Status=status};}
     }
     internal static class Mod
     {
+        internal static readonly WorldIdentity Worlds=ReadyWorld();
+        static WorldIdentity ReadyWorld(){var w=new WorldIdentity("boot");w.BeginLoad();w.CompleteLoad();return w;}
         internal const string Name="test",Version="test";
         internal static readonly BuildIdentity Identity=new BuildIdentity("test","test",null,null);
         internal static readonly RuntimeSnapshotStore RuntimeSnapshots=new RuntimeSnapshotStore();
@@ -31,3 +38,5 @@ namespace CS2MCP
         internal sealed class TestLog { internal void Warn(string message){} }
     }
 }
+
+namespace CS2MCP { internal static class ObservationWire { internal static byte[] Standalone(object value)=>new byte[0]; } }

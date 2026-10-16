@@ -16,7 +16,7 @@ namespace CS2MCP
     /// Executes bridge requests. Every method here runs on the simulation main
     /// thread (called from BridgeSystem.OnUpdate), so direct ECS access is safe.
     /// </summary>
-    public sealed partial class RequestHandlers
+    public sealed partial class RequestHandlers : IObservationReaders
     {
         private readonly BridgeSystem m_System;
 
@@ -68,6 +68,14 @@ namespace CS2MCP
                     return ConstructionInventoryRequest(request);
                 case "/capabilities":
                     return GetCapabilities(request);
+                case "/v2/metrics":
+                    return MetricsRequest(request);
+                case "/v2/metrics/catalog":
+                    return MetricCatalogRequest(request);
+                case "/v2/transit/status":
+                    return TransitStatusRequest(request);
+                case "/v2/transit/capabilities":
+                    return TransitCapabilitiesRequest(request);
                 case "/state":
                     return GetState();
                 case "/city/overview":
@@ -205,19 +213,21 @@ namespace CS2MCP
             }
         }
 
-        private BridgeResponse GetState()
+        private BridgeResponse GetState() => BridgeResponse.Json(ReadStateData());
+
+        private CityStateData ReadStateData()
         {
             GameManager manager = GameManager.instance;
             bool inGame = manager != null && manager.gameMode == GameMode.Game;
 
-            object simulation = null;
+            CitySimulationData simulation = null;
             string cityName = null;
             if (inGame)
             {
                 SimulationSystem sim = World.GetOrCreateSystemManaged<SimulationSystem>();
                 TimeSystem time = World.GetOrCreateSystemManaged<TimeSystem>();
                 cityName = World.GetOrCreateSystemManaged<CityConfigurationSystem>().cityName;
-                simulation = new
+                simulation = new CitySimulationData
                 {
                     paused = sim.selectedSpeed <= 0f,
                     selectedSpeed = sim.selectedSpeed,
@@ -228,21 +238,27 @@ namespace CS2MCP
                 };
             }
 
-            return BridgeResponse.Json(new
+            return new CityStateData
             {
                 gameMode = manager != null ? manager.gameMode.ToString() : "Unknown",
                 isLoading = manager != null && manager.isGameLoading,
                 cityLoaded = inGame,
-                cityName,
-                simulation,
-            });
+                cityName = cityName,
+                simulation = simulation,
+            };
         }
 
         private BridgeResponse GetCityOverview()
         {
+            if (!TryGetCity(out _, out BridgeResponse error)) return error;
+            return BridgeResponse.Json(ReadOverviewData());
+        }
+
+        private CityOverviewData ReadOverviewData()
+        {
             if (!TryGetCity(out Entity city, out BridgeResponse error))
             {
-                return error;
+                throw new OperationException(new BridgeErrorData(ErrorCodes.NotReady,"city unavailable",httpStatus:409));
             }
 
             CitySystem citySystem = World.GetOrCreateSystemManaged<CitySystem>();
@@ -250,13 +266,15 @@ namespace CS2MCP
             SimulationSystem sim = World.GetOrCreateSystemManaged<SimulationSystem>();
             string cityName = World.GetOrCreateSystemManaged<CityConfigurationSystem>().cityName;
 
-            Population population = EntityManager.HasComponent<Population>(city)
+            bool populationAvailable = EntityManager.HasComponent<Population>(city);
+            Population population = populationAvailable
                 ? EntityManager.GetComponentData<Population>(city)
                 : default;
 
-            return BridgeResponse.Json(new
+            return new CityOverviewData
             {
-                cityName,
+                cityName = cityName,
+                PopulationAvailable = populationAvailable,
                 population = population.m_Population,
                 populationWithMoveIn = population.m_PopulationWithMoveIn,
                 averageHappiness = population.m_AverageHappiness,
@@ -268,7 +286,7 @@ namespace CS2MCP
                 calendarMetadata = MetricContracts.DescribeCalendar(time.normalizedDate, time.normalizedTime, time.year, time.daysPerYear),
                 simulationPaused = sim.selectedSpeed <= 0f,
                 simulationSpeed = sim.selectedSpeed,
-            });
+            };
         }
 
         private BridgeResponse GetDemand()

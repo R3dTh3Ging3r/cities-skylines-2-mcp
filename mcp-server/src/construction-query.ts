@@ -1,10 +1,10 @@
 import { z } from "zod";
 import type { EntityRef, WorldRef } from "./contracts.js";
 
-const worldSchema=z.object({bootId:z.string().min(1).max(128).refine(s=>s.trim().length>0),epoch:z.number().int().min(0).max(Number.MAX_SAFE_INTEGER)}).strict();
-const entitySchema=z.object({world:worldSchema,index:z.number().int().min(1).max(2147483647),version:z.number().int().min(1).max(2147483647)}).strict();
+export const worldRefSchema=z.object({bootId:z.string().min(1).max(128).refine(s=>s.trim().length>0),epoch:z.number().int().min(0).max(Number.MAX_SAFE_INTEGER)}).strict();
+export const entityRefSchema=z.object({world:worldRefSchema,index:z.number().int().min(1).max(2147483647),version:z.number().int().min(1).max(2147483647)}).strict();
 export interface ConstructionRequest { world:WorldRef; entities:EntityRef[]; }
-const constructionInputSchema={world:worldSchema,entities:z.array(entitySchema).min(1).max(32),
+const constructionInputSchema={world:worldRefSchema,entities:z.array(entityRefSchema).min(1).max(32),
   spatial:z.never().optional(),cursor:z.never().optional(),includeFamilies:z.never().optional(),limit:z.never().optional()};
 export const constructionRequestSchema=z.object(constructionInputSchema).strict().superRefine((request,ctx)=>{
   const seen=new Set<number>();

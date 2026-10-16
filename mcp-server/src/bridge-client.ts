@@ -1,5 +1,8 @@
+import {metricFamilySchema,metricCatalogSchema,metricReadRequestSchema,metricQuery,parseMetricObservation,type MetricDefinition,type MetricReadRequest} from "./diagnostic-metric-contracts.js";
+import {transitRequestSchema,transitQuery,parseTransitObservation,transitCapabilitiesSchema,type TransitRequest,type TransitPage,type TransitCapabilities} from "./features/transit-contracts.js";
+import {observationRequestSchema,parseObservationResult} from "./observation-contracts.js";
 import { constructionQuery, type ConstructionRequest } from "./construction-query.js";
-import type { Observation, ConstructionSnapshot, BridgeErrorData, CommandRequest, OperationRecord } from "./contracts.js";
+import type { ObservationBatchRequest, ObservationBatchResult, Observation, ConstructionSnapshot, BridgeErrorData, CommandRequest, OperationRecord } from "./contracts.js";
 
 /** Encode for the bridge's percent decoder, which preserves literal '+'. */
 export function encodeQuery(params: URLSearchParams): string {
@@ -55,6 +58,11 @@ function httpError(status: number, text: string): BridgeClientError {
 }
 
 export interface BridgeClient {
+  metricCatalog(family?:"all"|"city"|"labor"|"budget"|"transit",options?:{signal?:AbortSignal}):Promise<MetricDefinition[]>;
+  readMetrics(request:MetricReadRequest):Promise<ReturnType<typeof parseMetricObservation>>;
+  transitStatus(request:TransitRequest):Promise<Observation<TransitPage>>;
+  transitCapabilities():Promise<TransitCapabilities>;
+  observe(request:ObservationBatchRequest,options?:{signal?:AbortSignal}):Promise<ObservationBatchResult>;
   constructionInventory(request:ConstructionRequest):Promise<Observation<ConstructionSnapshot>>;
   submit(command: CommandRequest): Promise<OperationRecord>;
   operation(operationId: string): Promise<OperationRecord>;
@@ -120,6 +128,80 @@ export function createBridgeClient(options: {
     return payload as T;
   }
 
+  async function observe(input: ObservationBatchRequest, options?: {
+      signal?: AbortSignal;
+  }): Promise<ObservationBatchResult> {
+      let request: ObservationBatchRequest, body: string;
+      try {
+          request = observationRequestSchema.parse(input);
+          body = JSON.stringify(request);
+          const address = new URL(baseUrl);
+          if (address.protocol !== "http:" || !["127.0.0.1", "localhost", "[::1]"].includes(address.hostname) || address.username || address.password || address.pathname !== "/" || address.search || address.hash || Buffer.byteLength(body, "utf8") > 1048576)
+              throw new Error("invalid address/size");
+      }
+      catch {
+          throw new BridgeClientError({ code: "INVALID_ARGUMENT", message: "invalid bounded observation request or loopback HTTP address", retryable: false, outcome: "notApplied" });
+      }
+      const controller = new AbortController(), signal = options?.signal;
+      const onAbort = () => controller.abort();
+      const timer = setTimeout(() => controller.abort(), defaultTimeoutMs);
+      if (signal?.aborted)
+          controller.abort();
+      else
+          signal?.addEventListener("abort", onAbort, { once: true });
+      try {
+          if (controller.signal.aborted)
+              throw new DOMException("observation aborted", "AbortError");
+          const response = await fetchImpl(`${baseUrl}/v2/observations`, { method: "POST", body, headers: { "content-type": "application/json" }, signal: controller.signal });
+          const reader = response.body?.getReader();
+          const bytes = new Uint8Array(4_194_304);
+          let length = 0;
+          if (reader)
+              try {
+                  while (true) {
+                      const part = await reader.read();
+                      if (part.done)
+                          break;
+                      length += part.value.byteLength;
+                      if (length > 4194304) {
+                          await reader.cancel();
+                          throw new BridgeClientError({ code: "PROTOCOL_ERROR", message: "observation response exceeds 4 MiB", retryable: false, outcome: "notApplied" });
+                      }
+                      bytes.set(part.value, length - part.value.byteLength);
+                  }
+              }
+              finally {
+                  reader.releaseLock();
+              }
+          let text: string;
+          try {
+              text = new TextDecoder("utf-8", { fatal: true }).decode(bytes.subarray(0, length));
+          }
+          catch {
+              throw new BridgeClientError({ code: "PROTOCOL_ERROR", message: "invalid observation response UTF8", retryable: false, outcome: "notApplied" });
+          }
+          if (!response.ok)
+              throw httpError(response.status, text);
+          try {
+              return parseObservationResult(JSON.parse(text), request);
+          }
+          catch {
+              throw new BridgeClientError({ code: "PROTOCOL_ERROR", message: "invalid observation result identity/union/frame evidence", retryable: false, outcome: "notApplied" });
+          }
+      }
+      catch (error) {
+          if (controller.signal.aborted)
+              throw new BridgeClientError({ code: signal?.aborted ? "READ_CANCELLED" : "TRANSPORT_UNAVAILABLE", message: signal?.aborted ? "observation cancelled by caller" : "observation timed out", retryable: false, outcome: "notApplied" });
+          if (error instanceof BridgeClientError)
+              throw error;
+          throw new BridgeClientError({ ...transportError(error).details, outcome: "notApplied" });
+      }
+      finally {
+          clearTimeout(timer);
+          signal?.removeEventListener("abort", onAbort);
+      }
+  }
+
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   async function operationRequest(method: "GET" | "POST", path: string, operationId: string,
     command?: CommandRequest): Promise<OperationRecord> {
@@ -156,7 +238,82 @@ export function createBridgeClient(options: {
       throw new BridgeClientError({...transportError(error).details,operationId,retryable:false});
     }
   }
-  return { getJson, getResponse,
+  // Read all HTTP statuses under the new protocol cap; legacy getResponse is unchanged.
+  async function boundedTransit(path: string, query?: URLSearchParams,
+    options?: {signal?: AbortSignal}): Promise<unknown> {
+    const address = new URL(baseUrl);
+    if (address.protocol !== "http:" || !["127.0.0.1", "localhost", "[::1]"].includes(address.hostname) ||
+        address.username || address.password || address.pathname !== "/" || address.search || address.hash) {
+      throw new BridgeClientError({code: "INVALID_ARGUMENT", message: "bounded reads require loopback HTTP", retryable: false, outcome: "notApplied"});
+    }
+    const encoded = query ? encodeQuery(query) : "";
+    const controller = new AbortController();
+    const signal = options?.signal;
+    const onAbort = () => controller.abort();
+    const timer = setTimeout(onAbort, defaultTimeoutMs);
+    if (signal?.aborted) controller.abort();
+    else signal?.addEventListener("abort", onAbort, {once: true});
+    try {
+      if (controller.signal.aborted) throw new Error("read aborted");
+      const response = await fetchImpl(`${baseUrl}${path}${encoded ? `?${encoded}` : ""}`,
+        {signal: controller.signal});
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("missing bounded response stream");
+      const chunks: Uint8Array[] = [];
+      let length = 0;
+      try {
+        while (true) {
+          const part = await reader.read();
+          if (part.done) break;
+          length += part.value.length;
+          if (length > 262144) {
+            await reader.cancel();
+            throw new Error("bounded response exceeds256KiB");
+          }
+          chunks.push(part.value);
+        }
+        const text = new TextDecoder("utf-8", {fatal: true}).decode(Buffer.concat(chunks, length));
+        if (!response.ok) throw httpError(response.status, text);
+        return JSON.parse(text);
+      } finally {
+        reader.releaseLock();
+      }
+    } catch (error) {
+      if (controller.signal.aborted) throw new BridgeClientError({
+        code: signal?.aborted ? "READ_CANCELLED" : "TRANSPORT_UNAVAILABLE",
+        message: signal?.aborted ? "bounded read cancelled by caller" : "bounded read timed out",
+        retryable: false, outcome: "notApplied"});
+      throw error;
+    } finally {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
+    }
+  }
+  async function transitStatus(input: TransitRequest): Promise<Observation<TransitPage>> {
+    const request = transitRequestSchema.parse(input);
+    try {
+      return parseTransitObservation(await boundedTransit("/v2/transit/status", transitQuery(request)), request);
+    } catch (error) {
+      if (error instanceof BridgeClientError) throw error;
+      throw new BridgeClientError({code: "PROTOCOL_ERROR", message: "invalid bounded selected transit response", retryable: false, outcome: "notApplied"});
+    }
+  }
+  async function readMetrics(input:MetricReadRequest){
+    let request:MetricReadRequest,query:URLSearchParams;
+    try{request=metricReadRequestSchema.parse(input);query=metricQuery(request);}catch{throw new BridgeClientError({code:"INVALID_ARGUMENT",message:"invalid bounded metric request",retryable:false,outcome:"notApplied"});}
+    try{return parseMetricObservation(await boundedTransit("/v2/metrics",query),request);}catch(error){if(error instanceof BridgeClientError)throw error;throw new BridgeClientError({code:"PROTOCOL_ERROR",message:"invalid bounded metric observation",retryable:false,outcome:"notApplied"});}
+  }
+  async function metricCatalog(family:"all"|"city"|"labor"|"budget"|"transit"="all",options?:{signal?:AbortSignal}){
+    metricFamilySchema.parse(family);
+    try{
+      const definitions=metricCatalogSchema.parse(await boundedTransit("/v2/metrics/catalog",new URLSearchParams({family}),options));
+      if(family!=="all"&&definitions.some(d=>!d.key.startsWith(family+".")))throw new Error("catalog family mismatch");
+      if(family==="all"&&definitions.length!==16)throw new Error("incomplete metric catalog");
+      return definitions;
+    }catch(error){if(error instanceof BridgeClientError)throw error;throw new BridgeClientError({code:"PROTOCOL_ERROR",message:"invalid bounded metric catalog",retryable:false,outcome:"notApplied"});}
+  }
+  return { getJson, getResponse, observe, transitStatus, readMetrics,metricCatalog,
+    transitCapabilities: async () => transitCapabilitiesSchema.parse(await boundedTransit("/v2/transit/capabilities")),
     constructionInventory: async request => getJson<Observation<ConstructionSnapshot>>("/v2/construction/inventory",constructionQuery(request)),
     submit: command => operationRequest("POST","/v2/commands",command.operationId,command),
     operation: operationId => operationRequest("GET",`/v2/operations/${encodeURIComponent(operationId)}`,operationId),

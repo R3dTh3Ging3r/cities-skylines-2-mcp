@@ -46,25 +46,34 @@ namespace CS2MCP
 
         private BridgeResponse GetBudget()
         {
+            if (!TryGetCity(out _, out BridgeResponse error)) return error;
+            return BridgeResponse.Json(ReadBudgetData());
+        }
+
+        private CityBudgetData ReadBudgetData()
+        {
             if (!TryGetCity(out _, out BridgeResponse error))
             {
-                return error;
+                throw new OperationException(new BridgeErrorData(ErrorCodes.NotReady,"city unavailable",httpStatus:409));
             }
 
             CityServiceBudgetSystem budget = World.GetOrCreateSystemManaged<CityServiceBudgetSystem>();
 
+            CityObservationBounds.BudgetCounts((int)IncomeSource.Count,(int)ExpenseSource.Count);
             var income = new Dictionary<string, int>();
             for (int i = 0; i < (int)IncomeSource.Count; i++)
             {
-                income[((IncomeSource)i).ToString()] = budget.GetIncome((IncomeSource)i);
+                string key=((IncomeSource)i).ToString();CityObservationBounds.Text(key,128);
+                income[key] = budget.GetIncome((IncomeSource)i);
             }
             var expenses = new Dictionary<string, int>();
             for (int i = 0; i < (int)ExpenseSource.Count; i++)
             {
-                expenses[((ExpenseSource)i).ToString()] = budget.GetExpense((ExpenseSource)i);
+                string key=((ExpenseSource)i).ToString();CityObservationBounds.Text(key,128);
+                expenses[key] = budget.GetExpense((ExpenseSource)i);
             }
 
-            return BridgeResponse.Json(new
+            return new CityBudgetData
             {
                 metricMetadata = MetricContracts.DescribeBudget(),
                 note = "hourly-updated monthly rates; totalExpenses is the native signed aggregate (negative costs); " +
@@ -74,9 +83,9 @@ namespace CS2MCP
                 totalTaxIncome = budget.GetTotalTaxIncome(),
                 balance = budget.GetBalance(),
                 moneyDelta = budget.GetMoneyDelta(),
-                income,
-                expenses,
-            });
+                income = income,
+                expenses = expenses,
+            };
         }
 
         private BridgeResponse GetTaxes()

@@ -14,7 +14,10 @@ dotnet build tests/CS2MCP.CoreTests/CS2MCP.CoreTests.csproj -c Release
 & tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite metrics
 & tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite values
 & tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite operations
+& tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite deferred
 & tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite construction-inventory
+& tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite observations
+& tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite transit-read
 # Serializer integration runner: links production BridgeResponse, using only the
 # already-installed Newtonsoft runtime assembly (no Game/Unity/ECS references).
 dotnet build tests/CS2MCP.ResponseTests/CS2MCP.ResponseTests.csproj -c Release '-p:GamePath=E:/SteamLibrary/steamapps/common/Cities Skylines II'
@@ -67,3 +70,51 @@ doubles for that dispatch test; it does not certify native ECS or serialization.
 `mcp-server/test/construction.test.mjs` runs actual MCP registration over stdio and
 the typed compact GET transport against an ephemeral fake bridge. Native
 G1/G2/CON-01 remain `notRun`.
+
+The `observations` suite executes the actual fixed catalog, shared scheduler and
+typed native interface binding file with explicitly labeled native-data doubles.
+The response runner additionally links the real HTTP server, BridgeRequest,
+serializer and scheduler: it tests actual loopback disconnect before/after partial
+dispatch, timeout cleanup, strict ingress and UTF-8 item/group limits. Only Mod
+logging/build globals are doubled there. Existing SDK Newtonsoft may be supplied
+for nongame serializer checks; that is not installed-game serializer/native parity.
+`observations.test.mjs` exercises actual MCP cancellation, strict registration,
+abortable typed transport and bounded streamed response validation. Full O7
+mutation batches and native timing/performance remain unverified/notRun.
+
+The `transit-read` suite exercises the production strict query, extraction budget,
+read model, world fence and fixed observation-catalog/native-interface binding.
+The response runner exercises actual finite UTF8 serialization for selected
+transit, ordinary 128-entry cases and escaped-world oversize refusals. Node transit
+tests exercise real MCP registration, typed compact GET, full-ref O7 requests,
+selected payload validation and bounded success/error streams. Native adapters
+still require installed-reference compilation and the separately qualified manual
+fixture in `docs/native/transit-readback.md`.
+
+The `diagnostic-metrics` core suite executes the actual typed M4 producer and its
+linked native interface binding with explicit native-data doubles. It covers
+presence-versus-zero Population, sixteen source mappings, signed monthly budgets,
+source-once counts, unavailable/nonfinite values, original clock source bounds,
+world fencing, T1 per-slot assessments and qualified structural fingerprints.
+The response runner adds actual GET ingress/server/facades, O7 scheduling,
+Newtonsoft serialization, optional catalog envelope and response bounds.
+
+`mcp-server/test/diagnostic-metrics.test.mjs` validates actual SDK registration,
+typed GET/O7 clients, strict arguments, all-status byte/UTF8/JSON limits and the
+production C# wire shape. Its checked-in JSON fixture contains **synthetic typed
+native-boundary data**, serialized by the actual producer/ObservationWire; it is
+not game telemetry. For a fresh interop check, set `M4_WIRE_DIR` to an ignored
+directory when running the response runner, then set the same variable for the
+Node suite. This tests both city and selected-line null metadata, State fallback,
+failed source and invalid clock. Run the Node suite without that variable too,
+so the checked-in default fixture cannot silently drift.
+
+Canonical projects remain net472. In cloud, cached Framework reference assemblies
+permit building them without installing packages; an existing SDK's Framework
+Newtonsoft can be passed through `-p:NewtonsoftPath=...`. Exact-source temporary
+net8 runners can execute linked portable tests and the existing SDK serializer,
+but their target/runtime/serializer differ from the installed game. Record those
+differences; no managed success certifies native binding, getter internals,
+performance or G1/unit/calendar/panel parity. Do not repeat unavailable PowerShell
+`evidence.test.mjs` or `native-runner.test.mjs` as portable tests in this cloud
+environment. Preserve their native validation gates as `notRun`.

@@ -29,8 +29,8 @@ namespace CS2MCP
                 ["metro"] = TransportType.Subway,
                 ["subway"] = TransportType.Subway,
                 ["train"] = TransportType.Train,
-                // Listing only: airport gates and the map's air connections. Flights are run by
-                // the game itself, so airplane lines and stops cannot be created.
+                // Air aliases support discovery; read, preview, create and edit capabilities
+                // require separate per-mode native evidence.
                 ["airplane"] = TransportType.Airplane,
                 ["air"] = TransportType.Airplane,
             };

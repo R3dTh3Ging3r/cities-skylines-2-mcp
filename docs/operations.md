@@ -77,9 +77,13 @@ The existing legacy queue now bounds pending requests at 256 and starts at most
 one writer plus eight reads or 2 ms additional queued work per update. Existing
 legacy writers capture a managed ingress world and reject at dispatch when it
 changed or remains unavailable. Legacy reads retain their existing behavior.
-These checks do **not** fence deferred rename/tile/tool callbacks, supply a
-caller-observed world, disable legacy writes by default, or prevent a legacy
-writer conflicting with a later v2 lease. O5 must deliver that migration together
+The original O2 checks did not fence deferred callbacks. The subsequent bounded
+O3 slice now fences deferred transit naming (including its response/name getter),
+tile refresh and screenshot capture/publication, and disarms old-world auto-pause.
+It still does **not** fence generic tool creation/apply, the earlier transit
+CreateDefinitions/WaitForPaths/OnStopRunning stages, supply a caller-observed
+legacy world, disable legacy writes by default, or prevent a legacy writer
+conflicting with a later v2 lease. O5 must deliver that migration together
 with explicit local compatibility opt-in and `retrySafe:false` server-assigned
 legacy IDs. Until then, no release 2 or all-writer safety claim is made.
 
@@ -95,3 +99,68 @@ its bounded entity reads. Only the three fixed operation routes use listener-sid
 managed refusal. Inventory supports query parameters as documented in
 [the bridge API](bridge-api.md#bounded-explicit-construction-inspection-partial-c1);
 operation routes still reject them. It supplies no writer or lease authority.
+
+## Deferred-world safety slice
+
+The named O3 continuations retain the original ingress WorldRef. Each native
+callback and delayed response builder checks world/readiness before and after
+execution. Failure permanently discards that continuation, so later readiness
+recovery cannot revive old work or idle tool restoration. A refused line finish
+clears managed state without reading/restoring native tool state; this is not a
+native cleanup or writer-readiness acknowledgment. Other tool lifecycle paths
+remain outside this slice and require O3/O5/G1.
+
+A stale/failed post-create line continuation returns a non-retryable partial or
+unknown outcome. It never inspects the replacement city's entity to reconcile
+old effects. Stale tile refresh is dropped without undoing the earlier purchase.
+Legacy auto-pause retains its start world and clears on preload, observed
+readiness loss and system destruction. It is not the O6 monotonic run supervisor.
+
+Successful PNG responses add X-CS2MCP-Boot-Id, X-CS2MCP-Epoch and
+X-CS2MCP-World-Ready headers. The MCP screenshot tool preserves its image and
+adds structuredContent.captureWorld/captureWorldReady when these headers exist.
+Main-menu/loading diagnostic images may report readiness=false; that is not a
+ready-city observation. A changed world/readiness during deferred capture makes
+an explicit error instead of publishing an image. Older bridges without these
+headers preserve legacy image output; malformed/partial metadata produces a
+protocol error. No native G1 assertion has been executed or passed by this work.
+
+Partial O7 adds [bounded read-only observation groups](observations.md), with a
+fixed catalog, shared ordinary/group pending and dispatch accounting, and actual
+HTTP timeout/disconnect cleanup. `POST /v2/observations` accepts a strict JSON body
+and rejects query parameters. It introduces no mutation batch, operation registry
+replay, lease or writer completion authority. Ordinary writer timeouts retain
+their existing unknown-outcome semantics.
+
+Partial M4 adds `cs2_metric_catalog` and `cs2_observe` over the
+[typed diagnostic metric API](bridge-api.md#typed-diagnostic-metrics-partial-m4).
+First obtain a ready observed world from capabilities or a state observation
+group, discover the catalog, then copy that exact world into an explicit city or
+selected-line request. For example, `cs2_observe` with
+`scope={kind:"city"}` and keys `city.population`, `city.money`, `budget.balance`
+returns typed values with units, periods and unavailable reasons. A missing
+Population component produces unavailable population, not a measured zero.
+Monthly signed costs remain monthly signed costs.
+
+Use O7 `metrics.read` when source-specific frames, raw normalized clock evidence
+and fixed member metadata are required; the direct metric read returns the
+dictionary facade of the same producer. Source sampling is sequential and never
+atomic. Refresh timestamps, native clock conversion, panel parity and performance
+remain unverified. Selected-line fault counts require complete per-slot evidence;
+unknown distance does not become zero invalid segments. M4 itself adds no automatic score, simulation change or new writer capability.
+
+The bounded [M5 collection workflow](observations.md#collected-diagnostic-history--bounded-m5-slice)
+now uses those same metric batches. Call `cs2_collect_observations` with explicit
+world/queries/scope/cohort and an interval of at least 1000ms; retain the returned
+process-local ID. Collect two or more observations, call
+`cs2_stop_observation_collection`, then page `cs2_read_observation_history`.
+Repeat for a second history and pass explicit retained inclusive sequence ranges,
+the exact cohort and raw-normalized-time policy to `cs2_compare_observations`.
+Stop returns a bounded summary, not a full history. Eight histories remain
+retained including stopped histories; there is no deletion or persistence.
+Comparison requires compatible source/clock/member evidence and never turns a
+new empty replacement line into improvement. All v1 improvement fields are null;
+large complete comparisons explicitly require narrower ranges. Disconnect/EOF
+and shutdown abort pending collection reads without affecting simulation or
+writer operations. Native history, calendar conversion, source refresh and
+performance remain unverified.

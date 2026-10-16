@@ -80,8 +80,10 @@ namespace CS2MCP.CoreTests
                     Program.Equal(null, Property(identity, "sourceRevision"));
                     Program.Equal("sourceRevisionUnavailable", Property(identity, "sourceRevisionReason"));
                     var bridge = ((IEnumerable)Property(manifest, "capabilities")).Cast<Capability>().ToArray();
-                    Program.Equal(70, bridge.Length);
+                    Program.Equal(75, bridge.Length);
                     Program.Equal("supported", bridge.Single(item => item.name == "cs2_build_road").support);
+                    Program.Equal("degraded", bridge.Single(item => item.name == "cs2_observe").support);
+                    Program.Equal("degraded", bridge.Single(item => item.name == "cs2_metric_catalog").support);
                     var native = ((IEnumerable)Property(manifest, "nativeSupport")).Cast<Capability>().ToArray();
                     Program.Equal("unverified", native.Single(item => item.name == "cs2_build_road").support);
                     Program.Equal("unsupported", native.Single(item => item.name == "transitPassengerAirCreation").support);
@@ -146,16 +148,16 @@ namespace CS2MCP.CoreTests
                     .Concat(Regex.Matches(File.ReadAllText("CS2MCP.Bridge/HttpBridgeServer.cs"), "request.Path == \"([^\"]+)\"")
                         .Cast<Match>().Select(match => match.Groups[1].Value)).Distinct().ToArray();
                 // Dynamic v2 patterns are routed through the production ingress/catalog, not switch cases.
-                routes = routes.Concat(new[] { "/v2/commands", "/v2/operations/{operationId}", "/v2/operations/{operationId}/cancel" }).Distinct().ToArray();
-                Program.Equal(70, routes.Length);
-                Program.Equal(70, byPath.Count);
+                routes = routes.Concat(new[] { "/v2/observations", "/v2/commands", "/v2/operations/{operationId}", "/v2/operations/{operationId}/cancel" }).Distinct().ToArray();
+                Program.Equal(75, routes.Length);
+                Program.Equal(75, byPath.Count);
                 foreach (string path in routes)
                 {
                     if (!byPath.ContainsKey(path)) throw new Exception("missing classification: " + path);
                     var endpoint = byPath[path];
                     if (!new[] { "read", "cityWrite", "uiWrite", "nativePreview", "control" }.Contains((string)Property(endpoint, "access")))
                         throw new Exception("invalid access classification: " + path);
-                    Program.Equal(path == "/v2/commands" || path.EndsWith("/cancel", StringComparison.Ordinal) ? "POST" : "GET",
+                    Program.Equal(path == "/v2/commands" || path == "/v2/observations" || path.EndsWith("/cancel", StringComparison.Ordinal) ? "POST" : "GET",
                         string.Join(",", (IEnumerable<string>)Property(endpoint, "legacyHttpVerbs")));
                     if (string.IsNullOrEmpty((string)Property(endpoint, "capability"))) throw new Exception("missing capability: " + path);
                     if (string.IsNullOrEmpty((string)Property(endpoint, "completionMechanism"))) throw new Exception("missing completion: " + path);
