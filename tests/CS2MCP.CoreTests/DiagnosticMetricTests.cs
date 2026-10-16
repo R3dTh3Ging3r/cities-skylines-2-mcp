@@ -120,14 +120,94 @@ namespace CS2MCP.CoreTests
                 Program.Equal(9d, result.data.values["city.money"].value);
                 Program.Equal("city.overview", string.Join(",", handlers.BoundCalls));
             });
-            Program.Check("catalog exposes exactly sixteen real definitions with no invented units or stock periods", () =>
+            Program.Check("catalog exposes exactly twenty-six real definitions with no invented units or stock periods", () =>
             {
                 var definitions = DiagnosticMetricCatalog.Read();
-                Program.Equal(16, definitions.Length);
+                Program.Equal(26, definitions.Length);
                 Program.Equal(4, definitions.Count(d => d.kind == "rate" && d.period == "month"));
                 Program.Equal(true, definitions.Where(d => d.kind != "rate").All(d => d.period == null));
                 Program.Equal(false, definitions.Any(d => d.key.Contains("length") || d.unit == "percent"));
                 Program.Throws<OperationException>(() => DiagnosticMetricCatalog.Read("*"));
+            });
+            Program.Check("education workplace buckets map independently with one labor read and original state clock", () =>
+            {
+                var s = new Sources();
+                s.LaborData.jobs.totalByEducation = new EducationCounters { uneducated = 11, poorlyEducated = 12, educated = 13, wellEducated = 14, highlyEducated = 15 };
+                s.LaborData.jobs.freeByEducation = new EducationCounters { uneducated = 1, poorlyEducated = 2, educated = 3, wellEducated = 4, highlyEducated = 0 };
+                string[] tiers = { "uneducated", "poorlyEducated", "educated", "wellEducated", "highlyEducated" };
+                string[] native = { "Uneducated", "PoorlyEducated", "Educated", "WellEducated", "HighlyEducated" };
+                var keys = tiers.Select(t => "labor.jobs.totalByEducation." + t).Concat(tiers.Select(t => "labor.jobs.freeByEducation." + t)).ToArray();
+                var result = Read(s, keys.Concat(new[] { "labor.jobs.total", "labor.jobs.free" }).ToArray());
+                Program.Equal("labor,state", string.Join(",", s.Calls));
+                Program.Equal("state", result.data.clock.sourceObservationId);
+                Program.Equal(8d, result.data.values["labor.jobs.total"].value);
+                Program.Equal(2d, result.data.values["labor.jobs.free"].value);
+                for (int i = 0; i < keys.Length; i++)
+                {
+                    var value = result.data.values[keys[i]];
+                    var definition = DiagnosticMetricCatalog.Read("labor").Single(d => d.key == keys[i]);
+                    Program.Equal((double?)(i < 5 ? 11 + i : i == 9 ? 0 : i - 4), value.value);
+                    Program.Equal("supported", value.support);
+                    Program.Equal("workplaceSlots", value.unit);
+                    Program.Equal(null, value.period);
+                    Program.Equal("count", definition.kind);
+                    Program.Equal("cachedSimulationCounterRefreshTimeUnknown", definition.refresh);
+                    Program.Equal("CountWorkplacesSystem.Get" + (i < 5 ? "Total" : "Free") + "Workplaces.m_" + native[i % 5], value.source);
+                    Program.Equal("unverified", definition.support.support);
+                }
+                Program.Equal(14, DiagnosticMetricCatalog.Read("labor").Length);
+                Program.Equal("diagnosticMetrics.v1", result.data.definitionRevision);
+                Program.Equal(true, result.data.sources.All(x => x.refreshTimeUtc == null));
+            });
+            Program.Check("missing education counter objects are unavailable while present zero and other buckets survive", () =>
+            {
+                var s = new Sources();
+                var keys = new[] { "labor.jobs.totalByEducation.uneducated", "labor.jobs.freeByEducation.uneducated", "labor.jobs.freeByEducation.educated" };
+                s.LaborData.jobs.freeByEducation = new EducationCounters { uneducated = -1, educated = 0 };
+                var result = Read(s, keys);
+                Program.Equal(null, result.data.values[keys[0]].value);
+                Program.Equal("workplaceEducationCountersUnavailable", result.data.values[keys[0]].reason);
+                Program.Equal("invalidNativeCount", result.data.values[keys[1]].reason);
+                Program.Equal(0d, result.data.values[keys[2]].value);
+                Program.Equal("supported", result.data.values[keys[2]].support);
+                s.LaborData.jobs = null;
+                Program.Equal(null, Read(s, keys).data.values[keys[2]].value);
+                s.LaborData = null;
+                var absent = Read(s, keys);
+                Program.Equal("unavailable", absent.data.values[keys[0]].support);
+                Program.Equal("incomplete", absent.data.sources.Single(x => x.id == "city.labor").completeness);
+                s.During = () => throw new Exception("controlled missing source");
+                Program.Equal(null, Read(s, keys).data.values[keys[0]].value);
+            });
+            Program.Check("education counters respect strict admission and original world across labor source failure", () =>
+            {
+                string key = "labor.jobs.freeByEducation.highlyEducated";
+                Program.Throws<OperationException>(() => Request(new[] { key, key }));
+                Program.Throws<OperationException>(() => Request(new[] { key }, true));
+                Program.Throws<OperationException>(() => Request(new[] { "labor.jobs.freeByEducation.unknown" }));
+                var worlds = Ready();
+                var s = new Sources { During = () => worlds.BeginLoad() };
+                Program.Throws<OperationException>(() => Read(s, new[] { key }, world: worlds));
+                Program.Equal("labor", string.Join(",", s.Calls));
+            });
+            Program.Check("every negative education bucket fails independently without clamping its neighbors", () =>
+            {
+                string[] fields = { "uneducated", "poorlyEducated", "educated", "wellEducated", "highlyEducated" };
+                foreach (string kind in new[] { "total", "free" })
+                foreach (string field in fields)
+                {
+                    var s = new Sources();
+                    s.LaborData.jobs.totalByEducation = new EducationCounters();
+                    s.LaborData.jobs.freeByEducation = new EducationCounters();
+                    var counters = kind == "total" ? s.LaborData.jobs.totalByEducation : s.LaborData.jobs.freeByEducation;
+                    typeof(EducationCounters).GetProperty(field).SetValue(counters, -1);
+                    string invalid = "labor.jobs." + kind + "ByEducation." + field;
+                    var keys = DiagnosticMetricCatalog.Read("labor").Where(d => d.key.Contains("ByEducation")).Select(d => d.key).ToArray();
+                    var result = Read(s, keys);
+                    Program.Equal("invalidNativeCount", result.data.values[invalid].reason);
+                    Program.Equal(null, result.data.values[invalid].value);
+                    Program.Equal(true, result.data.values.Where(pair => pair.Key != invalid).All(pair => pair.Value.value == 0 && pair.Value.support == "supported"));
+                }
             });
             Program.Check("population presence distinguishes supported zero from legacy absent default without losing money", () =>
             {

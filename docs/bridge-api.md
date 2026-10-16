@@ -384,7 +384,7 @@ or change the three operation-route refusals.
 
 ## Typed diagnostic metrics (partial M4)
 
-`cs2_metric_catalog` / `GET /v2/metrics/catalog` discover sixteen fixed raw
+`cs2_metric_catalog` / `GET /v2/metrics/catalog` discover twenty-six fixed raw
 metrics. Optional `family=all|city|labor|budget|transit` filters the compatibility
 array. `envelope=true` is an additive GET option returning definitions, revision,
 managed world/readiness/freshness, sample UTC and build identity; its freshness
@@ -411,11 +411,29 @@ request is:
 `GET /v2/metrics?query=<percent-encoded JSON>` carries that same request and
 returns `Observation<Record<string,MetricValue>>`. Use the shared query encoder;
 do not concatenate JSON into a URL. Require1–64 distinct known keys (the current
-catalog contains16), exact fields, and empty parameter maps for these definitions.
+catalog contains26), exact fields, and empty parameter maps for these definitions.
 Unknown keys, parameter semantics, areas, buildings, pagination and mixed scopes
 reject before native dispatch. Selected-line metrics use
 `scope={kind:"selectedLine",line:EntityRef}` with full observed world/index/version;
 they accept only transit keys. City scope accepts only city/labor/budget keys.
+The additive `diagnosticMetrics.v1` extension includes ten
+`labor.jobs.totalByEducation.<tier>` / `labor.jobs.freeByEducation.<tier>` keys,
+where tier is `uneducated`, `poorlyEducated`, `educated`, `wellEducated` or
+`highlyEducated`. Each is a cached native `count` in `workplaceSlots`, with no
+rate period. These are total/free job slots by the native education bucket;
+vacancies do not measure unemployed workers, worker qualifications or a proven
+labor bottleneck. Native totals remain separate; bucket sums are not forced to
+match them, and no occupancy/shortage ratio is inferred. Missing counter objects
+and negative counts yield null/unavailable; a present zero remains supported.
+
+The updated client accepts valid older16-key catalogs and unchanged old-key
+batches. A collection requesting a new key absent from its actual authoritative
+catalog refuses before polling. Older clients that cap catalogs at16 are not
+promised compatible with the expanded catalog. Selected definitions remain
+pinned in each history; the revision and all previous metric meanings stay v1.
+Actual MCP discovery exposes the strict typed metric inputs and all known keys;
+exactly one of keys/queries remains required by handler validation. SDK input
+errors are bounded independently of the existing response/history limits.
 GET routes accept no body. The encoded metric query limit is12,000 characters,
 within the existing16KiB whole-header limit. Larger future query forms can use
 the existing bounded O7 POST; no new read POST or arbitrary URL dispatch exists.

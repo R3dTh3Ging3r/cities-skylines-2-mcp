@@ -1,4 +1,4 @@
-import {metricFamilySchema,metricCatalogSchema,metricReadRequestSchema,metricQuery,parseMetricObservation,type MetricDefinition,type MetricReadRequest} from "./diagnostic-metric-contracts.js";
+import {legacyMetricKeys,metricFamilySchema,metricCatalogSchema,metricReadRequestSchema,metricQuery,parseMetricObservation,type MetricDefinition,type MetricReadRequest} from "./diagnostic-metric-contracts.js";
 import {transitRequestSchema,transitQuery,parseTransitObservation,transitCapabilitiesSchema,type TransitRequest,type TransitPage,type TransitCapabilities} from "./features/transit-contracts.js";
 import {observationRequestSchema,parseObservationResult} from "./observation-contracts.js";
 import {parseConstructionObservation} from "./construction-contracts.js";
@@ -309,7 +309,9 @@ export function createBridgeClient(options: {
     try{
       const definitions=metricCatalogSchema.parse(await boundedTransit("/v2/metrics/catalog",new URLSearchParams({family}),options));
       if(family!=="all"&&definitions.some(d=>!d.key.startsWith(family+".")))throw new Error("catalog family mismatch");
-      if(family==="all"&&definitions.length!==16)throw new Error("incomplete metric catalog");
+      // v1 keeps its original definitions; bounded additive keys may be absent
+      // on older producers. Collection separately checks every selected key.
+      if(family==="all"&&legacyMetricKeys.some(key=>!definitions.some(definition=>definition.key===key)))throw new Error("incomplete metric catalog");
       return definitions;
     }catch(error){if(error instanceof BridgeClientError)throw error;throw new BridgeClientError({code:"PROTOCOL_ERROR",message:"invalid bounded metric catalog",retryable:false,outcome:"notApplied"});}
   }

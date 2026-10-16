@@ -264,7 +264,7 @@ internal static class DiagnosticMetricWireTests
             var handlers = new RequestHandlers();
             var plain = Invoke(handlers, "MetricCatalogRequest", new BridgeRequest { MetricCatalog = Get("/v2/metrics/catalog").MetricCatalog });
             var array = JArray.Parse(Encoding.UTF8.GetString(plain.Body));
-            Equal(16, array.Count);
+            Equal(26, array.Count);
             var envelope = Invoke(handlers, "MetricCatalogRequest", new BridgeRequest { MetricCatalog = Get("/v2/metrics/catalog?envelope=true&family=budget").MetricCatalog });
             var value = JObject.Parse(Encoding.UTF8.GetString(envelope.Body));
             Equal(4, ((JArray)value["definitions"]).Count);

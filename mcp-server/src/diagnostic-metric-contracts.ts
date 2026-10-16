@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { entityRefSchema, worldRefSchema } from "./construction-query.js";
-export const metricKeys = ["city.population", "city.populationWithMoveIn", "city.money", "city.xp", "labor.employed", "labor.homelessCitizens", "labor.jobs.total", "labor.jobs.free", "budget.income", "budget.expenses", "budget.taxIncome", "budget.balance", "transit.waypointCount", "transit.segmentCount", "transit.brokenWaypointCount", "transit.invalidSegmentCount"] as const;
+export const legacyMetricKeys = ["city.population", "city.populationWithMoveIn", "city.money", "city.xp", "labor.employed", "labor.homelessCitizens", "labor.jobs.total", "labor.jobs.free", "budget.income", "budget.expenses", "budget.taxIncome", "budget.balance", "transit.waypointCount", "transit.segmentCount", "transit.brokenWaypointCount", "transit.invalidSegmentCount"] as const;
+export const workforceMetricKeys = ["labor.jobs.totalByEducation.uneducated", "labor.jobs.totalByEducation.poorlyEducated", "labor.jobs.totalByEducation.educated", "labor.jobs.totalByEducation.wellEducated", "labor.jobs.totalByEducation.highlyEducated", "labor.jobs.freeByEducation.uneducated", "labor.jobs.freeByEducation.poorlyEducated", "labor.jobs.freeByEducation.educated", "labor.jobs.freeByEducation.wellEducated", "labor.jobs.freeByEducation.highlyEducated"] as const;
+export const metricKeys = [...legacyMetricKeys, ...workforceMetricKeys] as const;
 const metricMeanings = {
     "city.population": {
         "kind": "count",
@@ -48,6 +50,66 @@ const metricMeanings = {
         "kind": "count",
         "unit": "workplaceSlots",
         "source": "CountWorkplacesSystem.GetFreeWorkplaces.TotalCount",
+        "period": null
+    },
+    "labor.jobs.totalByEducation.uneducated": {
+        "kind": "count",
+        "unit": "workplaceSlots",
+        "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_Uneducated",
+        "period": null
+    },
+    "labor.jobs.totalByEducation.poorlyEducated": {
+        "kind": "count",
+        "unit": "workplaceSlots",
+        "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_PoorlyEducated",
+        "period": null
+    },
+    "labor.jobs.totalByEducation.educated": {
+        "kind": "count",
+        "unit": "workplaceSlots",
+        "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_Educated",
+        "period": null
+    },
+    "labor.jobs.totalByEducation.wellEducated": {
+        "kind": "count",
+        "unit": "workplaceSlots",
+        "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_WellEducated",
+        "period": null
+    },
+    "labor.jobs.totalByEducation.highlyEducated": {
+        "kind": "count",
+        "unit": "workplaceSlots",
+        "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_HighlyEducated",
+        "period": null
+    },
+    "labor.jobs.freeByEducation.uneducated": {
+        "kind": "count",
+        "unit": "workplaceSlots",
+        "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_Uneducated",
+        "period": null
+    },
+    "labor.jobs.freeByEducation.poorlyEducated": {
+        "kind": "count",
+        "unit": "workplaceSlots",
+        "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_PoorlyEducated",
+        "period": null
+    },
+    "labor.jobs.freeByEducation.educated": {
+        "kind": "count",
+        "unit": "workplaceSlots",
+        "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_Educated",
+        "period": null
+    },
+    "labor.jobs.freeByEducation.wellEducated": {
+        "kind": "count",
+        "unit": "workplaceSlots",
+        "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_WellEducated",
+        "period": null
+    },
+    "labor.jobs.freeByEducation.highlyEducated": {
+        "kind": "count",
+        "unit": "workplaceSlots",
+        "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_HighlyEducated",
         "period": null
     },
     "budget.income": {
@@ -137,7 +199,7 @@ export const metricDefinitionSchema = z.object({
         ctx.addIssue({ code: "custom", message: "invalid definition meaning" });
 });
 export type MetricDefinition = z.infer<typeof metricDefinitionSchema>;
-export const metricCatalogSchema = z.array(metricDefinitionSchema).min(1).max(16).superRefine((definitions, ctx) => {
+export const metricCatalogSchema = z.array(metricDefinitionSchema).min(1).max(26).superRefine((definitions, ctx) => {
     if (new Set(definitions.map(d => d.key)).size !== definitions.length)
         ctx.addIssue({ code: "custom", message: "duplicate metric definition" });
 });

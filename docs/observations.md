@@ -41,6 +41,13 @@ not deserialize legacy responses. City names are capped at256 characters for
 observation admission to a result; oversized strings fail explicitly rather than
 being truncated. Legacy wrapper fields/defaults remain available.
 
+`metrics.read` includes ten total/free workplace-slot counters by native education
+tier. The existing typed labor source is read once for all requested labor keys;
+source refresh time remains unknown. Collection and qualified stored comparison
+retain each bucket separately, with no worker-supply or shortage diagnosis.
+Missing buckets stay unavailable and improvement remains null. See the
+[metric contract and compatibility notes](bridge-api.md#typed-diagnostic-metrics-partial-m4).
+
 Result shape is `{world,startFrame,endFrame,worldChanged,results}`. Rows preserve
 input order and contain exactly one `{id,observation}` or `{id,error}`. Successful
 items use the shared Observation shape (`data`, world, sample UTC, frame bounds,
