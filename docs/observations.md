@@ -21,6 +21,9 @@ optional; admission always captures the original ready world. Every item is
 validated before reserving any work. Require 1–64 unique IDs, each 1–128 UTF-16
 characters. Only the names below and their exact arguments are accepted; unknown
 fields, writers, URLs, dependencies and leases reject the whole request.
+MCP discovery advertises this strict object and every typed catalog branch,
+including the optional inventory relationship literal. SDK validation errors
+are bounded to256KiB; this error limit does not replace the4MiB group result limit.
 
 | Fixed name | Arguments and source scope |
 | --- | --- |

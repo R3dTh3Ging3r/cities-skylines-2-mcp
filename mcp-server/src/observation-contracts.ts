@@ -8,7 +8,10 @@ const context = z.object({ id: z.string().min(1).max(128), name: z.enum(["state"
 const metrics=z.object({id:z.string().min(1).max(128),name:z.literal("metrics.read"),args:metricReadRequestSchema}).strict();
 const transit = z.object({id:z.string().min(1).max(128),name:z.literal("transit.selectedLine"),args:transitRequestSchema}).strict();
 const inventory = z.object({ id: z.string().min(1).max(128), name: z.literal("construction.inventory"), args: constructionRequestSchema }).strict();
-export const observationRequestSchema = z.object({ expectedWorld: worldRefSchema.optional(), items: z.array(z.discriminatedUnion("name", [context, inventory, transit, metrics])).min(1).max(64) }).strict().superRefine((request, ctx) => {
+// The SDK needs the object facade to discover fields. The typed client still
+// consumes the refined schema below, including all nested and cross-field checks.
+export const observationRequestObjectSchema = z.object({ expectedWorld: worldRefSchema.optional(), items: z.array(z.discriminatedUnion("name", [context, inventory, transit, metrics])).min(1).max(64) }).strict();
+export const observationRequestSchema = observationRequestObjectSchema.superRefine((request, ctx) => {
     const ids = new Set<string>();
     for (const [i, item] of request.items.entries()) {
         if (ids.has(item.id))

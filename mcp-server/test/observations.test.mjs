@@ -8,6 +8,178 @@ const world = { bootId: 'boot', epoch: 1 };
 const request = { items: [{ id: 'a', name: 'state', args: {} }] };
 const observation = { data: { cityLoaded: true }, world, startFrame: 10, endFrame: 10, sampledAtUtc: '2026-10-16T00:00:00Z', freshness: 'current', warnings: [] };
 const result = { world, startFrame: 10, endFrame: 10, worldChanged: false, results: [{ id: 'a', observation }] };
+
+test('actual O7 listTools exposes the strict bounded fixed catalog and full nested inputs', async () => {
+    const mcp = await startOfflineMcp('http://127.0.0.1:1');
+    try {
+        const schema = (await mcp.client.listTools()).tools.find(t => t.name === 'cs2_observe_batch').inputSchema;
+        const exact = (node, required, fields = required) => {
+            assert.deepEqual(new Set(node.required), new Set(required));
+            assert.deepEqual(Object.keys(node.properties).sort(), [...fields].sort());
+            assert.equal(node.additionalProperties, false);
+        };
+        const resolve = node => {
+            while (node.$ref) node = node.$ref.slice(2).split('/').reduce((value, key) => value[key], schema);
+            return node;
+        };
+        const checkWorld = node => {
+            node = resolve(node); exact(node, ['bootId', 'epoch']);
+            assert.deepEqual(node.properties.bootId, {type: 'string', minLength: 1, maxLength: 128});
+            assert.deepEqual(node.properties.epoch, {type: 'integer', minimum: 0, maximum: Number.MAX_SAFE_INTEGER});
+        };
+        const checkRef = node => {
+            node = resolve(node); exact(node, ['world', 'index', 'version']); checkWorld(node.properties.world);
+            for (const field of ['index', 'version'])
+                assert.deepEqual(node.properties[field], {type: 'integer', minimum: 1, maximum: 2147483647});
+        };
+        exact(schema, ['items'], ['expectedWorld', 'items']); checkWorld(schema.properties.expectedWorld);
+        const items = schema.properties.items;
+        assert.equal(items.minItems, 1); assert.equal(items.maxItems, 64);
+        const branches = items.items.anyOf.map(resolve);
+        const byName = new Map();
+        for (const branch of branches) {
+            exact(branch, ['id', 'name', 'args']);
+            assert.deepEqual(branch.properties.id, {type: 'string', minLength: 1, maxLength: 128});
+            const name = branch.properties.name;
+            for (const key of name.enum ?? [name.const]) byName.set(key, resolve(branch.properties.args));
+        }
+        assert.deepEqual([...byName.keys()].sort(), ['state', 'city.overview', 'city.services', 'city.labor',
+            'city.budget', 'construction.inventory', 'transit.selectedLine', 'metrics.read'].sort());
+        for (const name of ['state', 'city.overview', 'city.services', 'city.labor', 'city.budget'])
+            exact(byName.get(name), []);
+        const inventory = byName.get('construction.inventory');
+        exact(inventory, ['world', 'entities'], ['world', 'entities', 'relationships']); checkWorld(inventory.properties.world);
+        assert.deepEqual(inventory.properties.relationships, {type: 'string', const: 'directDepth1'});
+        assert.equal(inventory.properties.entities.minItems, 1); assert.equal(inventory.properties.entities.maxItems, 32);
+        checkRef(inventory.properties.entities.items);
+        const transit = byName.get('transit.selectedLine');
+        exact(transit, ['line'], ['line', 'mode', 'purpose']); checkRef(transit.properties.line);
+        assert.deepEqual(transit.properties.mode.enum, ['bus', 'tram', 'metro', 'train', 'airplane']);
+        assert.deepEqual(transit.properties.purpose.enum, ['passenger', 'cargo']);
+        const metrics = byName.get('metrics.read'); exact(metrics, ['world', 'scope', 'queries']); checkWorld(metrics.properties.world);
+        const scopes = metrics.properties.scope.anyOf.map(resolve);
+        exact(scopes[0], ['kind']); assert.equal(scopes[0].properties.kind.const, 'city');
+        exact(scopes[1], ['kind', 'line']); assert.equal(scopes[1].properties.kind.const, 'selectedLine');
+        checkRef(scopes[1].properties.line);
+        const queries = metrics.properties.queries;
+        assert.equal(queries.minItems, 1); assert.equal(queries.maxItems, 64);
+        exact(queries.items, ['key', 'parameters']); exact(queries.items.properties.parameters, []);
+        assert.deepEqual(queries.items.properties.key.enum, ['city.population', 'city.populationWithMoveIn', 'city.money', 'city.xp',
+            'labor.employed', 'labor.homelessCitizens', 'labor.jobs.total', 'labor.jobs.free',
+            'budget.income', 'budget.expenses', 'budget.taxIncome', 'budget.balance',
+            'transit.waypointCount', 'transit.segmentCount', 'transit.brokenWaypointCount', 'transit.invalidSegmentCount']);
+    } finally { await mcp.close(); }
+});
+
+test('actual O7 SDK errors stay bounded for huge unknown keys at every input depth with zero HTTP', async () => {
+    let calls = 0;
+    const server = createServer((_req, res) => { calls++; res.end('{}'); });
+    server.listen(0, '127.0.0.1'); await once(server, 'listening');
+    let mcp;
+    try {
+        mcp = await startOfflineMcp(`http://127.0.0.1:${server.address().port}`);
+        const huge = '界'.repeat(100000), ref = {world, index: 1, version: 1};
+        const args = {world, entities: [ref], relationships: 'directDepth1'};
+        const item = {id: 'i', name: 'construction.inventory', args};
+        const input = {expectedWorld: world, items: [item]};
+        const cases = [
+            ['valid top', {...input, [huge]: 1}], ['missing top', {[huge]: 1}],
+            ['valid item', {...input, items: [{...item, [huge]: 1}]}], ['missing item', {items: [{[huge]: 1}]}],
+            ['valid args', {...input, items: [{...item, args: {...args, [huge]: 1}}]}],
+            ['missing args', {...input, items: [{...item, args: {[huge]: 1}}]}],
+            ['valid ref', {...input, items: [{...item, args: {...args, entities: [{...ref, [huge]: 1}]}}]}],
+            ['missing ref', {...input, items: [{...item, args: {...args, entities: [{[huge]: 1}]}}]}],
+            ['valid world', {...input, expectedWorld: {...world, [huge]: 1}}],
+            ['missing world', {...input, expectedWorld: {[huge]: 1}}],
+            ['missing required', {}], ['invalid items', {items: null}],
+        ];
+        const failures = [];
+        for (const [name, invalid] of cases) {
+            const response = await mcp.client.callTool({name: 'cs2_observe_batch', arguments: invalid});
+            assert.equal(response.isError, true, name);
+            const bytes = Buffer.byteLength(JSON.stringify(response));
+            if (bytes > 262144) failures.push(`${name}: ${bytes} bytes`);
+            assert.equal(calls, 0, name);
+        }
+        assert.deepEqual(failures, [], 'SDK diagnostics exceeded 256KiB');
+    } finally {
+        await mcp?.close(); server.closeAllConnections(); server.close(); await once(server, 'close');
+    }
+});
+
+test('actual O7 facade preserves every typed branch and rejects cross-field errors before POST', async () => {
+    const calls = [];
+    const server = createServer(async (req, res) => {
+        let body = ''; for await (const chunk of req) body += chunk;
+        const input = JSON.parse(body); calls.push(input);
+        res.end(JSON.stringify({...result, results: input.items.map(({id}) => ({id,
+            error: {code: 'SOURCE_UNAVAILABLE', message: 'controlled test source', retryable: false, outcome: 'notApplied'}}))}));
+    });
+    server.listen(0, '127.0.0.1'); await once(server, 'listening'); let mcp;
+    try {
+        mcp = await startOfflineMcp(`http://127.0.0.1:${server.address().port}`);
+        const ref = {world, index: 1, version: 1};
+        const inventory = {world, entities: [ref], relationships: 'directDepth1'};
+        const metrics = {world, scope: {kind: 'city'}, queries: [{key: 'city.population', parameters: {}}]};
+        const transitMetrics = {world, scope: {kind: 'selectedLine', line: ref}, queries: [{key: 'transit.waypointCount', parameters: {}}]};
+        const input = {expectedWorld: world, items: [
+            ...['state', 'city.overview', 'city.services', 'city.labor', 'city.budget'].map(name => ({id: name, name, args: {}})),
+            {id: 'inventory', name: 'construction.inventory', args: inventory},
+            {id: 'transit', name: 'transit.selectedLine', args: {line: ref, mode: 'train', purpose: 'cargo'}},
+            {id: 'cityMetrics', name: 'metrics.read', args: metrics},
+            {id: 'transitMetrics', name: 'metrics.read', args: transitMetrics},
+        ]};
+        assert.equal((await mcp.client.callTool({name: 'cs2_observe_batch', arguments: input})).isError, undefined);
+        assert.deepEqual(calls, [input]);
+        const item = (name, args) => ({items: [{id: 'i', name, args}]});
+        const invalid = [
+            {items: [input.items[0], input.items[0]]},
+            item('construction.inventory', {...inventory, entities: [ref, {...ref, version: 2}]}),
+            item('construction.inventory', {...inventory, entities: [{...ref, world: {...world, epoch: 2}}]}),
+            item('construction.inventory', {...inventory, entities: [{...ref, version: 2147483648}]}),
+            item('construction.inventory', {...inventory, entities: Array.from({length: 33}, (_, i) => ({...ref, index: i + 1}))}),
+            item('construction.inventory', {...inventory, relationships: 'directDepth2'}),
+            item('construction.inventory', {...inventory, family: 'roads'}),
+            item('construction.inventory', {...inventory, bbox: [0, 1]}),
+            item('transit.selectedLine', {line: ref, mode: 'ship'}),
+            item('transit.selectedLine', {line: ref, purpose: 'mixed'}),
+            item('transit.selectedLine', {line: ref, recursive: true}),
+            item('metrics.read', {...metrics, queries: [...metrics.queries, ...metrics.queries]}),
+            item('metrics.read', {...metrics, queries: transitMetrics.queries}),
+            item('metrics.read', {...transitMetrics, scope: {kind: 'selectedLine', line: {...ref, world: {...world, epoch: 2}}}}),
+            item('metrics.read', {...metrics, queries: [{key: 'city.population', parameters: {unknown: 1}}]}),
+            item('metrics.read', {...metrics, scope: {kind: 'city', line: null}}),
+            item('metrics.unknown', {}), item('state', {limit: 1}), item('state', undefined),
+            {items: [{name: 'state', args: {}}]}, {items: [{id: '', name: 'state', args: {}}]},
+            {items: [{id: 'x'.repeat(129), name: 'state', args: {}}]},
+            {...request, expectedWorld: {...world, epoch: Number.MAX_SAFE_INTEGER + 1}},
+            {...request, expectedWorld: {...world, bootId: ' '}},
+        ];
+        for (const args of invalid) {
+            const reply = await mcp.client.callTool({name: 'cs2_observe_batch', arguments: args});
+            assert.equal(reply.isError, true); assert.ok(Buffer.byteLength(JSON.stringify(reply)) <= 262144);
+            assert.equal(calls.length, 1);
+        }
+    } finally {
+        await mcp?.close(); server.closeAllConnections(); server.close(); await once(server, 'close');
+    }
+});
+
+test('actual O7 retains 64-item success groups larger than the SDK error cap', async () => {
+    const input = {items: Array.from({length: 64}, (_, i) => ({id: String(i), name: 'state', args: {}}))};
+    const group = {...result, results: input.items.map(({id}) => ({id, observation: {
+        ...observation, data: {boundedTestPayload: 'x'.repeat(5000)}}}))};
+    assert.ok(Buffer.byteLength(JSON.stringify(group)) > 262144);
+    const server = createServer((_req, res) => res.end(JSON.stringify(group)));
+    server.listen(0, '127.0.0.1'); await once(server, 'listening'); let mcp;
+    try {
+        mcp = await startOfflineMcp(`http://127.0.0.1:${server.address().port}`);
+        const response = await mcp.client.callTool({name: 'cs2_observe_batch', arguments: input});
+        assert.equal(response.isError, undefined); assert.deepEqual(JSON.parse(response.content[0].text), group);
+    } finally {
+        await mcp?.close(); server.closeAllConnections(); server.close(); await once(server, 'close');
+    }
+});
 test('actual MCP observation tool uses strict catalog request and preserves POST body', async () => {
     const calls = [];
     const server = createServer(async (req, res) => { let body = ''; for await (const chunk of req)
