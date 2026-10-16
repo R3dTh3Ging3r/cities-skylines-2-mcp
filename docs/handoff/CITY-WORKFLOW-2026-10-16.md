@@ -1,5 +1,11 @@
 # Larger city workflow — source progress
 
+Current status: the bounded deferred/O7/selected T1/M4/M5 source batch is
+independently accepted through `7e8547933505132e79f654d04ed45d7a56f5e6b1`.
+Earlier next-step paragraphs below are chronological history. The final M5
+acceptance records the current managed capability and native limitations.
+Publication uses existing draft PR6; PC packaging remains paused.
+
 Eric requested a substantially larger batch before the next PC package/playtest.
 The PC checkpoint remains paused. No install, merge, game/save or configuration
 change is authorized. Branch codex/city-observation-workflow starts at reviewed
@@ -135,3 +141,51 @@ execution used net8 and SDK Newtonsoft, not the installed game runtime.
 M5 collection/comparison source may now proceed using the accepted M4 contracts
 and the preserved history-lifecycle plan. Full M4 utility/production analytics,
 native history and G1–G4 remain open. PC packaging remains paused.
+
+## Collected history and comparison source acceptance
+
+M5 source `52267452823a366340375a9662b484b52d53a8d3` and scoped fixes
+`7e8547933505132e79f654d04ed45d7a56f5e6b1` complete the bounded managed
+workflow: `cs2_collect_observations`, `cs2_stop_observation_collection`,
+`cs2_read_observation_history` and `cs2_compare_observations`. Collection pins
+actual catalog definitions and exact world/cohort identity, polls the existing
+O7 `metrics.read`, and retains original source, clock and gap evidence. Stop and
+process shutdown abort pending reads and fence late publication.
+
+Eight retained histories (including stopped), 512 samples per history, 128KiB
+per sample, 1MiB per history and 8MiB total bound serialized retention. One
+scheduler and two shared network permits cover polling and catalog admission.
+Missed slots become gaps; there is no catch-up burst. Reads page whole samples,
+and every tool's serialized result is bounded at 256KiB. This is process-local
+history without persistence, export, automatic restart or native historical data.
+
+Comparison uses only explicit retained ranges, fixed cohorts and compatible
+producer definitions, structural fingerprints and raw normalized-time evidence.
+It preserves unknowns and refuses missing, gapped, changed or unaligned evidence.
+Qualified paired deltas do not imply improvement: `improvement` remains null.
+No interpolation, rate integration, replacement-world read or mutation is added.
+The four managed tools are reported separately from native capabilities.
+
+The review found two SDK integration defects and the scoped fix preserves exact
+advertised required/default/nested schemas while bounding validation errors, and
+retains stream-error handling until actual close promises settle. Actual SDK
+regressions cover queued, delayed, rejected and externally initiated closes,
+plus malformed/oversized inputs rejected before HTTP. Independent specification, quality/security and final bounded whole-batch
+integration review accepted exact source `7e8547933505132e79f654d04ed45d7a56f5e6b1`;
+root accepts those verdicts, with no remaining Important findings. The reviewer
+independently reran the TypeScript build and the final 18 focused tests, all passing.
+
+Verification chronology: the implementation's 92-test portable suite passed
+before the final schema facade/source-frame regressions; the later collector
+and real-MCP focused suite passed 18/18. After the two review fixes, the final
+TypeScript build and 18/18 actual tools/lifecycle/existing O7 integration checks
+passed. These counts are separate checkpoints, not a claim that the full
+92-test suite was rerun at the final source SHA. M5 changes no C#; accepted M4
+managed/serializer/canonical build evidence remains recorded above. Known
+unavailable PowerShell/native suites were not repeated.
+
+Native binding, installed-game/runtime behavior, source refresh/calendar/unit
+parity, opaque getter performance and G1–G4 remain unverified. Full roadmap
+operations, transit and management work remains partial. No PC packaging,
+installation, game/save/configuration activity, merge or deployment occurred.
+The original checkout and recovery snapshot remain preserved.
