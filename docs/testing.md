@@ -14,6 +14,7 @@ dotnet build tests/CS2MCP.CoreTests/CS2MCP.CoreTests.csproj -c Release
 & tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite metrics
 & tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite values
 & tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite operations
+& tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite construction-inventory
 # Serializer integration runner: links production BridgeResponse, using only the
 # already-installed Newtonsoft runtime assembly (no Game/Unity/ECS references).
 dotnet build tests/CS2MCP.ResponseTests/CS2MCP.ResponseTests.csproj -c Release '-p:GamePath=E:/SteamLibrary/steamapps/common/Cities Skylines II'
@@ -58,3 +59,11 @@ known build/world identity and tool exposure. Unknown date/count fields and carg
 units remain explicitly qualified. F6 introduces no mutation capability.
 See the [contracts evidence procedure](validation/contracts.md) for native gates,
 report validation, manual probes and rollback.
+
+The `construction-inventory` suite links the production bounded parser, reader
+orchestration, OBB computation, HTTP ingress and actual `HttpBridgeServer` dispatch.
+`HttpServerTestDependencies.cs` supplies BCL-only game/serializer/request boundary
+doubles for that dispatch test; it does not certify native ECS or serialization.
+`mcp-server/test/construction.test.mjs` runs actual MCP registration over stdio and
+the typed compact GET transport against an ephemeral fake bridge. Native
+G1/G2/CON-01 remain `notRun`.

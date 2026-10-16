@@ -186,3 +186,17 @@ namespace CS2MCP.Core
         public OperationException(BridgeErrorData error) : base(error.message) { Error = error; }
     }
 }
+
+namespace CS2MCP.Core
+{
+    /// <summary>One game-thread observation interval; does not promise an immutable ECS snapshot.</summary>
+    public sealed class Observation<T>
+    {
+        public T data { get; set; }
+        public WorldRef world { get; set; }
+        public System.DateTime sampledAtUtc { get; set; }
+        public long? startFrame { get; set; } public long? endFrame { get; set; }
+        public string freshness { get; set; } = "unavailable";
+        public string[] warnings { get; set; } = new string[0];
+    }
+}

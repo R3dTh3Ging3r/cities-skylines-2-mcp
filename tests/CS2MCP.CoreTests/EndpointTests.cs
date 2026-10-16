@@ -80,7 +80,7 @@ namespace CS2MCP.CoreTests
                     Program.Equal(null, Property(identity, "sourceRevision"));
                     Program.Equal("sourceRevisionUnavailable", Property(identity, "sourceRevisionReason"));
                     var bridge = ((IEnumerable)Property(manifest, "capabilities")).Cast<Capability>().ToArray();
-                    Program.Equal(69, bridge.Length);
+                    Program.Equal(70, bridge.Length);
                     Program.Equal("supported", bridge.Single(item => item.name == "cs2_build_road").support);
                     var native = ((IEnumerable)Property(manifest, "nativeSupport")).Cast<Capability>().ToArray();
                     Program.Equal("unverified", native.Single(item => item.name == "cs2_build_road").support);
@@ -147,8 +147,8 @@ namespace CS2MCP.CoreTests
                         .Cast<Match>().Select(match => match.Groups[1].Value)).Distinct().ToArray();
                 // Dynamic v2 patterns are routed through the production ingress/catalog, not switch cases.
                 routes = routes.Concat(new[] { "/v2/commands", "/v2/operations/{operationId}", "/v2/operations/{operationId}/cancel" }).Distinct().ToArray();
-                Program.Equal(69, routes.Length);
-                Program.Equal(69, byPath.Count);
+                Program.Equal(70, routes.Length);
+                Program.Equal(70, byPath.Count);
                 foreach (string path in routes)
                 {
                     if (!byPath.ContainsKey(path)) throw new Exception("missing classification: " + path);

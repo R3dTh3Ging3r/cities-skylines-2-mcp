@@ -64,6 +64,8 @@ namespace CS2MCP
         {
             switch (request.Path)
             {
+                case "/v2/construction/inventory":
+                    return ConstructionInventoryRequest(request);
                 case "/capabilities":
                     return GetCapabilities(request);
                 case "/state":

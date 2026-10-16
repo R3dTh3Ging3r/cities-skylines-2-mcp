@@ -12,6 +12,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { createBridgeClient } from "./bridge-client.js";
 import { errorResult, jsonResult } from "./tool-results.js";
+import { registerConstructionTools } from "./construction.js";
 import { registerOperationTools } from "./operations.js";
 import { withMcpExposure } from "./capabilities.js";
 import type { CapabilityManifest } from "./contracts.js";
@@ -35,6 +36,7 @@ const registerTool = new Proxy(server.registerTool.bind(server), {
 });
 
 registerOperationTools(registerTool, bridgeClient);
+registerConstructionTools(registerTool, bridgeClient);
 
 registerTool(
   "cs2_capabilities",

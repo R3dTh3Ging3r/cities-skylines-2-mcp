@@ -76,3 +76,33 @@ export interface OperationRecord {
   error: BridgeErrorData | null; receipt: MutationReceipt | null; createdAtUtc: string; updatedAtUtc: string;
   cancellationRequested: boolean; retrySafe: boolean;
 }
+
+export interface Observation<T> {
+  data:T; world:WorldRef|null; sampledAtUtc:string; startFrame:number|null; endFrame:number|null;
+  freshness:"current"|"warming"|"unavailable"; warnings:string[];
+}
+export interface Point3 { x:number; y:number; z:number; }
+export interface CubicCurve { a:Point3; b:Point3; c:Point3; d:Point3; }
+export interface OrientedBounds {
+  center:Point3; halfExtents:Point3; axisX:Point3; axisY:Point3; axisZ:Point3; scope:"rootGeometryOnly";
+}
+export interface NetworkGeometry {
+  curve:CubicCurve; start:EntityRef; end:EntityRef; length:number; direction:"startToEndNotLaneDirection";
+  coordinates:"worldXYZ"; width:number|null; widthReason:string|null; requiredLayers:string|null; connectLayers:string|null; layersReason:string|null;
+  elevationMode:null; elevationModeReason:string; laneDirections:null; laneDirectionsReason:string;
+}
+export interface ConstructionEntity {
+  entity:EntityRef; kind:"networkEdge"|"building"|null; unavailableReason:string|null;
+  assetKey:string|null; assetKeyReason:string|null; owner:EntityRef|null; ownerReason:string|null;
+  network:NetworkGeometry|null; networkReason:string|null; rootBounds:OrientedBounds|null; rootBoundsReason:string|null;
+  family:null; familyReason:string; compatibleFamilies:null; compatibleFamiliesReason:string;
+  installedUpgrades:null; installedUpgradesReason:string; facilityEnvelope:null; facilityEnvelopeReason:string;
+  childEnvelope:null; childEnvelopeReason:string; platformEnvelope:null; platformEnvelopeReason:string;
+  approachEnvelope:null; approachEnvelopeReason:string; connectors:null; connectorsReason:string;
+  costs:null; costsReason:string; prerequisites:null; prerequisitesReason:string; capacityEffects:null; capacityEffectsReason:string;
+}
+export interface ConstructionSnapshot {
+  scope:"explicitEntities"; requestedEntities:EntityRef[]; entities:ConstructionEntity[];
+  worldBounds:null; worldBoundsReason:"notMeasured"; nextCursor:null; truncated:false;
+  support:"partial"; nativeVerification:"CON-01:notRun";
+}

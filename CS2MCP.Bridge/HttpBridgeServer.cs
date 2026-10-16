@@ -126,7 +126,7 @@ namespace CS2MCP
                     Mod.RuntimeSnapshots.Read(DateTime.UtcNow), Mod.NativeValidation, m_World.Snapshot));
             }
 
-            if (request.Path.StartsWith("/v2/", StringComparison.Ordinal)) return m_Operations(request);
+            if (EndpointCatalog.IsOperationRoute(request.Path)) return m_Operations(request);
             if (!m_EnqueueToMainThread(request)) return BridgeResponse.Error(409, "pending queue is full", ErrorCodes.BridgeBusy);
             BridgeResponse response = request.WaitForResponse(MainThreadTimeoutMs);
             return response ?? BridgeResponse.Error(503,
@@ -159,6 +159,11 @@ namespace CS2MCP
             }
             request.Path = rawUrl.Substring(0, questionMark);
             string queryText = rawUrl.Substring(questionMark + 1);
+            if (request.Path == "/v2/construction/inventory")
+            {
+                request.Query = ConstructionInventory.DecodeQuery(queryText);
+                return;
+            }
             foreach (string pair in queryText.Split('&'))
             {
                 if (pair.Length == 0)

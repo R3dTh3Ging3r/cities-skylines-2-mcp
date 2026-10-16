@@ -83,8 +83,8 @@ namespace CS2MCP
             nativeValidation = validation;
             operationProtocol = new OperationProtocolMetadata(world);
             capabilities = Array.AsReadOnly(EndpointCatalog.All.Select(endpoint => new Capability {
-                name = endpoint.capability, support = endpoint.path.StartsWith("/v2/", StringComparison.Ordinal) ? "unverified" : "supported",
-                reason = endpoint.path.StartsWith("/v2/", StringComparison.Ordinal) ? "completionAndLeaseGuardsUnavailable" : null
+                name = endpoint.capability, support = endpoint.path == "/v2/construction/inventory" ? "degraded" : EndpointCatalog.IsOperationEndpoint(endpoint) ? "unverified" : "supported",
+                reason = endpoint.path == "/v2/construction/inventory" ? "explicitEntitiesOnlyRootGeometryNativeNotRun" : EndpointCatalog.IsOperationEndpoint(endpoint) ? "completionAndLeaseGuardsUnavailable" : null
             }).ToArray());
             nativeSupport = Array.AsReadOnly(EndpointCatalog.All
                 .Where(endpoint => endpoint.path != "/ping" && endpoint.path != "/capabilities")
@@ -174,10 +174,16 @@ namespace CS2MCP
             new EndpointDescriptor("/transit/lines/vehicles", "read", "cs2_line_vehicles", "sync-read"),
             new EndpointDescriptor("/transit/lines/vehicles/set", "cityWrite", "cs2_set_line_vehicles", "sync-set"),
             new EndpointDescriptor("/capabilities", "read", "cs2_capabilities", "off-thread-snapshot"),
+            new EndpointDescriptor("/v2/construction/inventory", "read", "cs2_construction_inventory", "explicit-entity-read"),
             new EndpointDescriptor("/v2/commands", "control", "cs2_submit_command", "guarded-admission-disabled", "POST"),
             new EndpointDescriptor("/v2/operations/{operationId}", "read", "cs2_operation", "managed-record"),
             new EndpointDescriptor("/v2/operations/{operationId}/cancel", "control", "cs2_cancel_operation", "cancel-request-ack", "POST"),
         });
+
+        public static bool IsOperationEndpoint(EndpointDescriptor endpoint) => endpoint != null &&
+            (endpoint.path == "/v2/commands" || endpoint.path == "/v2/operations/{operationId}" || endpoint.path == "/v2/operations/{operationId}/cancel");
+
+        public static bool IsOperationRoute(string path) => IsOperationEndpoint(Resolve(path, out _));
 
         public static EndpointDescriptor Resolve(string path, out string operationId)
         {
