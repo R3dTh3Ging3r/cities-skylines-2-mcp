@@ -17,6 +17,7 @@ dotnet build tests/CS2MCP.CoreTests/CS2MCP.CoreTests.csproj -c Release
 & tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite deferred
 & tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite construction-inventory
 & tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite observations
+& tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite transit-read
 # Serializer integration runner: links production BridgeResponse, using only the
 # already-installed Newtonsoft runtime assembly (no Game/Unity/ECS references).
 dotnet build tests/CS2MCP.ResponseTests/CS2MCP.ResponseTests.csproj -c Release '-p:GamePath=E:/SteamLibrary/steamapps/common/Cities Skylines II'
@@ -80,3 +81,12 @@ for nongame serializer checks; that is not installed-game serializer/native pari
 `observations.test.mjs` exercises actual MCP cancellation, strict registration,
 abortable typed transport and bounded streamed response validation. Full O7
 mutation batches and native timing/performance remain unverified/notRun.
+
+The `transit-read` suite exercises the production strict query, extraction budget,
+read model, world fence and fixed observation-catalog/native-interface binding.
+The response runner exercises actual finite UTF8 serialization for selected
+transit, ordinary 128-entry cases and escaped-world oversize refusals. Node transit
+tests exercise real MCP registration, typed compact GET, full-ref O7 requests,
+selected payload validation and bounded success/error streams. Native adapters
+still require installed-reference compilation and the separately qualified manual
+fixture in `docs/native/transit-readback.md`.

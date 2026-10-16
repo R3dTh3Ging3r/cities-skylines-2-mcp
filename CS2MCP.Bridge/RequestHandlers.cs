@@ -68,6 +68,10 @@ namespace CS2MCP
                     return ConstructionInventoryRequest(request);
                 case "/capabilities":
                     return GetCapabilities(request);
+                case "/v2/transit/status":
+                    return TransitStatusRequest(request);
+                case "/v2/transit/capabilities":
+                    return TransitCapabilitiesRequest(request);
                 case "/state":
                     return GetState();
                 case "/city/overview":

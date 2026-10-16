@@ -7,6 +7,7 @@ namespace CS2MCP {
         sealed class TestSystem {internal bool SimulationHasTickedSinceLoad=true;}
         readonly TestSystem m_System=new TestSystem();
         internal readonly List<string> BoundCalls=new List<string>();
+        Observation<TransitPage> ReadTransitData(TransitQuery query){BoundCalls.Add("transit.selectedLine");var w=new WorldIdentity("boot");w.BeginLoad();w.CompleteLoad();return TransitReader.Read(query,w,()=>10,new TestTransitSource());}
         object Record(string name){BoundCalls.Add(name);return new Dictionary<string,object>{{"source",name}};}
         object ReadStateData()=>Record("state");object ReadOverviewData()=>Record("city.overview");object ReadServicesData()=>Record("city.services");object ReadLaborData()=>Record("city.labor");object ReadBudgetData()=>Record("city.budget");
         Observation<ConstructionSnapshot> ReadConstructionInventory(IDictionary<string,string> query){BoundCalls.Add("construction.inventory");var world=new WorldIdentity("boot");world.BeginLoad();world.CompleteLoad();return ConstructionInventory.Read(query,world,()=>10,e=>new ConstructionEntity{entity=e,unavailableReason="missingDeletedOrRecycled"});}

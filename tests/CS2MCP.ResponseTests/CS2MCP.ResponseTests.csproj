@@ -13,7 +13,12 @@
     <!-- Existing runtime serializer only: no Game/Unity/ECS assembly or new package. -->
     <Reference Include="Newtonsoft.Json"><HintPath>$(NewtonsoftPath)</HintPath></Reference>
     <Compile Include="Program.cs" />
+    <Compile Include="../CS2MCP.CoreTests/TestTransitSource.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Transit/Contracts.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Transit/TransitQuery.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Transit/TransitReadModel.cs" />
     <Compile Include="ObservationHttpTests.cs" />
+    <Compile Include="TransitWireTests.cs" />
     <Compile Include="../../CS2MCP.Bridge/HttpBridgeServer.cs" />
     <Compile Include="../../CS2MCP.Bridge/ObservationWire.cs" />
     <Compile Include="../../CS2MCP.Bridge/EndpointCatalog.cs" />

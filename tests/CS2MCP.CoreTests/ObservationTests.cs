@@ -10,6 +10,8 @@ namespace CS2MCP.CoreTests
         static string Json(int count=1,string name="state")=>"{\"items\":["+string.Join(",",Enumerable.Range(0,count).Select(i=>"{\"id\":\""+i+"\",\"name\":\""+name+"\",\"args\":{}}"))+"]}";
         sealed class Readers:IObservationReaders {
             internal int Calls;internal Action During;
+            public Observation<TransitPage> Transit(TransitQuery query) => TransitReader.Read(query,Ready(),()=>10,new TestTransitSource());
+            static WorldIdentity Ready(){var w=new WorldIdentity("boot");w.BeginLoad();w.CompleteLoad();return w;}
             public bool Warming=>false;
             public object State(){Calls++;During?.Invoke();return new Dictionary<string,object>{{"ok",true}};}
             public object Overview()=>State();public object Services()=>State();public object Labor()=>State();public object Budget()=>State();

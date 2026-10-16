@@ -1,3 +1,4 @@
+import type {TransitRequest} from "./features/transit-contracts.js";
 /** Additive wire contracts; legacy success payloads keep their existing fields. */
 export interface BridgeErrorData {
   code: string;
@@ -119,7 +120,7 @@ export type ObservationBatchItem = {
         world: WorldRef;
         entities: EntityRef[];
     };
-};
+} | {id:string;name:"transit.selectedLine";args:TransitRequest};
 export interface ObservationBatchRequest {
     expectedWorld?: WorldRef;
     items: ObservationBatchItem[];

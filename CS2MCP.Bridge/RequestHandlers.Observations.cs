@@ -4,6 +4,7 @@ namespace CS2MCP
 {
     public sealed partial class RequestHandlers
     {
+        Observation<TransitPage> IObservationReaders.Transit(TransitQuery query) => ReadTransitData(query);
         bool IObservationReaders.Warming => !m_System.SimulationHasTickedSinceLoad;
         object IObservationReaders.State() => ReadStateData();
         object IObservationReaders.Overview() => ReadOverviewData();

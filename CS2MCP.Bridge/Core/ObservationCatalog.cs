@@ -29,14 +29,17 @@ namespace CS2MCP.Core
             get;
         }
         private readonly Dictionary<string, string> inventory;
-        internal ObservationRead(string id, string name, Dictionary<string, string> inventory = null)
+        private readonly TransitQuery transit;
+        internal ObservationRead(string id, string name, Dictionary<string, string> inventory = null, TransitQuery transit = null)
         {
             Id = id;
             Name = name;
             this.inventory = inventory;
+            this.transit = transit;
         }
         internal IDictionary<string, string> Inventory() => inventory == null ? null : new Dictionary<string, string>(inventory, StringComparer.Ordinal);
-        internal WorldRef InventoryWorld => inventory == null ? null : ConstructionInventory.Parse(inventory).world;
+        internal WorldRef ReferencedWorld => transit?.World ?? (inventory == null ? null : ConstructionInventory.Parse(inventory).world);
+        internal TransitQuery Transit => transit;
     }
     public sealed class ValidatedObservationBatch
     {
@@ -56,6 +59,7 @@ namespace CS2MCP.Core
         }
         object State(); object Overview(); object Services(); object Labor(); object Budget();
         Observation<ConstructionSnapshot> Inventory(IDictionary<string, string> query);
+        Observation<TransitPage> Transit(TransitQuery query);
     }
     public interface IObservationDataWarnings
     {
@@ -73,7 +77,7 @@ namespace CS2MCP.Core
             this.frame = frame;
             this.utc = utc;
         }
-        public static IReadOnlyList<string> Names { get; } = Array.AsReadOnly(new[] { "state", "city.overview", "city.services", "city.labor", "city.budget", "construction.inventory" });
+        public static IReadOnlyList<string> Names { get; } = Array.AsReadOnly(new[] { "state", "city.overview", "city.services", "city.labor", "city.budget", "construction.inventory", "transit.selectedLine" });
         internal static Dictionary<string, object> Map(object value) => value as Dictionary<string, object> ?? throw CommandJson.Invalid("expected object");
         static void Keys(Dictionary<string, object> value, params string[] allowed)
         {
@@ -113,6 +117,7 @@ namespace CS2MCP.Core
                     throw CommandJson.Invalid("invalid/duplicate observation item identity/name");
                 var map = Map(args);
                 Dictionary<string, string> compact = null;
+                TransitQuery transit = null;
                 if (key == "construction.inventory")
                 {
                     Keys(map, "world", "entities");
@@ -131,9 +136,11 @@ namespace CS2MCP.Core
                     compact = new Dictionary<string, string> { { "bootId", observed.bootId }, { "epoch", observed.epoch.ToString(CultureInfo.InvariantCulture) }, { "entities", string.Join(",", encoded) } };
                     ConstructionInventory.Parse(compact);
                 }
+                else if (key == "transit.selectedLine")
+                    transit = TransitQuery.ParseArguments(map);
                 else if (map.Count != 0)
                     throw CommandJson.Invalid("context observation args must be empty");
-                items[i] = new ObservationRead(text, key, compact);
+                items[i] = new ObservationRead(text, key, compact, transit);
             }
             return new ValidatedObservationBatch(items, expected);
         }
@@ -143,6 +150,11 @@ namespace CS2MCP.Core
             {
                 var value = readers.Inventory(item.Inventory());
                 return new Observation<object> { data = value.data, world = value.world, startFrame = value.startFrame, endFrame = value.endFrame, sampledAtUtc = value.sampledAtUtc, freshness = value.freshness, warnings = value.warnings };
+            }
+            if (item.Name == "transit.selectedLine")
+            {
+                var value = readers.Transit(item.Transit);
+                return new Observation<object> { data=value.data,world=value.world,startFrame=value.startFrame,endFrame=value.endFrame,sampledAtUtc=value.sampledAtUtc,freshness=value.freshness,warnings=value.warnings };
             }
             long start = frame();
             object data;

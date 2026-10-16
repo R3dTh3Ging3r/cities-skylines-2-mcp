@@ -1,3 +1,4 @@
+import {transitRequestSchema,transitQuery,parseTransitObservation,transitCapabilitiesSchema,type TransitRequest,type TransitPage,type TransitCapabilities} from "./features/transit-contracts.js";
 import {observationRequestSchema,parseObservationResult} from "./observation-contracts.js";
 import { constructionQuery, type ConstructionRequest } from "./construction-query.js";
 import type { ObservationBatchRequest, ObservationBatchResult, Observation, ConstructionSnapshot, BridgeErrorData, CommandRequest, OperationRecord } from "./contracts.js";
@@ -56,6 +57,8 @@ function httpError(status: number, text: string): BridgeClientError {
 }
 
 export interface BridgeClient {
+  transitStatus(request:TransitRequest):Promise<Observation<TransitPage>>;
+  transitCapabilities():Promise<TransitCapabilities>;
   observe(request:ObservationBatchRequest,options?:{signal?:AbortSignal}):Promise<ObservationBatchResult>;
   constructionInventory(request:ConstructionRequest):Promise<Observation<ConstructionSnapshot>>;
   submit(command: CommandRequest): Promise<OperationRecord>;
@@ -232,7 +235,53 @@ export function createBridgeClient(options: {
       throw new BridgeClientError({...transportError(error).details,operationId,retryable:false});
     }
   }
-  return { getJson, getResponse, observe,
+  // Read all HTTP statuses under the new protocol cap; legacy getResponse is unchanged.
+  async function boundedTransit(path: string, query?: URLSearchParams): Promise<unknown> {
+    const address = new URL(baseUrl);
+    if (address.protocol !== "http:" || !["127.0.0.1", "localhost", "[::1]"].includes(address.hostname) ||
+        address.username || address.password || address.pathname !== "/" || address.search || address.hash) {
+      throw new BridgeClientError({code: "INVALID_ARGUMENT", message: "selected transit requires loopback HTTP", retryable: false, outcome: "notApplied"});
+    }
+    const encoded = query ? encodeQuery(query) : "";
+    let response: Response;
+    try {
+      response = await fetchImpl(`${baseUrl}${path}${encoded ? `?${encoded}` : ""}`, {signal: AbortSignal.timeout(defaultTimeoutMs)});
+    } catch (error) {
+      throw transportError(error);
+    }
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("missing transit response stream");
+    const chunks: Uint8Array[] = [];
+    let length = 0;
+    try {
+      while (true) {
+        const part = await reader.read();
+        if (part.done) break;
+        length += part.value.length;
+        if (length > 262144) {
+          await reader.cancel();
+          throw new Error("transit response exceeds256KiB");
+        }
+        chunks.push(part.value);
+      }
+      const text = new TextDecoder("utf-8", {fatal: true}).decode(Buffer.concat(chunks, length));
+      if (!response.ok) throw httpError(response.status, text);
+      return JSON.parse(text);
+    } finally {
+      reader.releaseLock();
+    }
+  }
+  async function transitStatus(input: TransitRequest): Promise<Observation<TransitPage>> {
+    const request = transitRequestSchema.parse(input);
+    try {
+      return parseTransitObservation(await boundedTransit("/v2/transit/status", transitQuery(request)), request);
+    } catch (error) {
+      if (error instanceof BridgeClientError) throw error;
+      throw new BridgeClientError({code: "PROTOCOL_ERROR", message: "invalid bounded selected transit response", retryable: false, outcome: "notApplied"});
+    }
+  }
+  return { getJson, getResponse, observe, transitStatus,
+    transitCapabilities: async () => transitCapabilitiesSchema.parse(await boundedTransit("/v2/transit/capabilities")),
     constructionInventory: async request => getJson<Observation<ConstructionSnapshot>>("/v2/construction/inventory",constructionQuery(request)),
     submit: command => operationRequest("POST","/v2/commands",command.operationId,command),
     operation: operationId => operationRequest("GET",`/v2/operations/${encodeURIComponent(operationId)}`,operationId),

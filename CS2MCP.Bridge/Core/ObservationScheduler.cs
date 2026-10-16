@@ -83,8 +83,8 @@ namespace CS2MCP.Core
                 throw Failure(ErrorCodes.WorldMismatch, "observation expected a different world", 409);
             worlds.Validate(snapshot.world);
             foreach (var item in request.Items)
-                if (item.InventoryWorld != null && !WorldIdentity.Same(item.InventoryWorld, snapshot.world))
-                    throw Failure(ErrorCodes.WorldMismatch, "inventory belongs to a different world", 409);
+                if (item.ReferencedWorld != null && !WorldIdentity.Same(item.ReferencedWorld, snapshot.world))
+                    throw Failure(ErrorCodes.WorldMismatch, "selected entities belong to a different world", 409);
             lock (gate)
             {
                 worlds.Validate(snapshot.world);

@@ -13,7 +13,9 @@ internal static class ObservationHttpTests
 {
     sealed class Readers:IObservationReaders {
         internal int Count;internal double Millis;internal object Data=new CityStateData{gameMode="Game",cityLoaded=true,cityName="City"};
-        public bool Warming=>false;public object State(){Count++;Millis=2;return Data;}
+        public Observation<TransitPage> Transit(TransitQuery query) => TransitReader.Read(query,Ready(),()=>10,new TestTransitSource());
+            static WorldIdentity Ready(){var w=new WorldIdentity("boot");w.BeginLoad();w.CompleteLoad();return w;}
+            public bool Warming=>false;public object State(){Count++;Millis=2;return Data;}
         public object Overview()=>State();public object Services()=>State();public object Labor()=>State();public object Budget()=>State();
         public Observation<ConstructionSnapshot> Inventory(System.Collections.Generic.IDictionary<string,string> q)=>throw new InvalidOperationException();
     }

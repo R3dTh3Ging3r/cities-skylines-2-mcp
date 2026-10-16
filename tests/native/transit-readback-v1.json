@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "fixture": "transit-readback-v1",
+  "fixtureVersion": 1,
+  "access": "read",
+  "requiresMutation": false,
+  "execution": "manualReadOnly",
+  "runnerIntegration": "notImplemented",
+  "nativeOutcome": "notRun",
+  "syntheticSetupInstructions": [
+    "Operator supplies a disposable paused city and fresh observed world plus exact versioned passenger, cargo and air line refs.",
+    "Do not automatically load/restore, create broken examples, advance simulation, change lines or deploy the candidate.",
+    "If a requested example or component cannot be observed, retain notRun/unknown rather than synthesize native evidence."
+  ],
+  "requiredCapabilities": ["cs2_transit_status", "cs2_transit_capabilities"],
+  "operations": [
+    { "method": "GET", "path": "/capabilities" },
+    { "method": "GET", "path": "/state" },
+    { "method": "GET", "path": "/v2/transit/capabilities" }
+  ],
+  "selectedQueries": {
+    "path": "/v2/transit/status",
+    "required": ["fresh caller-observed bootId", "epoch", "line index:version"],
+    "maxObservations": 16
+  },
+  "requiredChecks": [
+    "installedSignatures", "originalWorldFence", "selectedLinePanelParity",
+    "committedSegmentMeaning", "rawDistanceUnitsRemainUnknownUntilMeasured",
+    "waypointXYZAndImmediateOwnership", "optionalEvidenceIsNotFault",
+    "nullSlotsRemainKnownFault", "combined128EntryCap", "actual256KiBWireCap",
+    "boundedReadTiming", "actualClientToolExposure"
+  ]
+}

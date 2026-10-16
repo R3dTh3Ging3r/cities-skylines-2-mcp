@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {registerTransitTools} from "./features/transit.js";
 /**
  * cs2-mcp - MCP server for Cities: Skylines II.
  *
@@ -39,6 +40,7 @@ const registerTool = new Proxy(server.registerTool.bind(server), {
 registerOperationTools(registerTool, bridgeClient);
 registerConstructionTools(registerTool, bridgeClient);
 registerObservationTools(registerTool,bridgeClient);
+registerTransitTools(registerTool,bridgeClient);
 
 registerTool(
   "cs2_capabilities",

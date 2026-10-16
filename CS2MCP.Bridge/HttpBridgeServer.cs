@@ -169,6 +169,12 @@ namespace CS2MCP
                 request.Query = ConstructionInventory.DecodeQuery(queryText);
                 return;
             }
+            if (request.Path == "/v2/transit/status")
+            {
+                request.Query = TransitQuery.DecodeQuery(queryText).Compact();
+                return;
+            }
+            if (request.Path == "/v2/transit/capabilities") throw CommandJson.Invalid("transit capabilities accepts no query");
             foreach (string pair in queryText.Split('&'))
             {
                 if (pair.Length == 0)

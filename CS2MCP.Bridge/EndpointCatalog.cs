@@ -98,8 +98,8 @@ namespace CS2MCP
             nativeValidation = validation;
             operationProtocol = new OperationProtocolMetadata(world);
             capabilities = Array.AsReadOnly(EndpointCatalog.All.Select(endpoint => new Capability {
-                name = endpoint.capability, support = endpoint.path == "/v2/observations" || endpoint.path == "/v2/construction/inventory" ? "degraded" : EndpointCatalog.IsOperationEndpoint(endpoint) ? "unverified" : "supported",
-                reason = endpoint.path == "/v2/observations" ? "fixedBoundedReadersOnlyNativeNotRun" : endpoint.path == "/v2/construction/inventory" ? "explicitEntitiesOnlyRootGeometryNativeNotRun" : EndpointCatalog.IsOperationEndpoint(endpoint) ? "completionAndLeaseGuardsUnavailable" : null
+                name = endpoint.capability, support = endpoint.path.StartsWith("/v2/transit/", StringComparison.Ordinal) || endpoint.path == "/v2/observations" || endpoint.path == "/v2/construction/inventory" ? "degraded" : EndpointCatalog.IsOperationEndpoint(endpoint) ? "unverified" : "supported",
+                reason = endpoint.path.StartsWith("/v2/transit/", StringComparison.Ordinal) ? "selectedLineOnlyStructuralFactsNativeNotRun" : endpoint.path == "/v2/observations" ? "fixedBoundedReadersOnlyNativeNotRun" : endpoint.path == "/v2/construction/inventory" ? "explicitEntitiesOnlyRootGeometryNativeNotRun" : EndpointCatalog.IsOperationEndpoint(endpoint) ? "completionAndLeaseGuardsUnavailable" : null
             }).ToArray());
             nativeSupport = Array.AsReadOnly(EndpointCatalog.All
                 .Where(endpoint => endpoint.path != "/ping" && endpoint.path != "/capabilities")
@@ -190,6 +190,8 @@ namespace CS2MCP
             new EndpointDescriptor("/transit/lines/vehicles/set", "cityWrite", "cs2_set_line_vehicles", "sync-set"),
             new EndpointDescriptor("/capabilities", "read", "cs2_capabilities", "off-thread-snapshot"),
             new EndpointDescriptor("/v2/observations", "read", "cs2_observe_batch", "bounded-observation-group", "POST"),
+            new EndpointDescriptor("/v2/transit/status", "read", "cs2_transit_status", "selected-transit-read"),
+            new EndpointDescriptor("/v2/transit/capabilities", "read", "cs2_transit_capabilities", "selected-transit-read"),
             new EndpointDescriptor("/v2/construction/inventory", "read", "cs2_construction_inventory", "explicit-entity-read"),
             new EndpointDescriptor("/v2/commands", "control", "cs2_submit_command", "guarded-admission-disabled", "POST"),
             new EndpointDescriptor("/v2/operations/{operationId}", "read", "cs2_operation", "managed-record"),
