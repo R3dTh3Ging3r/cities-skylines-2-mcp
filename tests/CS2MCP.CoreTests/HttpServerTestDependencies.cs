@@ -8,6 +8,7 @@ namespace CS2MCP
     public sealed class BridgeRequest
     {
         public string Method, Path, Body, OperationId;
+        public MetricReadRequest Metrics;public Dictionary<string,string> MetricCatalog;
         public CommandRequest Command;
         public ValidatedObservationBatch Observations;
         internal Func<bool> ConnectionClosed;
@@ -27,6 +28,8 @@ namespace CS2MCP
     }
     internal static class Mod
     {
+        internal static readonly WorldIdentity Worlds=ReadyWorld();
+        static WorldIdentity ReadyWorld(){var w=new WorldIdentity("boot");w.BeginLoad();w.CompleteLoad();return w;}
         internal const string Name="test",Version="test";
         internal static readonly BuildIdentity Identity=new BuildIdentity("test","test",null,null);
         internal static readonly RuntimeSnapshotStore RuntimeSnapshots=new RuntimeSnapshotStore();
@@ -35,3 +38,5 @@ namespace CS2MCP
         internal sealed class TestLog { internal void Warn(string message){} }
     }
 }
+
+namespace CS2MCP { internal static class ObservationWire { internal static byte[] Standalone(object value)=>new byte[0]; } }

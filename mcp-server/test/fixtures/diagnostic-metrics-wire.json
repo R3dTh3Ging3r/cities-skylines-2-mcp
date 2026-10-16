@@ -1,0 +1,993 @@
+{
+  "catalog-envelope": {
+    "schemaVersion": 1,
+    "definitionRevision": "diagnosticMetrics.v1",
+    "definitions": [
+      {
+        "key": "budget.income",
+        "label": "Monthly income rate",
+        "kind": "rate",
+        "unit": "nativeMoney",
+        "period": "month",
+        "source": "CityServiceBudgetSystem.GetTotalIncome",
+        "parameters": [],
+        "parameterDefinitions": [],
+        "refresh": "gameHour",
+        "support": {
+          "name": "budget.income",
+          "support": "unverified",
+          "reason": "nativeDiagnosticMetricParityNotRun"
+        }
+      },
+      {
+        "key": "budget.expenses",
+        "label": "Signed monthly expenses rate",
+        "kind": "rate",
+        "unit": "nativeMoney",
+        "period": "month",
+        "source": "CityServiceBudgetSystem.GetTotalExpenses",
+        "parameters": [],
+        "parameterDefinitions": [],
+        "refresh": "gameHour",
+        "support": {
+          "name": "budget.expenses",
+          "support": "unverified",
+          "reason": "nativeDiagnosticMetricParityNotRun"
+        }
+      },
+      {
+        "key": "budget.taxIncome",
+        "label": "Monthly tax income rate",
+        "kind": "rate",
+        "unit": "nativeMoney",
+        "period": "month",
+        "source": "CityServiceBudgetSystem.GetTotalTaxIncome",
+        "parameters": [],
+        "parameterDefinitions": [],
+        "refresh": "gameHour",
+        "support": {
+          "name": "budget.taxIncome",
+          "support": "unverified",
+          "reason": "nativeDiagnosticMetricParityNotRun"
+        }
+      },
+      {
+        "key": "budget.balance",
+        "label": "Native monthly balance rate",
+        "kind": "rate",
+        "unit": "nativeMoney",
+        "period": "month",
+        "source": "CityServiceBudgetSystem.GetBalance",
+        "parameters": [],
+        "parameterDefinitions": [],
+        "refresh": "gameHour",
+        "support": {
+          "name": "budget.balance",
+          "support": "unverified",
+          "reason": "nativeDiagnosticMetricParityNotRun"
+        }
+      }
+    ],
+    "world": {
+      "bootId": "boot",
+      "epoch": 1
+    },
+    "ready": true,
+    "sampledAtUtc": "2026-10-16T22:05:01.9109843Z",
+    "freshness": "current",
+    "freshnessReason": "managedReadinessOnlyNativeParityNotRun",
+    "identity": {
+      "assemblyVersion": "test",
+      "modVersion": "test",
+      "buildIdentity": null,
+      "buildIdentityReason": "buildIdentityUnavailable",
+      "sourceRevision": null,
+      "sourceRevisionReason": "sourceRevisionUnavailable",
+      "gameVersion": null,
+      "gameVersionReason": "gameVersionNotObserved"
+    },
+    "nativeVerification": "diagnostic-metrics:notRun"
+  },
+  "catalog": [
+    {
+      "key": "city.population",
+      "label": "Native population",
+      "kind": "count",
+      "unit": "citizens",
+      "period": null,
+      "source": "Population.m_Population",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "liveComponentSnapshot",
+      "support": {
+        "name": "city.population",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "city.populationWithMoveIn",
+      "label": "Native population including move-in",
+      "kind": "count",
+      "unit": "citizens",
+      "period": null,
+      "source": "Population.m_PopulationWithMoveIn",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "liveComponentSnapshot",
+      "support": {
+        "name": "city.populationWithMoveIn",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "city.money",
+      "label": "Raw treasury money",
+      "kind": "stock",
+      "unit": "nativeMoney",
+      "period": null,
+      "source": "CitySystem.moneyAmount",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "liveComponentSnapshot",
+      "support": {
+        "name": "city.money",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "city.xp",
+      "label": "City XP",
+      "kind": "stock",
+      "unit": "XP",
+      "period": null,
+      "source": "CitySystem.XP",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "liveComponentSnapshot",
+      "support": {
+        "name": "city.xp",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "labor.employed",
+      "label": "City worker count",
+      "kind": "count",
+      "unit": "workers",
+      "period": null,
+      "source": "CountHouseholdDataSystem.CityWorkerCount",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "cachedSimulationCounterRefreshTimeUnknown",
+      "support": {
+        "name": "labor.employed",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "labor.homelessCitizens",
+      "label": "Homeless citizen count",
+      "kind": "count",
+      "unit": "citizens",
+      "period": null,
+      "source": "CountHouseholdDataSystem.HomelessCitizenCount",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "cachedSimulationCounterRefreshTimeUnknown",
+      "support": {
+        "name": "labor.homelessCitizens",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "labor.jobs.total",
+      "label": "Total workplace slots",
+      "kind": "count",
+      "unit": "workplaceSlots",
+      "period": null,
+      "source": "CountWorkplacesSystem.GetTotalWorkplaces.TotalCount",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "cachedSimulationCounterRefreshTimeUnknown",
+      "support": {
+        "name": "labor.jobs.total",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "labor.jobs.free",
+      "label": "Free workplace slots",
+      "kind": "count",
+      "unit": "workplaceSlots",
+      "period": null,
+      "source": "CountWorkplacesSystem.GetFreeWorkplaces.TotalCount",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "cachedSimulationCounterRefreshTimeUnknown",
+      "support": {
+        "name": "labor.jobs.free",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "budget.income",
+      "label": "Monthly income rate",
+      "kind": "rate",
+      "unit": "nativeMoney",
+      "period": "month",
+      "source": "CityServiceBudgetSystem.GetTotalIncome",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "gameHour",
+      "support": {
+        "name": "budget.income",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "budget.expenses",
+      "label": "Signed monthly expenses rate",
+      "kind": "rate",
+      "unit": "nativeMoney",
+      "period": "month",
+      "source": "CityServiceBudgetSystem.GetTotalExpenses",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "gameHour",
+      "support": {
+        "name": "budget.expenses",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "budget.taxIncome",
+      "label": "Monthly tax income rate",
+      "kind": "rate",
+      "unit": "nativeMoney",
+      "period": "month",
+      "source": "CityServiceBudgetSystem.GetTotalTaxIncome",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "gameHour",
+      "support": {
+        "name": "budget.taxIncome",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "budget.balance",
+      "label": "Native monthly balance rate",
+      "kind": "rate",
+      "unit": "nativeMoney",
+      "period": "month",
+      "source": "CityServiceBudgetSystem.GetBalance",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "gameHour",
+      "support": {
+        "name": "budget.balance",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "transit.waypointCount",
+      "label": "Inspected waypoint slots",
+      "kind": "count",
+      "unit": "waypoints",
+      "period": null,
+      "source": "TransitCompleteness.waypointCount",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "selectedLineStructuralSnapshot",
+      "support": {
+        "name": "transit.waypointCount",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "transit.segmentCount",
+      "label": "Inspected segment slots",
+      "kind": "count",
+      "unit": "segments",
+      "period": null,
+      "source": "TransitCompleteness.segmentCount",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "selectedLineStructuralSnapshot",
+      "support": {
+        "name": "transit.segmentCount",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "transit.brokenWaypointCount",
+      "label": "Exact structurally faulty waypoint slots",
+      "kind": "count",
+      "unit": "waypoints",
+      "period": null,
+      "source": "TransitWaypoint.structuralAssessment",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "selectedLineStructuralSnapshot",
+      "support": {
+        "name": "transit.brokenWaypointCount",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "transit.invalidSegmentCount",
+      "label": "Exact structurally faulty segment slots",
+      "kind": "count",
+      "unit": "segments",
+      "period": null,
+      "source": "TransitSegment.structuralAssessment",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "selectedLineStructuralSnapshot",
+      "support": {
+        "name": "transit.invalidSegmentCount",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    }
+  ],
+  "city-direct": {
+    "data": {
+      "city.money": {
+        "value": 9.0,
+        "unit": "nativeMoney",
+        "period": null,
+        "source": "CitySystem.moneyAmount",
+        "support": "supported",
+        "reason": null
+      },
+      "city.population": {
+        "value": 0.0,
+        "unit": "citizens",
+        "period": null,
+        "source": "Population.m_Population",
+        "support": "supported",
+        "reason": null
+      }
+    },
+    "world": {
+      "bootId": "boot",
+      "epoch": 1
+    },
+    "sampledAtUtc": "2026-10-16T22:05:01.8878034Z",
+    "startFrame": 10,
+    "endFrame": 10,
+    "freshness": "current",
+    "warnings": [
+      "nativeDiagnosticMetricParityNotRun",
+      "sourceRefreshTimesUnknown",
+      "observedSamplesNotNativeHistory",
+      "nativeObservationParityNotRun",
+      "cachedSourceRefreshTimeUnknown"
+    ]
+  },
+  "city-request": {
+    "world": {
+      "bootId": "boot",
+      "epoch": 1
+    },
+    "scope": {
+      "kind": "city"
+    },
+    "queries": [
+      {
+        "key": "city.money",
+        "parameters": {}
+      },
+      {
+        "key": "city.population",
+        "parameters": {}
+      }
+    ]
+  },
+  "city": {
+    "data": {
+      "schemaVersion": 1,
+      "definitionRevision": "diagnosticMetrics.v1",
+      "scope": {
+        "kind": "city",
+        "line": null
+      },
+      "values": {
+        "city.money": {
+          "value": 9.0,
+          "unit": "nativeMoney",
+          "period": null,
+          "source": "CitySystem.moneyAmount",
+          "support": "supported",
+          "reason": null
+        },
+        "city.population": {
+          "value": 0.0,
+          "unit": "citizens",
+          "period": null,
+          "source": "Population.m_Population",
+          "support": "supported",
+          "reason": null
+        }
+      },
+      "members": [],
+      "perMember": [],
+      "sources": [
+        {
+          "id": "city.overview",
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "startFrame": 10,
+          "endFrame": 10,
+          "sampledAtUtc": "2026-10-16T22:05:01.8898451Z",
+          "freshness": "current",
+          "warnings": [
+            "nativeObservationParityNotRun",
+            "cachedSourceRefreshTimeUnknown"
+          ],
+          "completeness": "complete",
+          "refreshTimeUtc": null
+        }
+      ],
+      "clock": {
+        "source": "TimeSystem",
+        "rawNormalizedTime": 0.3,
+        "rawNormalizedDate": 0.2,
+        "rawYear": 2026,
+        "rawDaysPerYear": 12,
+        "frameIndex": 10,
+        "startFrame": 10,
+        "endFrame": 10,
+        "sourceObservationId": "city.overview",
+        "frameEvidence": "sourceObservationEnd",
+        "conversionStatus": "unverified",
+        "reason": "nativeCalendarParityNotRun"
+      },
+      "memberEvidence": []
+    },
+    "world": {
+      "bootId": "boot",
+      "epoch": 1
+    },
+    "sampledAtUtc": "2026-10-16T22:05:01.8898809Z",
+    "startFrame": 10,
+    "endFrame": 10,
+    "freshness": "current",
+    "warnings": [
+      "nativeDiagnosticMetricParityNotRun",
+      "sourceRefreshTimesUnknown",
+      "observedSamplesNotNativeHistory",
+      "nativeObservationParityNotRun",
+      "cachedSourceRefreshTimeUnknown"
+    ]
+  },
+  "failed-source": {
+    "data": {
+      "schemaVersion": 1,
+      "definitionRevision": "diagnosticMetrics.v1",
+      "scope": {
+        "kind": "city",
+        "line": null
+      },
+      "values": {
+        "city.money": {
+          "value": null,
+          "unit": "nativeMoney",
+          "period": null,
+          "source": "CitySystem.moneyAmount",
+          "support": "unavailable",
+          "reason": "sourceReadUnavailable"
+        },
+        "city.population": {
+          "value": null,
+          "unit": "citizens",
+          "period": null,
+          "source": "Population.m_Population",
+          "support": "unavailable",
+          "reason": "populationComponentUnavailable"
+        }
+      },
+      "members": [],
+      "perMember": [],
+      "sources": [
+        {
+          "id": "city.overview",
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "startFrame": 10,
+          "endFrame": 11,
+          "sampledAtUtc": "2026-10-16T00:00:00Z",
+          "freshness": "unavailable",
+          "warnings": [
+            "nativeObservationParityNotRun",
+            "cachedSourceRefreshTimeUnknown",
+            "nativeSourceReadFailed",
+            "multiFrameReadNotAtomic"
+          ],
+          "completeness": "incomplete",
+          "refreshTimeUtc": null
+        },
+        {
+          "id": "state",
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "startFrame": 11,
+          "endFrame": 12,
+          "sampledAtUtc": "2026-10-16T00:00:00Z",
+          "freshness": "current",
+          "warnings": [
+            "nativeObservationParityNotRun",
+            "cachedSourceRefreshTimeUnknown",
+            "multiFrameReadNotAtomic"
+          ],
+          "completeness": "complete",
+          "refreshTimeUtc": null
+        }
+      ],
+      "clock": {
+        "source": "TimeSystem",
+        "rawNormalizedTime": 0.3,
+        "rawNormalizedDate": 0.2,
+        "rawYear": 2026,
+        "rawDaysPerYear": 12,
+        "frameIndex": 12,
+        "startFrame": 11,
+        "endFrame": 12,
+        "sourceObservationId": "state",
+        "frameEvidence": "sourceObservationEnd",
+        "conversionStatus": "unverified",
+        "reason": "nativeCalendarParityNotRun"
+      },
+      "memberEvidence": []
+    },
+    "world": {
+      "bootId": "boot",
+      "epoch": 1
+    },
+    "sampledAtUtc": "2026-10-16T00:00:00Z",
+    "startFrame": 10,
+    "endFrame": 12,
+    "freshness": "current",
+    "warnings": [
+      "nativeDiagnosticMetricParityNotRun",
+      "sourceRefreshTimesUnknown",
+      "observedSamplesNotNativeHistory",
+      "multiSourceReadNotAtomic",
+      "nativeObservationParityNotRun",
+      "cachedSourceRefreshTimeUnknown",
+      "nativeSourceReadFailed",
+      "multiFrameReadNotAtomic",
+      "multiFrameReadNotAtomic"
+    ]
+  },
+  "fallback": {
+    "data": {
+      "schemaVersion": 1,
+      "definitionRevision": "diagnosticMetrics.v1",
+      "scope": {
+        "kind": "city",
+        "line": null
+      },
+      "values": {
+        "city.money": {
+          "value": 2.0,
+          "unit": "nativeMoney",
+          "period": null,
+          "source": "CitySystem.moneyAmount",
+          "support": "supported",
+          "reason": null
+        },
+        "city.population": {
+          "value": 0.0,
+          "unit": "citizens",
+          "period": null,
+          "source": "Population.m_Population",
+          "support": "supported",
+          "reason": null
+        }
+      },
+      "members": [],
+      "perMember": [],
+      "sources": [
+        {
+          "id": "city.overview",
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "startFrame": 10,
+          "endFrame": 11,
+          "sampledAtUtc": "2026-10-16T00:00:00Z",
+          "freshness": "current",
+          "warnings": [
+            "nativeObservationParityNotRun",
+            "cachedSourceRefreshTimeUnknown",
+            "multiFrameReadNotAtomic"
+          ],
+          "completeness": "complete",
+          "refreshTimeUtc": null
+        },
+        {
+          "id": "state",
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "startFrame": 11,
+          "endFrame": 12,
+          "sampledAtUtc": "2026-10-16T00:00:00Z",
+          "freshness": "current",
+          "warnings": [
+            "nativeObservationParityNotRun",
+            "cachedSourceRefreshTimeUnknown",
+            "multiFrameReadNotAtomic"
+          ],
+          "completeness": "complete",
+          "refreshTimeUtc": null
+        }
+      ],
+      "clock": {
+        "source": "TimeSystem",
+        "rawNormalizedTime": 0.3,
+        "rawNormalizedDate": 0.2,
+        "rawYear": 2026,
+        "rawDaysPerYear": 12,
+        "frameIndex": 12,
+        "startFrame": 11,
+        "endFrame": 12,
+        "sourceObservationId": "state",
+        "frameEvidence": "sourceObservationEnd",
+        "conversionStatus": "unverified",
+        "reason": "nativeCalendarParityNotRun"
+      },
+      "memberEvidence": []
+    },
+    "world": {
+      "bootId": "boot",
+      "epoch": 1
+    },
+    "sampledAtUtc": "2026-10-16T00:00:00Z",
+    "startFrame": 10,
+    "endFrame": 12,
+    "freshness": "current",
+    "warnings": [
+      "nativeDiagnosticMetricParityNotRun",
+      "sourceRefreshTimesUnknown",
+      "observedSamplesNotNativeHistory",
+      "multiSourceReadNotAtomic",
+      "nativeObservationParityNotRun",
+      "cachedSourceRefreshTimeUnknown",
+      "multiFrameReadNotAtomic",
+      "multiFrameReadNotAtomic"
+    ]
+  },
+  "invalid-clock": {
+    "data": {
+      "schemaVersion": 1,
+      "definitionRevision": "diagnosticMetrics.v1",
+      "scope": {
+        "kind": "city",
+        "line": null
+      },
+      "values": {
+        "city.money": {
+          "value": 2.0,
+          "unit": "nativeMoney",
+          "period": null,
+          "source": "CitySystem.moneyAmount",
+          "support": "supported",
+          "reason": null
+        },
+        "city.population": {
+          "value": 0.0,
+          "unit": "citizens",
+          "period": null,
+          "source": "Population.m_Population",
+          "support": "supported",
+          "reason": null
+        }
+      },
+      "members": [],
+      "perMember": [],
+      "sources": [
+        {
+          "id": "city.overview",
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "startFrame": 10,
+          "endFrame": 11,
+          "sampledAtUtc": "2026-10-16T00:00:00Z",
+          "freshness": "current",
+          "warnings": [
+            "nativeObservationParityNotRun",
+            "cachedSourceRefreshTimeUnknown",
+            "multiFrameReadNotAtomic"
+          ],
+          "completeness": "complete",
+          "refreshTimeUtc": null
+        },
+        {
+          "id": "state",
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "startFrame": 11,
+          "endFrame": 12,
+          "sampledAtUtc": "2026-10-16T00:00:00Z",
+          "freshness": "current",
+          "warnings": [
+            "nativeObservationParityNotRun",
+            "cachedSourceRefreshTimeUnknown",
+            "multiFrameReadNotAtomic"
+          ],
+          "completeness": "complete",
+          "refreshTimeUtc": null
+        }
+      ],
+      "clock": null,
+      "memberEvidence": []
+    },
+    "world": {
+      "bootId": "boot",
+      "epoch": 1
+    },
+    "sampledAtUtc": "2026-10-16T00:00:00Z",
+    "startFrame": 10,
+    "endFrame": 12,
+    "freshness": "current",
+    "warnings": [
+      "nativeDiagnosticMetricParityNotRun",
+      "sourceRefreshTimesUnknown",
+      "observedSamplesNotNativeHistory",
+      "multiSourceReadNotAtomic",
+      "rawNormalizedClockUnavailable",
+      "nativeObservationParityNotRun",
+      "cachedSourceRefreshTimeUnknown",
+      "multiFrameReadNotAtomic",
+      "multiFrameReadNotAtomic"
+    ]
+  },
+  "line-direct": {
+    "data": {
+      "transit.segmentCount": {
+        "value": 0.0,
+        "unit": "segments",
+        "period": null,
+        "source": "TransitCompleteness.segmentCount",
+        "support": "supported",
+        "reason": null
+      },
+      "transit.invalidSegmentCount": {
+        "value": 0.0,
+        "unit": "segments",
+        "period": null,
+        "source": "TransitSegment.structuralAssessment",
+        "support": "supported",
+        "reason": null
+      }
+    },
+    "world": {
+      "bootId": "boot",
+      "epoch": 1
+    },
+    "sampledAtUtc": "2026-10-16T22:05:01.9036159Z",
+    "startFrame": 10,
+    "endFrame": 10,
+    "freshness": "current",
+    "warnings": [
+      "nativeDiagnosticMetricParityNotRun",
+      "sourceRefreshTimesUnknown",
+      "observedSamplesNotNativeHistory",
+      "multiSourceReadNotAtomic",
+      "rawNormalizedClockUnavailable",
+      "nativeObservationParityNotRun",
+      "cachedSourceRefreshTimeUnknown",
+      "partialSelectedTransit",
+      "nativeTransitFixtureNotRun",
+      "structuralFactsNotNativeValidity"
+    ]
+  },
+  "line-request": {
+    "world": {
+      "bootId": "boot",
+      "epoch": 1
+    },
+    "scope": {
+      "kind": "selectedLine",
+      "line": {
+        "world": {
+          "bootId": "boot",
+          "epoch": 1
+        },
+        "index": 10,
+        "version": 1
+      }
+    },
+    "queries": [
+      {
+        "key": "transit.segmentCount",
+        "parameters": {}
+      },
+      {
+        "key": "transit.invalidSegmentCount",
+        "parameters": {}
+      }
+    ]
+  },
+  "line": {
+    "data": {
+      "schemaVersion": 1,
+      "definitionRevision": "diagnosticMetrics.v1",
+      "scope": {
+        "kind": "selectedLine",
+        "line": {
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "index": 10,
+          "version": 1
+        }
+      },
+      "values": {
+        "transit.segmentCount": {
+          "value": 0.0,
+          "unit": "segments",
+          "period": null,
+          "source": "TransitCompleteness.segmentCount",
+          "support": "supported",
+          "reason": null
+        },
+        "transit.invalidSegmentCount": {
+          "value": 0.0,
+          "unit": "segments",
+          "period": null,
+          "source": "TransitSegment.structuralAssessment",
+          "support": "supported",
+          "reason": null
+        }
+      },
+      "members": [
+        {
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "index": 10,
+          "version": 1
+        }
+      ],
+      "perMember": [
+        {
+          "member": {
+            "world": {
+              "bootId": "boot",
+              "epoch": 1
+            },
+            "index": 10,
+            "version": 1
+          },
+          "metrics": {
+            "transit.segmentCount": {
+              "value": 0.0,
+              "unit": "segments",
+              "period": null,
+              "source": "TransitCompleteness.segmentCount",
+              "support": "supported",
+              "reason": null
+            },
+            "transit.invalidSegmentCount": {
+              "value": 0.0,
+              "unit": "segments",
+              "period": null,
+              "source": "TransitSegment.structuralAssessment",
+              "support": "supported",
+              "reason": null
+            }
+          }
+        }
+      ],
+      "sources": [
+        {
+          "id": "state",
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "startFrame": 10,
+          "endFrame": 10,
+          "sampledAtUtc": "2026-10-16T22:05:01.9038095Z",
+          "freshness": "current",
+          "warnings": [
+            "nativeObservationParityNotRun",
+            "cachedSourceRefreshTimeUnknown"
+          ],
+          "completeness": "complete",
+          "refreshTimeUtc": null
+        },
+        {
+          "id": "transit.selectedLine",
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "startFrame": 10,
+          "endFrame": 10,
+          "sampledAtUtc": "2026-10-16T22:05:01.9038257Z",
+          "freshness": "current",
+          "warnings": [
+            "partialSelectedTransit",
+            "nativeTransitFixtureNotRun",
+            "structuralFactsNotNativeValidity"
+          ],
+          "completeness": "complete",
+          "refreshTimeUtc": null
+        }
+      ],
+      "clock": null,
+      "memberEvidence": [
+        {
+          "member": {
+            "world": {
+              "bootId": "boot",
+              "epoch": 1
+            },
+            "index": 10,
+            "version": 1
+          },
+          "fingerprint": "15c3c2ecdc0a93694dfd69c6460d91c98e423bddd40ecb15092050370e2c4f29",
+          "coverage": "structuralSampleOnly",
+          "complete": true,
+          "reasons": [
+            "structuralSampleNotCompleteRouteGeometry"
+          ]
+        }
+      ]
+    },
+    "world": {
+      "bootId": "boot",
+      "epoch": 1
+    },
+    "sampledAtUtc": "2026-10-16T22:05:01.9038807Z",
+    "startFrame": 10,
+    "endFrame": 10,
+    "freshness": "current",
+    "warnings": [
+      "nativeDiagnosticMetricParityNotRun",
+      "sourceRefreshTimesUnknown",
+      "observedSamplesNotNativeHistory",
+      "multiSourceReadNotAtomic",
+      "rawNormalizedClockUnavailable",
+      "nativeObservationParityNotRun",
+      "cachedSourceRefreshTimeUnknown",
+      "partialSelectedTransit",
+      "nativeTransitFixtureNotRun",
+      "structuralFactsNotNativeValidity"
+    ]
+  }
+}

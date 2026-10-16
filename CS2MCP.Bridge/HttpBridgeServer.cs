@@ -94,7 +94,7 @@ namespace CS2MCP
                     {
                         HttpIngress.ReadAndDispatch(stream, parsed => {
                             var request = new BridgeRequest { Method = parsed.Method, Path = parsed.Path, Body = parsed.Body,
-                                Command = parsed.Command, OperationId = parsed.OperationId, IngressWorld = m_World.Current,
+                                Metrics = parsed.Metrics, MetricCatalog = parsed.MetricCatalog, Command = parsed.Command, OperationId = parsed.OperationId, IngressWorld = m_World.Current,
                                 Observations = parsed.Observations,
                                 ConnectionClosed = () => client.Client.Poll(0, SelectMode.SelectRead) && client.Client.Available == 0 };
                             try {
@@ -156,6 +156,7 @@ namespace CS2MCP
 
         private static void ParseUrl(string rawUrl, BridgeRequest request)
         {
+            if(request.Path=="/v2/metrics"||request.Path=="/v2/metrics/catalog") return;
             int questionMark = rawUrl.IndexOf('?');
             if (questionMark < 0)
             {

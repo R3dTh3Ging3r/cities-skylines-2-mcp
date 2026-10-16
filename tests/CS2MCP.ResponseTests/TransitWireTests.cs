@@ -56,6 +56,7 @@ internal static class TransitWireTests
         public object Labor() => State();
         public object Budget() => State();
         public Observation<ConstructionSnapshot> Inventory(IDictionary<string, string> query) => throw new Exception("unexpected inventory");
+        public Observation<MetricBatch> Metrics(MetricReadRequest request) => throw new InvalidOperationException("unused metric source");
         public Observation<TransitPage> Transit(TransitQuery query) => Value;
     }
 

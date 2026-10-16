@@ -344,3 +344,102 @@ See [the exact request, fixed catalog, result semantics and bounds](observations
 `observationProtocol` limits and degraded `fixedBoundedReadersOnlyNativeNotRun`
 support; native support remains unverified. This does not enable mutation batches
 or change the three operation-route refusals.
+
+## Typed diagnostic metrics (partial M4)
+
+`cs2_metric_catalog` / `GET /v2/metrics/catalog` discover sixteen fixed raw
+metrics. Optional `family=all|city|labor|budget|transit` filters the compatibility
+array. `envelope=true` is an additive GET option returning definitions, revision,
+managed world/readiness/freshness, sample UTC and build identity; its freshness
+reason is `managedReadinessOnlyNativeParityNotRun`. The MCP catalog tool and
+`BridgeClient.metricCatalog(family)` consume the definition array. Native metric
+and panel parity remain unverified.
+
+`cs2_observe` accepts an observed `world`, explicit `scope`, and exactly one of
+`keys` or `queries`. Keys translate to `{key,parameters:{}}`. The normalized
+request is:
+
+```json
+{
+  "world": { "bootId": "example-boot", "epoch": 7 },
+  "scope": { "kind": "city" },
+  "queries": [
+    { "key": "city.population", "parameters": {} },
+    { "key": "city.money", "parameters": {} },
+    { "key": "budget.balance", "parameters": {} }
+  ]
+}
+```
+
+`GET /v2/metrics?query=<percent-encoded JSON>` carries that same request and
+returns `Observation<Record<string,MetricValue>>`. Use the shared query encoder;
+do not concatenate JSON into a URL. Require1–64 distinct known keys (the current
+catalog contains16), exact fields, and empty parameter maps for these definitions.
+Unknown keys, parameter semantics, areas, buildings, pagination and mixed scopes
+reject before native dispatch. Selected-line metrics use
+`scope={kind:"selectedLine",line:EntityRef}` with full observed world/index/version;
+they accept only transit keys. City scope accepts only city/labor/budget keys.
+GET routes accept no body. The encoded metric query limit is12,000 characters,
+within the existing16KiB whole-header limit. Larger future query forms can use
+the existing bounded O7 POST; no new read POST or arbitrary URL dispatch exists.
+
+`MetricValue` is `{value,unit,period,source,support,reason}`. Unavailable values are
+null with a reason; no default zero, clamping or unit conversion occurs.
+Definitions include kind, source, refresh description and parameter definitions.
+Their Capability is `unverified`; a value's `support="supported"` only says that
+the declared raw field was read. It does not certify native parity.
+
+| Keys | Unit and period | Source and qualification |
+| --- | --- | --- |
+| `city.population`, `city.populationWithMoveIn` | `citizens`; no period | Native Population counters; the latter explicitly includes move-in. Absent Population makes these unavailable while preserving independent money/XP. Present zero population remains supported zero. |
+| `city.money` | `nativeMoney`; no period | Signed raw CitySystem treasury; no currency conversion. |
+| `city.xp` | `XP`; no period | Raw CitySystem XP. |
+| `labor.employed` | `workers`; no period | Cached CityWorkerCount, not a resident employment ratio. |
+| `labor.homelessCitizens` | `citizens`; no period | Cached HomelessCitizenCount. |
+| `labor.jobs.total`, `labor.jobs.free` | `workplaceSlots`; no period | Cached native total/free workplace counters. |
+| `budget.income`, `budget.expenses`, `budget.taxIncome`, `budget.balance` | `nativeMoney`; `month` | Native monthly rates refreshed hourly. Expenses retain signed negative costs; native balance is preserved rather than subtracting signed expenses. |
+| `transit.waypointCount`, `transit.segmentCount` | `waypoints` / `segments`; no period | Complete traversal of the bounded selected-line buffers. Incomplete/oversized observations remain unavailable. |
+| `transit.brokenWaypointCount`, `transit.invalidSegmentCount` | `waypoints` / `segments`; no period | Exact counts of T1 per-slot `knownFault` assessments; any `unassessed` slot makes the exact total unavailable. Nullable health-reference arrays are not counted. Optional positions/waiting metadata do not create broken references. |
+
+Nonfinite values and invalid count values become unavailable. Missing
+PathInformation/distance is unassessed, not zero invalid segments; sanitized
+nonfinite distance remains a known fault. Native validity remains unknown.
+There is no route-length, load/capacity/headway, utility-health, happiness-percent
+or arbitrary-statistics metric in this catalog. T1's `rawLength` has unknown unit
+and cannot borrow the legacy UI helper's metre meaning.
+
+O7 adds the fixed item `{id,name:"metrics.read",args:<normalized request>}`.
+It uses the same producer but returns `Observation<MetricBatch>` rather than a
+dictionary. `MetricBatch` contains schemaVersion1, definitionRevision
+`diagnosticMetrics.v1`, `values`, explicit scope, exact `members`, `perMember`
+values, per-source observation metadata, nullable clock and member evidence.
+Output city scope is explicitly `{kind:"city",line:null}` with empty member
+arrays; input city scope is strictly `{kind:"city"}`. Empty city membership is
+an explicit aggregate scope, never a wildcard route cohort.
+
+Each required typed source is read once per request; clock comes from that
+overview read or one state read. Source metadata retains original world, frames,
+UTC, warming/availability, completeness and warnings; refreshTimeUtc is null.
+Selected transit retains its original observation. Source failures disable only
+affected metrics; world/readiness changes prevent publication. Multi-source reads
+warn `multiSourceReadNotAtomic`; differing frames warn `multiFrameReadNotAtomic`.
+Equal frames do not establish an atomic native snapshot.
+
+Clock metadata retains raw normalized TimeSystem date/time/year/daysPerYear,
+`sourceObservationId="city.overview"|"state"`, that source's frame bounds and
+`frameIndex=endFrame`, explicitly qualified `frameEvidence="sourceObservationEnd"`.
+It does not prove an exact clock-getter frame, verified hours or elapsed native
+time. Invalid/unavailable clock evidence is null. Calendar conversion and native
+budget parity remain unverified; cached-source refresh time remains unknown.
+
+Selected-line member fingerprints cover only observed ordered waypoint/connection
+refs and XYZ, segment refs/raw distances, mode/purpose, world and completeness.
+They are `structuralSampleOnly`, unavailable when required evidence is missing,
+and cannot prove complete geometry/topology, reconcile rebuilt identities or
+authorize editing. No metric has an automatic improvement direction.
+
+Direct results and catalog use the existing256KiB capped UTF-8 serializer; O7
+retains its256KiB item,4MiB group and1MiB body limits. The client caps streamed
+metric responses for all HTTP statuses. New endpoint capabilities are degraded
+`fixedTypedMetricsOnlyNativeNotRun`; native support is unverified. No history,
+comparison, persistence, writer/lease authority or gameplay controls are added.

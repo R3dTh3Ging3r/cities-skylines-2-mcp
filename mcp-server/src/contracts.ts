@@ -1,3 +1,4 @@
+import type {MetricReadRequest} from "./diagnostic-metric-contracts.js";
 import type {TransitRequest} from "./features/transit-contracts.js";
 /** Additive wire contracts; legacy success payloads keep their existing fields. */
 export interface BridgeErrorData {
@@ -109,7 +110,7 @@ export interface ConstructionSnapshot {
   support:"partial"; nativeVerification:"CON-01:notRun";
 }
 
-export type ObservationBatchItem = {
+export type ObservationBatchItem = {id:string;name:"metrics.read";args:MetricReadRequest} | {
     id: string;
     name: "state" | "city.overview" | "city.services" | "city.labor" | "city.budget";
     args: Record<string, never>;

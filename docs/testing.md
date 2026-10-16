@@ -90,3 +90,31 @@ tests exercise real MCP registration, typed compact GET, full-ref O7 requests,
 selected payload validation and bounded success/error streams. Native adapters
 still require installed-reference compilation and the separately qualified manual
 fixture in `docs/native/transit-readback.md`.
+
+The `diagnostic-metrics` core suite executes the actual typed M4 producer and its
+linked native interface binding with explicit native-data doubles. It covers
+presence-versus-zero Population, sixteen source mappings, signed monthly budgets,
+source-once counts, unavailable/nonfinite values, original clock source bounds,
+world fencing, T1 per-slot assessments and qualified structural fingerprints.
+The response runner adds actual GET ingress/server/facades, O7 scheduling,
+Newtonsoft serialization, optional catalog envelope and response bounds.
+
+`mcp-server/test/diagnostic-metrics.test.mjs` validates actual SDK registration,
+typed GET/O7 clients, strict arguments, all-status byte/UTF8/JSON limits and the
+production C# wire shape. Its checked-in JSON fixture contains **synthetic typed
+native-boundary data**, serialized by the actual producer/ObservationWire; it is
+not game telemetry. For a fresh interop check, set `M4_WIRE_DIR` to an ignored
+directory when running the response runner, then set the same variable for the
+Node suite. This tests both city and selected-line null metadata, State fallback,
+failed source and invalid clock. Run the Node suite without that variable too,
+so the checked-in default fixture cannot silently drift.
+
+Canonical projects remain net472. In cloud, cached Framework reference assemblies
+permit building them without installing packages; an existing SDK's Framework
+Newtonsoft can be passed through `-p:NewtonsoftPath=...`. Exact-source temporary
+net8 runners can execute linked portable tests and the existing SDK serializer,
+but their target/runtime/serializer differ from the installed game. Record those
+differences; no managed success certifies native binding, getter internals,
+performance or G1/unit/calendar/panel parity. Do not repeat unavailable PowerShell
+`evidence.test.mjs` or `native-runner.test.mjs` as portable tests in this cloud
+environment. Preserve their native validation gates as `notRun`.

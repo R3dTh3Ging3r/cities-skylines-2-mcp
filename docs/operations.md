@@ -131,3 +131,22 @@ HTTP timeout/disconnect cleanup. `POST /v2/observations` accepts a strict JSON b
 and rejects query parameters. It introduces no mutation batch, operation registry
 replay, lease or writer completion authority. Ordinary writer timeouts retain
 their existing unknown-outcome semantics.
+
+Partial M4 adds `cs2_metric_catalog` and `cs2_observe` over the
+[typed diagnostic metric API](bridge-api.md#typed-diagnostic-metrics-partial-m4).
+First obtain a ready observed world from capabilities or a state observation
+group, discover the catalog, then copy that exact world into an explicit city or
+selected-line request. For example, `cs2_observe` with
+`scope={kind:"city"}` and keys `city.population`, `city.money`, `budget.balance`
+returns typed values with units, periods and unavailable reasons. A missing
+Population component produces unavailable population, not a measured zero.
+Monthly signed costs remain monthly signed costs.
+
+Use O7 `metrics.read` when source-specific frames, raw normalized clock evidence
+and fixed member metadata are required; the direct metric read returns the
+dictionary facade of the same producer. Source sampling is sequential and never
+atomic. Refresh timestamps, native clock conversion, panel parity and performance
+remain unverified. Selected-line fault counts require complete per-slot evidence;
+unknown distance does not become zero invalid segments. No collected history,
+comparison tools, automatic score, simulation change or new writer capability
+exists in this M4 slice. M5 remains separate work after review.

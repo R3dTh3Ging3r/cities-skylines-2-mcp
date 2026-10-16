@@ -1,11 +1,13 @@
+import {metricReadRequestSchema,parseMetricBatchObservation} from "./diagnostic-metric-contracts.js";
 import {transitRequestSchema,parseTransitObservation} from "./features/transit-contracts.js";
 import { z } from "zod";
 import { constructionRequestSchema, worldRefSchema } from "./construction-query.js";
 import type { ObservationBatchRequest, ObservationBatchResult } from "./contracts.js";
 const context = z.object({ id: z.string().min(1).max(128), name: z.enum(["state", "city.overview", "city.services", "city.labor", "city.budget"]), args: z.object({}).strict() }).strict();
+const metrics=z.object({id:z.string().min(1).max(128),name:z.literal("metrics.read"),args:metricReadRequestSchema}).strict();
 const transit = z.object({id:z.string().min(1).max(128),name:z.literal("transit.selectedLine"),args:transitRequestSchema}).strict();
 const inventory = z.object({ id: z.string().min(1).max(128), name: z.literal("construction.inventory"), args: constructionRequestSchema }).strict();
-export const observationRequestSchema = z.object({ expectedWorld: worldRefSchema.optional(), items: z.array(z.discriminatedUnion("name", [context, inventory, transit])).min(1).max(64) }).strict().superRefine((request, ctx) => {
+export const observationRequestSchema = z.object({ expectedWorld: worldRefSchema.optional(), items: z.array(z.discriminatedUnion("name", [context, inventory, transit, metrics])).min(1).max(64) }).strict().superRefine((request, ctx) => {
     const ids = new Set<string>();
     for (const [i, item] of request.items.entries()) {
         if (ids.has(item.id))
@@ -37,10 +39,12 @@ export function parseObservationResult(value: unknown, request: ObservationBatch
             throw new Error("missing, duplicated or reordered observation ID");
         if (expected.name === "construction.inventory" && !same(expected.args.world, result.world))
             throw new Error("inventory world mismatch");
+        if(expected.name === "metrics.read" && !same(expected.args.world,result.world))throw new Error("metric world mismatch");
         if(expected.name === "transit.selectedLine" && !same(expected.args.line.world,result.world)) throw new Error("transit world mismatch");
         const observation = item.observation;
         if (!observation)
             continue;
+        if(expected.name === "metrics.read") parseMetricBatchObservation(observation,expected.args);
         if(expected.name === "transit.selectedLine") parseTransitObservation(observation,expected.args);
         if (!same(observation.world, result.world) || observation.startFrame === null || observation.endFrame === null || result.startFrame === null ||
             observation.endFrame < observation.startFrame || observation.startFrame < result.startFrame ||

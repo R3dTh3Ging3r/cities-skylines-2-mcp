@@ -1,3 +1,4 @@
+import {metricFamilySchema,metricCatalogSchema,metricReadRequestSchema,metricQuery,parseMetricObservation,type MetricDefinition,type MetricReadRequest} from "./diagnostic-metric-contracts.js";
 import {transitRequestSchema,transitQuery,parseTransitObservation,transitCapabilitiesSchema,type TransitRequest,type TransitPage,type TransitCapabilities} from "./features/transit-contracts.js";
 import {observationRequestSchema,parseObservationResult} from "./observation-contracts.js";
 import { constructionQuery, type ConstructionRequest } from "./construction-query.js";
@@ -57,6 +58,8 @@ function httpError(status: number, text: string): BridgeClientError {
 }
 
 export interface BridgeClient {
+  metricCatalog(family?:"all"|"city"|"labor"|"budget"|"transit"):Promise<MetricDefinition[]>;
+  readMetrics(request:MetricReadRequest):Promise<ReturnType<typeof parseMetricObservation>>;
   transitStatus(request:TransitRequest):Promise<Observation<TransitPage>>;
   transitCapabilities():Promise<TransitCapabilities>;
   observe(request:ObservationBatchRequest,options?:{signal?:AbortSignal}):Promise<ObservationBatchResult>;
@@ -280,7 +283,21 @@ export function createBridgeClient(options: {
       throw new BridgeClientError({code: "PROTOCOL_ERROR", message: "invalid bounded selected transit response", retryable: false, outcome: "notApplied"});
     }
   }
-  return { getJson, getResponse, observe, transitStatus,
+  async function readMetrics(input:MetricReadRequest){
+    let request:MetricReadRequest,query:URLSearchParams;
+    try{request=metricReadRequestSchema.parse(input);query=metricQuery(request);}catch{throw new BridgeClientError({code:"INVALID_ARGUMENT",message:"invalid bounded metric request",retryable:false,outcome:"notApplied"});}
+    try{return parseMetricObservation(await boundedTransit("/v2/metrics",query),request);}catch(error){if(error instanceof BridgeClientError)throw error;throw new BridgeClientError({code:"PROTOCOL_ERROR",message:"invalid bounded metric observation",retryable:false,outcome:"notApplied"});}
+  }
+  async function metricCatalog(family:"all"|"city"|"labor"|"budget"|"transit"="all"){
+    metricFamilySchema.parse(family);
+    try{
+      const definitions=metricCatalogSchema.parse(await boundedTransit("/v2/metrics/catalog",new URLSearchParams({family})));
+      if(family!=="all"&&definitions.some(d=>!d.key.startsWith(family+".")))throw new Error("catalog family mismatch");
+      if(family==="all"&&definitions.length!==16)throw new Error("incomplete metric catalog");
+      return definitions;
+    }catch(error){if(error instanceof BridgeClientError)throw error;throw new BridgeClientError({code:"PROTOCOL_ERROR",message:"invalid bounded metric catalog",retryable:false,outcome:"notApplied"});}
+  }
+  return { getJson, getResponse, observe, transitStatus, readMetrics,metricCatalog,
     transitCapabilities: async () => transitCapabilitiesSchema.parse(await boundedTransit("/v2/transit/capabilities")),
     constructionInventory: async request => getJson<Observation<ConstructionSnapshot>>("/v2/construction/inventory",constructionQuery(request)),
     submit: command => operationRequest("POST","/v2/commands",command.operationId,command),

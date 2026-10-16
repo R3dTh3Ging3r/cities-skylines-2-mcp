@@ -12,6 +12,8 @@ namespace CS2MCP.Core
         public string Method { get; internal set; } public string Path { get; internal set; }
         public string RawTarget { get; internal set; } public string Body { get; internal set; }
         public ValidatedObservationBatch Observations { get; internal set; }
+        public MetricReadRequest Metrics { get; internal set; }
+        public Dictionary<string,string> MetricCatalog { get; internal set; }
         public CommandRequest Command { get; internal set; } public string OperationId { get; internal set; }
     }
     /// <summary>Production framing and v2 shape validation, run entirely before enqueue.
@@ -69,8 +71,18 @@ namespace CS2MCP.Core
             string json;
             try { json = new UTF8Encoding(false, true).GetString(body); } catch (DecoderFallbackException) { throw Reject("invalid UTF-8 body"); }
             return new IngressRequest { Method = first[0], Path = path, RawTarget = target, Body = json, OperationId = id,
+                Metrics = path=="/v2/metrics" ? MetricReadRequest.DecodeQuery(query<0?null:target.Substring(query+1)) : null,
+                MetricCatalog = path=="/v2/metrics/catalog" ? ParseMetricCatalog(query<0?null:target.Substring(query+1)) : null,
                 Observations = observations ? ObservationCatalog.Parse(json) : null,
                 Command = command ? ParseCommand(json) : null };
+        }
+        public static Dictionary<string,string> ParseMetricCatalog(string query)
+        {
+            var fields=query==null?new Dictionary<string,string>():MetricReadRequest.DecodeFields(query);
+            if(fields.Keys.Any(k=>k!="family"&&k!="envelope")) throw CommandJson.Invalid("unknown metric catalog field");
+            DiagnosticMetricCatalog.Read(fields.TryGetValue("family",out var family)?family:"all");
+            if(fields.TryGetValue("envelope",out var envelope)&&envelope!="true"&&envelope!="false") throw CommandJson.Invalid("invalid metric catalog envelope");
+            return fields;
         }
         public static CommandRequest ParseCommand(string json)
         {

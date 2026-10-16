@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {registerDiagnosticMetricTools} from "./diagnostic-metrics.js";
 import {registerTransitTools} from "./features/transit.js";
 /**
  * cs2-mcp - MCP server for Cities: Skylines II.
@@ -41,6 +42,7 @@ registerOperationTools(registerTool, bridgeClient);
 registerConstructionTools(registerTool, bridgeClient);
 registerObservationTools(registerTool,bridgeClient);
 registerTransitTools(registerTool,bridgeClient);
+registerDiagnosticMetricTools(registerTool,bridgeClient);
 
 registerTool(
   "cs2_capabilities",

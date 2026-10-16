@@ -13,6 +13,7 @@ internal static class ObservationHttpTests
 {
     sealed class Readers:IObservationReaders {
         internal int Count;internal double Millis;internal object Data=new CityStateData{gameMode="Game",cityLoaded=true,cityName="City"};
+        public Observation<MetricBatch> Metrics(MetricReadRequest request) => throw new InvalidOperationException("unused metric source");
         public Observation<TransitPage> Transit(TransitQuery query) => TransitReader.Read(query,Ready(),()=>10,new TestTransitSource());
             static WorldIdentity Ready(){var w=new WorldIdentity("boot");w.BeginLoad();w.CompleteLoad();return w;}
             public bool Warming=>false;public object State(){Count++;Millis=2;return Data;}
@@ -85,6 +86,8 @@ namespace CS2MCP
 {
     // Only game-global logging/build metadata are doubled. BridgeRequest, HTTP server and serializer are real production sources.
     internal static class Mod {
+        internal static readonly WorldIdentity Worlds=ReadyWorld();
+        static WorldIdentity ReadyWorld(){var w=new WorldIdentity("boot");w.BeginLoad();w.CompleteLoad();return w;}
         internal const string Name="test",Version="test";internal static readonly BuildIdentity Identity=new BuildIdentity("test","test",null,null);
         internal static readonly RuntimeSnapshotStore RuntimeSnapshots=new RuntimeSnapshotStore();internal static readonly NativeValidationMetadata NativeValidation=new NativeValidationMetadata(null);
         internal static readonly TestLog Log=new TestLog();internal sealed class TestLog{internal void Warn(string message){}}

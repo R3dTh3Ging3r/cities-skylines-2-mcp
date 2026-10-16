@@ -68,6 +68,7 @@ internal static class Program
         });
         ObservationHttpTests.Run(Check);
         TransitWireTests.Run(Check);
+        DiagnosticMetricWireTests.Run(Check);
         Console.WriteLine($"Response serialization: {passed + failed} assertions, {passed} passed, {failed} failed");
         return failed == 0 ? 0 : 1;
     }

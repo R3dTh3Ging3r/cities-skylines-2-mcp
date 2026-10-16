@@ -22,6 +22,8 @@ namespace CS2MCP
         public string Body;
         // Immutable managed ingress identity; legacy callers did not supply/observe this world.
         public WorldRef IngressWorld { get; internal set; }
+        public MetricReadRequest Metrics { get; internal set; }
+        public Dictionary<string,string> MetricCatalog { get; internal set; }
         public CommandRequest Command { get; internal set; }
         public string OperationId { get; internal set; }
         public ValidatedObservationBatch Observations { get; internal set; }
