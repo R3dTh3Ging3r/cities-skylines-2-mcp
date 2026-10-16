@@ -1,12 +1,13 @@
 # Bridge API
 
-The current source candidate has **70 endpoint descriptors and 70 registered MCP
+The current source candidate has **71 endpoint descriptors and 71 registered MCP
 tools**, verified by the catalog and offline MCP discovery tests. The legacy
 manifest retains `protocolVersion:1` / `schemaVersion:1` and advertises managed
 `operationProtocol.version:2`. Strict HTTP method/framing checks are implemented;
 the three [operation endpoints](operations.md) remain disabled pending completion
 and lease guards. [Partial C1 inspection](#bounded-explicit-construction-inspection-partial-c1)
-is a bounded read-only addition. Native G1/G2/CON-01 remain `notRun`.
+is a bounded read-only addition. [Observation groups](observations.md) add a fixed
+read-only JSON POST catalog with shared scheduling and transport detachment. Native G1/G2/CON-01 remain `notRun`.
 
 ## Historical release 1 baseline
 
@@ -19,11 +20,12 @@ becomes nullable as documented below.
 ## Discovery and exposure
 
 `/capabilities` returns `identity`, `runtime`, `endpoints`, `capabilities`,
-`nativeSupport`, `degradedReasons`, `nativeValidation` and `operationProtocol`.
+`nativeSupport`, `degradedReasons`, `nativeValidation` `operationProtocol` and `observationProtocol`.
 `EndpointCatalog.All` in
 [EndpointCatalog.cs](../CS2MCP.Bridge/EndpointCatalog.cs) is the authoritative
-classification of the current 70 endpoint descriptors. There are 70 registered
-MCP tools, including discovery, three operation tools and partial C1 inspection.
+classification of the current 71 endpoint descriptors. There are 71 registered
+MCP tools, including discovery, three operation tools, partial C1 inspection and
+bounded observation groups.
 Each endpoint names its corresponding MCP capability.
 
 `capabilities[].support: supported` means the bridge implements that endpoint.
@@ -97,7 +99,7 @@ the listener thread without waiting for native dispatch.
 Each descriptor contains `path`, `legacyHttpVerbs`, `access`, `capability` and
 `completionMechanism`. Despite its retained name, `legacyHttpVerbs` is enforced
 by the current strict ingress before dispatch: legacy routes and partial C1
-inventory accept GET; command submission and operation cancellation accept POST.
+inventory accept GET; command submission, operation cancellation and bounded observation groups accept POST.
 Other methods reject. The historical release1 manifest only documented legacy
 MCP usage, including GET writer routes, without enforcing it.
 
@@ -334,3 +336,11 @@ its native support is `unverified`. Full C1 and native G1/G2/CON-01 remain open.
 See [supported fields and deferred evidence](native/construction-gates.md).
 Existing `PrefabInfo` and `RoadGraph` payloads and midpoint-filter defaults retain
 their current behavior.
+
+## Observation groups (partial O7)
+
+See [the exact request, fixed catalog, result semantics and bounds](observations.md).
+`POST /v2/observations` / `cs2_observe_batch` are read-only. Capabilities advertise
+`observationProtocol` limits and degraded `fixedBoundedReadersOnlyNativeNotRun`
+support; native support remains unverified. This does not enable mutation batches
+or change the three operation-route refusals.

@@ -28,7 +28,8 @@ namespace CS2MCP.CoreTests
         private static int Main(string[] args)
         {
             string suite = args.Length == 2 && args[0] == "--suite" ? args[1] : null;
-            if (suite == "deferred") DeferredWorkTests.Run();
+            if (suite == "observations") ObservationTests.Run();
+            else if (suite == "deferred") DeferredWorkTests.Run();
             else if (suite == "construction-inventory") ConstructionInventoryTests.Run();
             else if (suite == "operations") OperationTests.Run();
             else if (suite == "contracts") ContractTests.Run();

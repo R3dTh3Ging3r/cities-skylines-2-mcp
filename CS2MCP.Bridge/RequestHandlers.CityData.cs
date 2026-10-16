@@ -1,4 +1,5 @@
 using System;
+using CS2MCP.Core;
 using System.Collections.Generic;
 using Game.City;
 using Game.Companies;
@@ -16,9 +17,15 @@ namespace CS2MCP
     {
         private BridgeResponse GetServices()
         {
+            if (!TryGetCity(out _, out BridgeResponse error)) return error;
+            return BridgeResponse.Json(ReadServicesData());
+        }
+
+        private CityServicesData ReadServicesData()
+        {
             if (!TryGetCity(out _, out BridgeResponse error))
             {
-                return error;
+                throw new OperationException(new BridgeErrorData(ErrorCodes.NotReady,"city unavailable",httpStatus:409));
             }
 
             ElectricityStatisticsSystem electricity = World.GetOrCreateSystemManaged<ElectricityStatisticsSystem>();
@@ -27,19 +34,19 @@ namespace CS2MCP
             WaterTradeSystem waterTrade = World.GetOrCreateSystemManaged<WaterTradeSystem>();
             GarbageAccumulationSystem garbage = World.GetOrCreateSystemManaged<GarbageAccumulationSystem>();
 
-            return BridgeResponse.Json(new
+            return new CityServicesData
             {
-                electricity = new
+                electricity = new CityElectricityData
                 {
                     production = electricity.production,
                     consumption = electricity.consumption,
                     fulfilledConsumption = electricity.fulfilledConsumption,
                     batteryCharge = electricity.batteryCharge,
                     batteryCapacity = electricity.batteryCapacity,
-                    import = electricityTrade.import,
+                    @import = electricityTrade.import,
                     export = electricityTrade.export,
                 },
-                water = new
+                water = new CityWaterData
                 {
                     freshCapacity = water.freshCapacity,
                     freshConsumption = water.freshConsumption,
@@ -49,19 +56,25 @@ namespace CS2MCP
                     freshExport = waterTrade.freshExport,
                     sewageExport = waterTrade.sewageExport,
                 },
-                garbage = new
+                garbage = new CityGarbageData
                 {
                     accumulationRate = garbage.garbageAccumulation,
                 },
                 note = "healthcare/education coverage: query /city/statistics (e.g. type=EducationCount) until dedicated endpoints land",
-            });
+            };
         }
 
         private BridgeResponse GetLabor()
         {
+            if (!TryGetCity(out _, out BridgeResponse error)) return error;
+            return BridgeResponse.Json(ReadLaborData());
+        }
+
+        private CityLaborData ReadLaborData()
+        {
             if (!TryGetCity(out _, out BridgeResponse error))
             {
-                return error;
+                throw new OperationException(new BridgeErrorData(ErrorCodes.NotReady,"city unavailable",httpStatus:409));
             }
 
             CountHouseholdDataSystem households = World.GetOrCreateSystemManaged<CountHouseholdDataSystem>();
@@ -70,17 +83,17 @@ namespace CS2MCP
             Workplaces total = workplaces.GetTotalWorkplaces();
             Workplaces free = workplaces.GetFreeWorkplaces();
 
-            return BridgeResponse.Json(new
+            return new CityLaborData
             {
                 employed = households.CityWorkerCount,
                 unemploymentRate = households.UnemploymentRate,
                 homelessCitizens = households.HomelessCitizenCount,
                 homelessnessRate = households.HomelessnessRate,
-                jobs = new
+                jobs = new CityJobsData
                 {
                     total = total.TotalCount,
                     free = free.TotalCount,
-                    totalByEducation = new
+                    totalByEducation = new EducationCounters
                     {
                         uneducated = total.m_Uneducated,
                         poorlyEducated = total.m_PoorlyEducated,
@@ -88,7 +101,7 @@ namespace CS2MCP
                         wellEducated = total.m_WellEducated,
                         highlyEducated = total.m_HighlyEducated,
                     },
-                    freeByEducation = new
+                    freeByEducation = new EducationCounters
                     {
                         uneducated = free.m_Uneducated,
                         poorlyEducated = free.m_PoorlyEducated,
@@ -97,7 +110,7 @@ namespace CS2MCP
                         highlyEducated = free.m_HighlyEducated,
                     },
                 },
-                ageStructure = new
+                ageStructure = new CityAgeData
                 {
                     children = households.ChildrenCount,
                     teens = households.TeenCount,
@@ -105,7 +118,7 @@ namespace CS2MCP
                     seniors = households.SeniorCount,
                     totalCitizens = households.MovedInCitizenCount,
                 },
-            });
+            };
         }
 
         private BridgeResponse GetStatistics(BridgeRequest request)

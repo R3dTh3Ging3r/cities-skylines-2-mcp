@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -23,6 +24,36 @@ namespace CS2MCP
         public WorldRef IngressWorld { get; internal set; }
         public CommandRequest Command { get; internal set; }
         public string OperationId { get; internal set; }
+        public ValidatedObservationBatch Observations { get; internal set; }
+        internal Func<bool> ConnectionClosed;
+        private readonly object m_TransportGate = new object();
+        private Action m_Detach;
+        private bool m_Detached;
+        internal void AttachObservation(Action detach)
+        {
+            bool detached;
+            lock (m_TransportGate)
+            {
+                detached = m_Detached;
+                if (!detached)
+                    m_Detach = detach;
+            }
+            if (detached)
+                detach();
+        }
+        internal void DetachObservation()
+        {
+            Action detach;
+            lock (m_TransportGate)
+            {
+                if (m_Detached)
+                    return;
+                m_Detached = true;
+                detach = m_Detach;
+                m_Detach = null;
+            }
+            detach?.Invoke();
+        }
 
         private readonly TaskCompletionSource<BridgeResponse> m_Completion =
             new TaskCompletionSource<BridgeResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -49,13 +80,33 @@ namespace CS2MCP
 
         public void Complete(BridgeResponse response)
         {
-            m_Completion.TrySetResult(response);
+            lock (m_TransportGate)
+            {
+                if (Observations != null && m_Detached)
+                    return;
+                m_Completion.TrySetResult(response);
+            }
         }
 
         /// <summary>Returns null on timeout.</summary>
         public BridgeResponse WaitForResponse(int timeoutMs)
         {
-            return m_Completion.Task.Wait(timeoutMs) ? m_Completion.Task.Result : null;
+            if (Observations == null)
+                return m_Completion.Task.Wait(timeoutMs) ? m_Completion.Task.Result : null;
+            var elapsed = Stopwatch.StartNew();
+            while (elapsed.ElapsedMilliseconds < timeoutMs)
+            {
+                if (ConnectionClosed?.Invoke() == true)
+                {
+                    DetachObservation();
+                    return null;
+                }
+                int remaining = timeoutMs - (int)elapsed.ElapsedMilliseconds;
+                if (remaining > 0 && m_Completion.Task.Wait(Math.Min(25, remaining)))
+                    return m_Completion.Task.Result;
+            }
+            DetachObservation();
+            return null;
         }
     }
 
@@ -91,7 +142,11 @@ namespace CS2MCP
             {
                 Status = status,
                 // Omit absent optional error fields without changing legacy success/null semantics.
-                Body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new { error = message, errorData = details },
+                Body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new
+                {
+                    error = message,
+                    errorData = details
+                },
                     Formatting.None, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })),
             };
         }

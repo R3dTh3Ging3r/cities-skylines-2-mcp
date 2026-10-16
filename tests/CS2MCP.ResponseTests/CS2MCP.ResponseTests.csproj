@@ -13,6 +13,20 @@
     <!-- Existing runtime serializer only: no Game/Unity/ECS assembly or new package. -->
     <Reference Include="Newtonsoft.Json"><HintPath>$(NewtonsoftPath)</HintPath></Reference>
     <Compile Include="Program.cs" />
+    <Compile Include="ObservationHttpTests.cs" />
+    <Compile Include="../../CS2MCP.Bridge/HttpBridgeServer.cs" />
+    <Compile Include="../../CS2MCP.Bridge/ObservationWire.cs" />
+    <Compile Include="../../CS2MCP.Bridge/EndpointCatalog.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/WorldIdentity.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/OperationRegistry.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/HttpIngress.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/ConstructionContracts.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/ConstructionInventory.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/CityObservationData.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/MetricContracts.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/ObservationCatalog.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/ObservationScheduler.cs" />
+
     <Compile Include="../../CS2MCP.Bridge/Core/CommandJson.cs" Link="Core/CommandJson.cs" />
     <Compile Include="../../CS2MCP.Bridge/BridgeRequest.cs" Link="BridgeRequest.cs" />
     <Compile Include="../../CS2MCP.Bridge/Core/Contracts.cs" Link="Core/Contracts.cs" />

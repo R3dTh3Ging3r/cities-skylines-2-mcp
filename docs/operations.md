@@ -124,3 +124,10 @@ ready-city observation. A changed world/readiness during deferred capture makes
 an explicit error instead of publishing an image. Older bridges without these
 headers preserve legacy image output; malformed/partial metadata produces a
 protocol error. No native G1 assertion has been executed or passed by this work.
+
+Partial O7 adds [bounded read-only observation groups](observations.md), with a
+fixed catalog, shared ordinary/group pending and dispatch accounting, and actual
+HTTP timeout/disconnect cleanup. `POST /v2/observations` accepts a strict JSON body
+and rejects query parameters. It introduces no mutation batch, operation registry
+replay, lease or writer completion authority. Ordinary writer timeouts retain
+their existing unknown-outcome semantics.

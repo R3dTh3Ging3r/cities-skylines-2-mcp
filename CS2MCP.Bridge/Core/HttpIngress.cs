@@ -11,6 +11,7 @@ namespace CS2MCP.Core
     {
         public string Method { get; internal set; } public string Path { get; internal set; }
         public string RawTarget { get; internal set; } public string Body { get; internal set; }
+        public ValidatedObservationBatch Observations { get; internal set; }
         public CommandRequest Command { get; internal set; } public string OperationId { get; internal set; }
     }
     /// <summary>Production framing and v2 shape validation, run entirely before enqueue.
@@ -57,17 +58,18 @@ namespace CS2MCP.Core
             string id = null; CS2MCP.EndpointDescriptor endpoint = CS2MCP.EndpointCatalog.Resolve(path, out id);
             if (endpoint == null) throw Reject("unknown route", 404);
             if (!endpoint.legacyHttpVerbs.Contains(first[0])) throw Reject("unsupported method", 405);
-            bool command = path == "/v2/commands";
-            if (CS2MCP.EndpointCatalog.IsOperationEndpoint(endpoint) && query >= 0) throw Reject("v2 query parameters unsupported");
-            if (!command && length != 0) throw Reject("this route accepts no body");
+            bool command = path == "/v2/commands", observations = path == "/v2/observations";
+            if ((CS2MCP.EndpointCatalog.IsOperationEndpoint(endpoint)||observations) && query >= 0) throw Reject("v2 query parameters unsupported");
+            if (!command && !observations && length != 0) throw Reject("this route accepts no body");
             if (first[0] == "POST" && !headers.ContainsKey("Content-Length")) throw Reject("Content-Length required");
-            if (command && (!headers.TryGetValue("Content-Type", out string contentType) ||
+            if ((command||observations) && (!headers.TryGetValue("Content-Type", out string contentType) ||
                 !contentType.Split(';')[0].Trim().Equals("application/json", StringComparison.OrdinalIgnoreCase))) throw Reject("application/json required");
             byte[] body = new byte[length]; int count = 0;
             while (count < length) { int read = stream.Read(body, count, length - count); if (read <= 0) throw Reject("truncated body"); count += read; }
             string json;
             try { json = new UTF8Encoding(false, true).GetString(body); } catch (DecoderFallbackException) { throw Reject("invalid UTF-8 body"); }
             return new IngressRequest { Method = first[0], Path = path, RawTarget = target, Body = json, OperationId = id,
+                Observations = observations ? ObservationCatalog.Parse(json) : null,
                 Command = command ? ParseCommand(json) : null };
         }
         public static CommandRequest ParseCommand(string json)

@@ -66,6 +66,7 @@ internal static class Program
             Equal(-4.5d,(double)wire["receipt"]["result"]["counts"][1]);
             Equal(1L,(long)wire["world"]["epoch"]);
         });
+        ObservationHttpTests.Run(Check);
         Console.WriteLine($"Response serialization: {passed + failed} assertions, {passed} passed, {failed} failed");
         return failed == 0 ? 0 : 1;
     }

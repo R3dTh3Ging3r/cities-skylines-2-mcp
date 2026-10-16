@@ -50,6 +50,7 @@ export interface CapabilityManifest {
   operationProtocol?: { version: 2; dispatchAvailable: false; scopedStatusAvailable: false;
     reason: string; legacyWrites: "unmigrated"; world: WorldRef | null; ready: boolean;
     registryCapacity: number; pendingCapacity: number; maxBodyBytes: number; };
+  observationProtocol?: {support:"partial";names:string[];maxItems:number;activeGroups:number;sharedPendingItems:number;sharedReadsPerUpdate:number;additionalWorkMilliseconds:number;maxItemBytes:number;maxGroupBytes:number;nativePerformance:"notRun"};
   degradedReasons: string[];
 }
 
@@ -105,4 +106,36 @@ export interface ConstructionSnapshot {
   scope:"explicitEntities"; requestedEntities:EntityRef[]; entities:ConstructionEntity[];
   worldBounds:null; worldBoundsReason:"notMeasured"; nextCursor:null; truncated:false;
   support:"partial"; nativeVerification:"CON-01:notRun";
+}
+
+export type ObservationBatchItem = {
+    id: string;
+    name: "state" | "city.overview" | "city.services" | "city.labor" | "city.budget";
+    args: Record<string, never>;
+} | {
+    id: string;
+    name: "construction.inventory";
+    args: {
+        world: WorldRef;
+        entities: EntityRef[];
+    };
+};
+export interface ObservationBatchRequest {
+    expectedWorld?: WorldRef;
+    items: ObservationBatchItem[];
+}
+export interface ObservationBatchResult {
+    world: WorldRef | null;
+    startFrame: number | null;
+    endFrame: number | null;
+    worldChanged: boolean;
+    results: ({
+        id: string;
+        observation: Observation<Record<string, unknown>>;
+        error?: never;
+    } | {
+        id: string;
+        error: BridgeErrorData;
+        observation?: never;
+    })[];
 }

@@ -57,7 +57,7 @@ test("offline capability tool preserves distinct versions and reports actual reg
     mcp = await startOfflineMcp(`http://127.0.0.1:${server.address().port}`);
     const { tools } = await mcp.client.listTools();
     assert.ok(tools.some((tool) => tool.name === "cs2_capabilities"), "additive capability tool is missing");
-    assert.equal(tools.length, 70);
+    assert.equal(tools.length, 71);
     assert.equal(requests.length, 0);
     for (const args of [{}, { clientTools: ["cs2_ping"] }]) {
       const result = await mcp.client.callTool({ name: "cs2_capabilities", arguments: args });

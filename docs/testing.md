@@ -16,6 +16,7 @@ dotnet build tests/CS2MCP.CoreTests/CS2MCP.CoreTests.csproj -c Release
 & tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite operations
 & tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite deferred
 & tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite construction-inventory
+& tests/CS2MCP.CoreTests/bin/Release/net472/CS2MCP.CoreTests.exe --suite observations
 # Serializer integration runner: links production BridgeResponse, using only the
 # already-installed Newtonsoft runtime assembly (no Game/Unity/ECS references).
 dotnet build tests/CS2MCP.ResponseTests/CS2MCP.ResponseTests.csproj -c Release '-p:GamePath=E:/SteamLibrary/steamapps/common/Cities Skylines II'
@@ -68,3 +69,14 @@ doubles for that dispatch test; it does not certify native ECS or serialization.
 `mcp-server/test/construction.test.mjs` runs actual MCP registration over stdio and
 the typed compact GET transport against an ephemeral fake bridge. Native
 G1/G2/CON-01 remain `notRun`.
+
+The `observations` suite executes the actual fixed catalog, shared scheduler and
+typed native interface binding file with explicitly labeled native-data doubles.
+The response runner additionally links the real HTTP server, BridgeRequest,
+serializer and scheduler: it tests actual loopback disconnect before/after partial
+dispatch, timeout cleanup, strict ingress and UTF-8 item/group limits. Only Mod
+logging/build globals are doubled there. Existing SDK Newtonsoft may be supplied
+for nongame serializer checks; that is not installed-game serializer/native parity.
+`observations.test.mjs` exercises actual MCP cancellation, strict registration,
+abortable typed transport and bounded streamed response validation. Full O7
+mutation batches and native timing/performance remain unverified/notRun.

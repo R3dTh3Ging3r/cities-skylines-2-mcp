@@ -94,9 +94,13 @@ namespace CS2MCP
                     {
                         HttpIngress.ReadAndDispatch(stream, parsed => {
                             var request = new BridgeRequest { Method = parsed.Method, Path = parsed.Path, Body = parsed.Body,
-                                Command = parsed.Command, OperationId = parsed.OperationId, IngressWorld = m_World.Current };
-                            ParseUrl(parsed.RawTarget, request);
-                            WriteResponse(stream, Dispatch(request));
+                                Command = parsed.Command, OperationId = parsed.OperationId, IngressWorld = m_World.Current,
+                                Observations = parsed.Observations,
+                                ConnectionClosed = () => client.Client.Poll(0, SelectMode.SelectRead) && client.Client.Available == 0 };
+                            try {
+                                ParseUrl(parsed.RawTarget, request);
+                                WriteResponse(stream, Dispatch(request));
+                            } finally { if(request.Observations!=null)request.DetachObservation(); }
                         });
                     }
                     catch (OperationException error)
@@ -129,6 +133,7 @@ namespace CS2MCP
             if (EndpointCatalog.IsOperationRoute(request.Path)) return m_Operations(request);
             if (!m_EnqueueToMainThread(request)) return BridgeResponse.Error(409, "pending queue is full", ErrorCodes.BridgeBusy);
             BridgeResponse response = request.WaitForResponse(MainThreadTimeoutMs);
+            if(response==null && request.Observations!=null){request.DetachObservation();return BridgeResponse.Error(503,"observation transport expired", "READ_CANCELLED");}
             return response ?? BridgeResponse.Error(503,
                 "simulation thread did not respond within 10s (game still loading, or bridge system disabled)",
                 ErrorCodes.OutcomeUnknown, retryable: false, outcome: "unknown");

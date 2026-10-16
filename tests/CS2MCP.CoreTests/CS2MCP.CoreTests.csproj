@@ -9,6 +9,10 @@
     <Reference Include="System.Web.Extensions" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
     <Compile Include="Program.cs" />
+    <Compile Include="ObservationTests.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/CityObservationData.cs" Link="Core/CityObservationData.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/ObservationCatalog.cs" Link="Core/ObservationCatalog.cs" />
+    <Compile Include="../../CS2MCP.Bridge/Core/ObservationScheduler.cs" Link="Core/ObservationScheduler.cs" />
     <Compile Include="DeferredWorkTests.cs" />
     <Compile Include="../../CS2MCP.Bridge/Core/DeferredWorldWork.cs" Link="Core/DeferredWorldWork.cs" />
     <Compile Include="ConstructionInventoryTests.cs" />
@@ -30,5 +34,5 @@
     <Compile Include="../../CS2MCP.Bridge/EndpointCatalog.cs" Link="EndpointCatalog.cs" />
     <Compile Include="../../CS2MCP.Bridge/Core/ConstructionContracts.cs" Link="Core/ConstructionContracts.cs" />
     <Compile Include="../../CS2MCP.Bridge/Core/ConstructionInventory.cs" Link="Core/ConstructionInventory.cs" />
-  </ItemGroup>
+  <Compile Include="ObservationBindingTestDependencies.cs" /><Compile Include="../../CS2MCP.Bridge/RequestHandlers.Observations.cs" /></ItemGroup>
 </Project>

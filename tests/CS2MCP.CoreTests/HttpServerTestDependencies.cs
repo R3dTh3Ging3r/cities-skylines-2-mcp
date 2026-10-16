@@ -9,6 +9,9 @@ namespace CS2MCP
     {
         public string Method, Path, Body, OperationId;
         public CommandRequest Command;
+        public ValidatedObservationBatch Observations;
+        internal Func<bool> ConnectionClosed;
+        internal void DetachObservation(){}
         public WorldRef IngressWorld;
         public Dictionary<string,string> Query=new Dictionary<string,string>();
         private BridgeResponse response;
