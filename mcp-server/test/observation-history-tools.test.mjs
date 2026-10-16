@@ -4,6 +4,7 @@ import {createServer} from 'node:http';
 import {once} from 'node:events';
 import {startOfflineMcp} from './fake-bridge.mjs';
 import {spec,wire,observed,group} from './history-fixtures.mjs';
+import {metricKeys} from '../dist/diagnostic-metric-contracts.js';
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 test('actual MCP catalog observe collect stop read compare workflow uses only fixed reads',async()=>{
  const calls=[];let polls=0;
@@ -70,7 +71,7 @@ test('actual listTools preserves exact required optional default and nested hist
  for(const [name,keys]of Object.entries(required))exact(schemas[name],keys);
  const collect=schemas.cs2_collect_observations,c=collect.properties;
  exact(c.world,['bootId','epoch']);assert.deepEqual(c.world.properties.bootId,{type:'string',minLength:1,maxLength:128});assert.deepEqual(c.world.properties.epoch,{type:'integer',minimum:0,maximum:Number.MAX_SAFE_INTEGER});
- assert.equal(c.queries.minItems,1);assert.equal(c.queries.maxItems,64);exact(c.queries.items,['key','parameters']);assert.deepEqual(new Set(c.queries.items.properties.key.enum),new Set(wire.catalog.map(definition=>definition.key)));assert.deepEqual(c.queries.items.properties.parameters,{type:'object',properties:{},additionalProperties:false});
+ assert.equal(c.queries.minItems,1);assert.equal(c.queries.maxItems,64);exact(c.queries.items,['key','parameters']);assert.deepEqual(new Set(c.queries.items.properties.key.enum),new Set(metricKeys));assert.deepEqual(c.queries.items.properties.parameters,{type:'object',properties:{},additionalProperties:false});
  exact(c.scope.anyOf[0],['kind']);assert.equal(c.scope.anyOf[0].properties.kind.const,'city');exact(c.scope.anyOf[1],['kind','line']);assert.equal(c.scope.anyOf[1].properties.kind.const,'selectedLine');
  const line=resolve(collect,c.scope.anyOf[1].properties.line);exact(line,['world','index','version']);assert.deepEqual(resolve(collect,line.properties.world),c.world);for(const field of ['index','version'])assert.deepEqual(line.properties[field],{type:'integer',minimum:1,maximum:2147483647});
  for(const [index,kind,count]of [[0,'city',0],[1,'fixedSelectedLine',1]]){const branch=c.cohort.anyOf[index];exact(branch,['kind','world','members']);assert.equal(branch.properties.kind.const,kind);assert.equal(branch.properties.members.minItems,count);assert.equal(branch.properties.members.maxItems,count);assert.deepEqual(resolve(collect,branch.properties.members.items),line);}

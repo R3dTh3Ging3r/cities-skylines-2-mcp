@@ -64,10 +64,12 @@ test('actual O7 listTools exposes the strict bounded fixed catalog and full nest
         const queries = metrics.properties.queries;
         assert.equal(queries.minItems, 1); assert.equal(queries.maxItems, 64);
         exact(queries.items, ['key', 'parameters']); exact(queries.items.properties.parameters, []);
-        assert.deepEqual(queries.items.properties.key.enum, ['city.population', 'city.populationWithMoveIn', 'city.money', 'city.xp',
+        assert.deepEqual(new Set(queries.items.properties.key.enum), new Set(['city.population', 'city.populationWithMoveIn', 'city.money', 'city.xp',
             'labor.employed', 'labor.homelessCitizens', 'labor.jobs.total', 'labor.jobs.free',
+            'labor.jobs.totalByEducation.uneducated', 'labor.jobs.totalByEducation.poorlyEducated', 'labor.jobs.totalByEducation.educated', 'labor.jobs.totalByEducation.wellEducated', 'labor.jobs.totalByEducation.highlyEducated',
+            'labor.jobs.freeByEducation.uneducated', 'labor.jobs.freeByEducation.poorlyEducated', 'labor.jobs.freeByEducation.educated', 'labor.jobs.freeByEducation.wellEducated', 'labor.jobs.freeByEducation.highlyEducated',
             'budget.income', 'budget.expenses', 'budget.taxIncome', 'budget.balance',
-            'transit.waypointCount', 'transit.segmentCount', 'transit.brokenWaypointCount', 'transit.invalidSegmentCount']);
+            'transit.waypointCount', 'transit.segmentCount', 'transit.brokenWaypointCount', 'transit.invalidSegmentCount']));
     } finally { await mcp.close(); }
 });
 

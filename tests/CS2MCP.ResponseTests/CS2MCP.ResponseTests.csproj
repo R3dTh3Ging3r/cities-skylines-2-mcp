@@ -14,6 +14,7 @@
     <Reference Include="Newtonsoft.Json"><HintPath>$(NewtonsoftPath)</HintPath></Reference>
     <Compile Include="Program.cs" />
     <Compile Include="DiagnosticMetricWireTests.cs" />
+    <Compile Include="WorkforceWireTests.cs" />
     <Compile Include="../CS2MCP.CoreTests/ObservationBindingTestDependencies.cs" />
     <Compile Include="../../CS2MCP.Bridge/RequestHandlers.Observations.cs" />
     <Compile Include="../../CS2MCP.Bridge/RequestHandlers.Metrics.cs" />

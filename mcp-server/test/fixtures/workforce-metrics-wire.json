@@ -1,0 +1,1714 @@
+{
+  "request": {
+    "world": {
+      "bootId": "boot",
+      "epoch": 1
+    },
+    "scope": {
+      "kind": "city"
+    },
+    "queries": [
+      {
+        "key": "labor.jobs.totalByEducation.uneducated",
+        "parameters": {}
+      },
+      {
+        "key": "labor.jobs.totalByEducation.poorlyEducated",
+        "parameters": {}
+      },
+      {
+        "key": "labor.jobs.totalByEducation.educated",
+        "parameters": {}
+      },
+      {
+        "key": "labor.jobs.totalByEducation.wellEducated",
+        "parameters": {}
+      },
+      {
+        "key": "labor.jobs.totalByEducation.highlyEducated",
+        "parameters": {}
+      },
+      {
+        "key": "labor.jobs.freeByEducation.uneducated",
+        "parameters": {}
+      },
+      {
+        "key": "labor.jobs.freeByEducation.poorlyEducated",
+        "parameters": {}
+      },
+      {
+        "key": "labor.jobs.freeByEducation.educated",
+        "parameters": {}
+      },
+      {
+        "key": "labor.jobs.freeByEducation.wellEducated",
+        "parameters": {}
+      },
+      {
+        "key": "labor.jobs.freeByEducation.highlyEducated",
+        "parameters": {}
+      }
+    ]
+  },
+  "direct": {
+    "data": {
+      "labor.jobs.totalByEducation.uneducated": {
+        "value": 11.0,
+        "unit": "workplaceSlots",
+        "period": null,
+        "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_Uneducated",
+        "support": "supported",
+        "reason": null
+      },
+      "labor.jobs.totalByEducation.poorlyEducated": {
+        "value": 12.0,
+        "unit": "workplaceSlots",
+        "period": null,
+        "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_PoorlyEducated",
+        "support": "supported",
+        "reason": null
+      },
+      "labor.jobs.totalByEducation.educated": {
+        "value": 13.0,
+        "unit": "workplaceSlots",
+        "period": null,
+        "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_Educated",
+        "support": "supported",
+        "reason": null
+      },
+      "labor.jobs.totalByEducation.wellEducated": {
+        "value": 14.0,
+        "unit": "workplaceSlots",
+        "period": null,
+        "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_WellEducated",
+        "support": "supported",
+        "reason": null
+      },
+      "labor.jobs.totalByEducation.highlyEducated": {
+        "value": 15.0,
+        "unit": "workplaceSlots",
+        "period": null,
+        "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_HighlyEducated",
+        "support": "supported",
+        "reason": null
+      },
+      "labor.jobs.freeByEducation.uneducated": {
+        "value": 1.0,
+        "unit": "workplaceSlots",
+        "period": null,
+        "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_Uneducated",
+        "support": "supported",
+        "reason": null
+      },
+      "labor.jobs.freeByEducation.poorlyEducated": {
+        "value": 2.0,
+        "unit": "workplaceSlots",
+        "period": null,
+        "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_PoorlyEducated",
+        "support": "supported",
+        "reason": null
+      },
+      "labor.jobs.freeByEducation.educated": {
+        "value": 3.0,
+        "unit": "workplaceSlots",
+        "period": null,
+        "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_Educated",
+        "support": "supported",
+        "reason": null
+      },
+      "labor.jobs.freeByEducation.wellEducated": {
+        "value": 4.0,
+        "unit": "workplaceSlots",
+        "period": null,
+        "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_WellEducated",
+        "support": "supported",
+        "reason": null
+      },
+      "labor.jobs.freeByEducation.highlyEducated": {
+        "value": 0.0,
+        "unit": "workplaceSlots",
+        "period": null,
+        "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_HighlyEducated",
+        "support": "supported",
+        "reason": null
+      }
+    },
+    "world": {
+      "bootId": "boot",
+      "epoch": 1
+    },
+    "sampledAtUtc": "2026-10-16T23:35:30.5853557Z",
+    "startFrame": 10,
+    "endFrame": 10,
+    "freshness": "current",
+    "warnings": [
+      "nativeDiagnosticMetricParityNotRun",
+      "sourceRefreshTimesUnknown",
+      "observedSamplesNotNativeHistory",
+      "multiSourceReadNotAtomic",
+      "nativeObservationParityNotRun",
+      "cachedSourceRefreshTimeUnknown"
+    ]
+  },
+  "observation": {
+    "data": {
+      "schemaVersion": 1,
+      "definitionRevision": "diagnosticMetrics.v1",
+      "scope": {
+        "kind": "city",
+        "line": null
+      },
+      "values": {
+        "labor.jobs.totalByEducation.uneducated": {
+          "value": 11.0,
+          "unit": "workplaceSlots",
+          "period": null,
+          "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_Uneducated",
+          "support": "supported",
+          "reason": null
+        },
+        "labor.jobs.totalByEducation.poorlyEducated": {
+          "value": 12.0,
+          "unit": "workplaceSlots",
+          "period": null,
+          "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_PoorlyEducated",
+          "support": "supported",
+          "reason": null
+        },
+        "labor.jobs.totalByEducation.educated": {
+          "value": 13.0,
+          "unit": "workplaceSlots",
+          "period": null,
+          "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_Educated",
+          "support": "supported",
+          "reason": null
+        },
+        "labor.jobs.totalByEducation.wellEducated": {
+          "value": 14.0,
+          "unit": "workplaceSlots",
+          "period": null,
+          "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_WellEducated",
+          "support": "supported",
+          "reason": null
+        },
+        "labor.jobs.totalByEducation.highlyEducated": {
+          "value": 15.0,
+          "unit": "workplaceSlots",
+          "period": null,
+          "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_HighlyEducated",
+          "support": "supported",
+          "reason": null
+        },
+        "labor.jobs.freeByEducation.uneducated": {
+          "value": 1.0,
+          "unit": "workplaceSlots",
+          "period": null,
+          "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_Uneducated",
+          "support": "supported",
+          "reason": null
+        },
+        "labor.jobs.freeByEducation.poorlyEducated": {
+          "value": 2.0,
+          "unit": "workplaceSlots",
+          "period": null,
+          "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_PoorlyEducated",
+          "support": "supported",
+          "reason": null
+        },
+        "labor.jobs.freeByEducation.educated": {
+          "value": 3.0,
+          "unit": "workplaceSlots",
+          "period": null,
+          "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_Educated",
+          "support": "supported",
+          "reason": null
+        },
+        "labor.jobs.freeByEducation.wellEducated": {
+          "value": 4.0,
+          "unit": "workplaceSlots",
+          "period": null,
+          "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_WellEducated",
+          "support": "supported",
+          "reason": null
+        },
+        "labor.jobs.freeByEducation.highlyEducated": {
+          "value": 0.0,
+          "unit": "workplaceSlots",
+          "period": null,
+          "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_HighlyEducated",
+          "support": "supported",
+          "reason": null
+        }
+      },
+      "members": [],
+      "perMember": [],
+      "sources": [
+        {
+          "id": "city.labor",
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "startFrame": 10,
+          "endFrame": 10,
+          "sampledAtUtc": "2026-10-16T23:35:30.5859547Z",
+          "freshness": "current",
+          "warnings": [
+            "nativeObservationParityNotRun",
+            "cachedSourceRefreshTimeUnknown"
+          ],
+          "completeness": "complete",
+          "refreshTimeUtc": null
+        },
+        {
+          "id": "state",
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "startFrame": 10,
+          "endFrame": 10,
+          "sampledAtUtc": "2026-10-16T23:35:30.5859583Z",
+          "freshness": "current",
+          "warnings": [
+            "nativeObservationParityNotRun",
+            "cachedSourceRefreshTimeUnknown"
+          ],
+          "completeness": "complete",
+          "refreshTimeUtc": null
+        }
+      ],
+      "clock": {
+        "source": "TimeSystem",
+        "rawNormalizedTime": 0.3,
+        "rawNormalizedDate": 0.2,
+        "rawYear": 2026,
+        "rawDaysPerYear": 12,
+        "frameIndex": 10,
+        "startFrame": 10,
+        "endFrame": 10,
+        "sourceObservationId": "state",
+        "frameEvidence": "sourceObservationEnd",
+        "conversionStatus": "unverified",
+        "reason": "nativeCalendarParityNotRun"
+      },
+      "memberEvidence": []
+    },
+    "world": {
+      "bootId": "boot",
+      "epoch": 1
+    },
+    "sampledAtUtc": "2026-10-16T23:35:30.5859822Z",
+    "startFrame": 10,
+    "endFrame": 10,
+    "freshness": "current",
+    "warnings": [
+      "nativeDiagnosticMetricParityNotRun",
+      "sourceRefreshTimesUnknown",
+      "observedSamplesNotNativeHistory",
+      "multiSourceReadNotAtomic",
+      "nativeObservationParityNotRun",
+      "cachedSourceRefreshTimeUnknown"
+    ]
+  },
+  "group": {
+    "world": {
+      "bootId": "boot",
+      "epoch": 1
+    },
+    "startFrame": 10,
+    "endFrame": 10,
+    "worldChanged": false,
+    "results": [
+      {
+        "id": "workforce",
+        "observation": {
+          "data": {
+            "schemaVersion": 1,
+            "definitionRevision": "diagnosticMetrics.v1",
+            "scope": {
+              "kind": "city",
+              "line": null
+            },
+            "values": {
+              "labor.jobs.totalByEducation.uneducated": {
+                "value": 11.0,
+                "unit": "workplaceSlots",
+                "period": null,
+                "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_Uneducated",
+                "support": "supported",
+                "reason": null
+              },
+              "labor.jobs.totalByEducation.poorlyEducated": {
+                "value": 12.0,
+                "unit": "workplaceSlots",
+                "period": null,
+                "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_PoorlyEducated",
+                "support": "supported",
+                "reason": null
+              },
+              "labor.jobs.totalByEducation.educated": {
+                "value": 13.0,
+                "unit": "workplaceSlots",
+                "period": null,
+                "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_Educated",
+                "support": "supported",
+                "reason": null
+              },
+              "labor.jobs.totalByEducation.wellEducated": {
+                "value": 14.0,
+                "unit": "workplaceSlots",
+                "period": null,
+                "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_WellEducated",
+                "support": "supported",
+                "reason": null
+              },
+              "labor.jobs.totalByEducation.highlyEducated": {
+                "value": 15.0,
+                "unit": "workplaceSlots",
+                "period": null,
+                "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_HighlyEducated",
+                "support": "supported",
+                "reason": null
+              },
+              "labor.jobs.freeByEducation.uneducated": {
+                "value": 1.0,
+                "unit": "workplaceSlots",
+                "period": null,
+                "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_Uneducated",
+                "support": "supported",
+                "reason": null
+              },
+              "labor.jobs.freeByEducation.poorlyEducated": {
+                "value": 2.0,
+                "unit": "workplaceSlots",
+                "period": null,
+                "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_PoorlyEducated",
+                "support": "supported",
+                "reason": null
+              },
+              "labor.jobs.freeByEducation.educated": {
+                "value": 3.0,
+                "unit": "workplaceSlots",
+                "period": null,
+                "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_Educated",
+                "support": "supported",
+                "reason": null
+              },
+              "labor.jobs.freeByEducation.wellEducated": {
+                "value": 4.0,
+                "unit": "workplaceSlots",
+                "period": null,
+                "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_WellEducated",
+                "support": "supported",
+                "reason": null
+              },
+              "labor.jobs.freeByEducation.highlyEducated": {
+                "value": 0.0,
+                "unit": "workplaceSlots",
+                "period": null,
+                "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_HighlyEducated",
+                "support": "supported",
+                "reason": null
+              }
+            },
+            "members": [],
+            "perMember": [],
+            "sources": [
+              {
+                "id": "city.labor",
+                "world": {
+                  "bootId": "boot",
+                  "epoch": 1
+                },
+                "startFrame": 10,
+                "endFrame": 10,
+                "sampledAtUtc": "2026-10-16T23:35:30.5859547Z",
+                "freshness": "current",
+                "warnings": [
+                  "nativeObservationParityNotRun",
+                  "cachedSourceRefreshTimeUnknown"
+                ],
+                "completeness": "complete",
+                "refreshTimeUtc": null
+              },
+              {
+                "id": "state",
+                "world": {
+                  "bootId": "boot",
+                  "epoch": 1
+                },
+                "startFrame": 10,
+                "endFrame": 10,
+                "sampledAtUtc": "2026-10-16T23:35:30.5859583Z",
+                "freshness": "current",
+                "warnings": [
+                  "nativeObservationParityNotRun",
+                  "cachedSourceRefreshTimeUnknown"
+                ],
+                "completeness": "complete",
+                "refreshTimeUtc": null
+              }
+            ],
+            "clock": {
+              "source": "TimeSystem",
+              "rawNormalizedTime": 0.3,
+              "rawNormalizedDate": 0.2,
+              "rawYear": 2026,
+              "rawDaysPerYear": 12,
+              "frameIndex": 10,
+              "startFrame": 10,
+              "endFrame": 10,
+              "sourceObservationId": "state",
+              "frameEvidence": "sourceObservationEnd",
+              "conversionStatus": "unverified",
+              "reason": "nativeCalendarParityNotRun"
+            },
+            "memberEvidence": []
+          },
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "sampledAtUtc": "2026-10-16T23:35:30.5859822Z",
+          "startFrame": 10,
+          "endFrame": 10,
+          "freshness": "current",
+          "warnings": [
+            "nativeDiagnosticMetricParityNotRun",
+            "sourceRefreshTimesUnknown",
+            "observedSamplesNotNativeHistory",
+            "multiSourceReadNotAtomic",
+            "nativeObservationParityNotRun",
+            "cachedSourceRefreshTimeUnknown"
+          ]
+        }
+      }
+    ]
+  },
+  "catalog": [
+    {
+      "key": "city.population",
+      "label": "Native population",
+      "kind": "count",
+      "unit": "citizens",
+      "period": null,
+      "source": "Population.m_Population",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "liveComponentSnapshot",
+      "support": {
+        "name": "city.population",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "city.populationWithMoveIn",
+      "label": "Native population including move-in",
+      "kind": "count",
+      "unit": "citizens",
+      "period": null,
+      "source": "Population.m_PopulationWithMoveIn",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "liveComponentSnapshot",
+      "support": {
+        "name": "city.populationWithMoveIn",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "city.money",
+      "label": "Raw treasury money",
+      "kind": "stock",
+      "unit": "nativeMoney",
+      "period": null,
+      "source": "CitySystem.moneyAmount",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "liveComponentSnapshot",
+      "support": {
+        "name": "city.money",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "city.xp",
+      "label": "City XP",
+      "kind": "stock",
+      "unit": "XP",
+      "period": null,
+      "source": "CitySystem.XP",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "liveComponentSnapshot",
+      "support": {
+        "name": "city.xp",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "labor.employed",
+      "label": "City worker count",
+      "kind": "count",
+      "unit": "workers",
+      "period": null,
+      "source": "CountHouseholdDataSystem.CityWorkerCount",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "cachedSimulationCounterRefreshTimeUnknown",
+      "support": {
+        "name": "labor.employed",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "labor.homelessCitizens",
+      "label": "Homeless citizen count",
+      "kind": "count",
+      "unit": "citizens",
+      "period": null,
+      "source": "CountHouseholdDataSystem.HomelessCitizenCount",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "cachedSimulationCounterRefreshTimeUnknown",
+      "support": {
+        "name": "labor.homelessCitizens",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "labor.jobs.total",
+      "label": "Total workplace slots",
+      "kind": "count",
+      "unit": "workplaceSlots",
+      "period": null,
+      "source": "CountWorkplacesSystem.GetTotalWorkplaces.TotalCount",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "cachedSimulationCounterRefreshTimeUnknown",
+      "support": {
+        "name": "labor.jobs.total",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "labor.jobs.free",
+      "label": "Free workplace slots",
+      "kind": "count",
+      "unit": "workplaceSlots",
+      "period": null,
+      "source": "CountWorkplacesSystem.GetFreeWorkplaces.TotalCount",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "cachedSimulationCounterRefreshTimeUnknown",
+      "support": {
+        "name": "labor.jobs.free",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "labor.jobs.totalByEducation.uneducated",
+      "label": "Native total workplace slots: uneducated",
+      "kind": "count",
+      "unit": "workplaceSlots",
+      "period": null,
+      "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_Uneducated",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "cachedSimulationCounterRefreshTimeUnknown",
+      "support": {
+        "name": "labor.jobs.totalByEducation.uneducated",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "labor.jobs.totalByEducation.poorlyEducated",
+      "label": "Native total workplace slots: poorlyEducated",
+      "kind": "count",
+      "unit": "workplaceSlots",
+      "period": null,
+      "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_PoorlyEducated",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "cachedSimulationCounterRefreshTimeUnknown",
+      "support": {
+        "name": "labor.jobs.totalByEducation.poorlyEducated",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "labor.jobs.totalByEducation.educated",
+      "label": "Native total workplace slots: educated",
+      "kind": "count",
+      "unit": "workplaceSlots",
+      "period": null,
+      "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_Educated",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "cachedSimulationCounterRefreshTimeUnknown",
+      "support": {
+        "name": "labor.jobs.totalByEducation.educated",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "labor.jobs.totalByEducation.wellEducated",
+      "label": "Native total workplace slots: wellEducated",
+      "kind": "count",
+      "unit": "workplaceSlots",
+      "period": null,
+      "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_WellEducated",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "cachedSimulationCounterRefreshTimeUnknown",
+      "support": {
+        "name": "labor.jobs.totalByEducation.wellEducated",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "labor.jobs.totalByEducation.highlyEducated",
+      "label": "Native total workplace slots: highlyEducated",
+      "kind": "count",
+      "unit": "workplaceSlots",
+      "period": null,
+      "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_HighlyEducated",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "cachedSimulationCounterRefreshTimeUnknown",
+      "support": {
+        "name": "labor.jobs.totalByEducation.highlyEducated",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "labor.jobs.freeByEducation.uneducated",
+      "label": "Native free workplace slots: uneducated",
+      "kind": "count",
+      "unit": "workplaceSlots",
+      "period": null,
+      "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_Uneducated",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "cachedSimulationCounterRefreshTimeUnknown",
+      "support": {
+        "name": "labor.jobs.freeByEducation.uneducated",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "labor.jobs.freeByEducation.poorlyEducated",
+      "label": "Native free workplace slots: poorlyEducated",
+      "kind": "count",
+      "unit": "workplaceSlots",
+      "period": null,
+      "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_PoorlyEducated",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "cachedSimulationCounterRefreshTimeUnknown",
+      "support": {
+        "name": "labor.jobs.freeByEducation.poorlyEducated",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "labor.jobs.freeByEducation.educated",
+      "label": "Native free workplace slots: educated",
+      "kind": "count",
+      "unit": "workplaceSlots",
+      "period": null,
+      "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_Educated",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "cachedSimulationCounterRefreshTimeUnknown",
+      "support": {
+        "name": "labor.jobs.freeByEducation.educated",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "labor.jobs.freeByEducation.wellEducated",
+      "label": "Native free workplace slots: wellEducated",
+      "kind": "count",
+      "unit": "workplaceSlots",
+      "period": null,
+      "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_WellEducated",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "cachedSimulationCounterRefreshTimeUnknown",
+      "support": {
+        "name": "labor.jobs.freeByEducation.wellEducated",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "labor.jobs.freeByEducation.highlyEducated",
+      "label": "Native free workplace slots: highlyEducated",
+      "kind": "count",
+      "unit": "workplaceSlots",
+      "period": null,
+      "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_HighlyEducated",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "cachedSimulationCounterRefreshTimeUnknown",
+      "support": {
+        "name": "labor.jobs.freeByEducation.highlyEducated",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "budget.income",
+      "label": "Monthly income rate",
+      "kind": "rate",
+      "unit": "nativeMoney",
+      "period": "month",
+      "source": "CityServiceBudgetSystem.GetTotalIncome",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "gameHour",
+      "support": {
+        "name": "budget.income",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "budget.expenses",
+      "label": "Signed monthly expenses rate",
+      "kind": "rate",
+      "unit": "nativeMoney",
+      "period": "month",
+      "source": "CityServiceBudgetSystem.GetTotalExpenses",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "gameHour",
+      "support": {
+        "name": "budget.expenses",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "budget.taxIncome",
+      "label": "Monthly tax income rate",
+      "kind": "rate",
+      "unit": "nativeMoney",
+      "period": "month",
+      "source": "CityServiceBudgetSystem.GetTotalTaxIncome",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "gameHour",
+      "support": {
+        "name": "budget.taxIncome",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "budget.balance",
+      "label": "Native monthly balance rate",
+      "kind": "rate",
+      "unit": "nativeMoney",
+      "period": "month",
+      "source": "CityServiceBudgetSystem.GetBalance",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "gameHour",
+      "support": {
+        "name": "budget.balance",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "transit.waypointCount",
+      "label": "Inspected waypoint slots",
+      "kind": "count",
+      "unit": "waypoints",
+      "period": null,
+      "source": "TransitCompleteness.waypointCount",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "selectedLineStructuralSnapshot",
+      "support": {
+        "name": "transit.waypointCount",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "transit.segmentCount",
+      "label": "Inspected segment slots",
+      "kind": "count",
+      "unit": "segments",
+      "period": null,
+      "source": "TransitCompleteness.segmentCount",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "selectedLineStructuralSnapshot",
+      "support": {
+        "name": "transit.segmentCount",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "transit.brokenWaypointCount",
+      "label": "Exact structurally faulty waypoint slots",
+      "kind": "count",
+      "unit": "waypoints",
+      "period": null,
+      "source": "TransitWaypoint.structuralAssessment",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "selectedLineStructuralSnapshot",
+      "support": {
+        "name": "transit.brokenWaypointCount",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    },
+    {
+      "key": "transit.invalidSegmentCount",
+      "label": "Exact structurally faulty segment slots",
+      "kind": "count",
+      "unit": "segments",
+      "period": null,
+      "source": "TransitSegment.structuralAssessment",
+      "parameters": [],
+      "parameterDefinitions": [],
+      "refresh": "selectedLineStructuralSnapshot",
+      "support": {
+        "name": "transit.invalidSegmentCount",
+        "support": "unverified",
+        "reason": "nativeDiagnosticMetricParityNotRun"
+      }
+    }
+  ],
+  "samples": [
+    {
+      "data": {
+        "schemaVersion": 1,
+        "definitionRevision": "diagnosticMetrics.v1",
+        "scope": {
+          "kind": "city",
+          "line": null
+        },
+        "values": {
+          "labor.jobs.totalByEducation.uneducated": {
+            "value": 100.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_Uneducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.totalByEducation.poorlyEducated": {
+            "value": 101.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_PoorlyEducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.totalByEducation.educated": {
+            "value": 102.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_Educated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.totalByEducation.wellEducated": {
+            "value": 103.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_WellEducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.totalByEducation.highlyEducated": {
+            "value": 104.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_HighlyEducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.freeByEducation.uneducated": {
+            "value": 0.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_Uneducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.freeByEducation.poorlyEducated": {
+            "value": 1.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_PoorlyEducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.freeByEducation.educated": {
+            "value": 2.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_Educated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.freeByEducation.wellEducated": {
+            "value": 3.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_WellEducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.freeByEducation.highlyEducated": {
+            "value": 4.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_HighlyEducated",
+            "support": "supported",
+            "reason": null
+          }
+        },
+        "members": [],
+        "perMember": [],
+        "sources": [
+          {
+            "id": "city.labor",
+            "world": {
+              "bootId": "boot",
+              "epoch": 1
+            },
+            "startFrame": 100,
+            "endFrame": 100,
+            "sampledAtUtc": "2026-10-16T23:35:30.5867986Z",
+            "freshness": "current",
+            "warnings": [
+              "nativeObservationParityNotRun",
+              "cachedSourceRefreshTimeUnknown"
+            ],
+            "completeness": "complete",
+            "refreshTimeUtc": null
+          },
+          {
+            "id": "state",
+            "world": {
+              "bootId": "boot",
+              "epoch": 1
+            },
+            "startFrame": 100,
+            "endFrame": 100,
+            "sampledAtUtc": "2026-10-16T23:35:30.5868Z",
+            "freshness": "current",
+            "warnings": [
+              "nativeObservationParityNotRun",
+              "cachedSourceRefreshTimeUnknown"
+            ],
+            "completeness": "complete",
+            "refreshTimeUtc": null
+          }
+        ],
+        "clock": {
+          "source": "TimeSystem",
+          "rawNormalizedTime": 0.2,
+          "rawNormalizedDate": 0.3,
+          "rawYear": 2026,
+          "rawDaysPerYear": 12,
+          "frameIndex": 100,
+          "startFrame": 100,
+          "endFrame": 100,
+          "sourceObservationId": "state",
+          "frameEvidence": "sourceObservationEnd",
+          "conversionStatus": "unverified",
+          "reason": "nativeCalendarParityNotRun"
+        },
+        "memberEvidence": []
+      },
+      "world": {
+        "bootId": "boot",
+        "epoch": 1
+      },
+      "sampledAtUtc": "2026-10-16T23:35:30.5868267Z",
+      "startFrame": 100,
+      "endFrame": 100,
+      "freshness": "current",
+      "warnings": [
+        "nativeDiagnosticMetricParityNotRun",
+        "sourceRefreshTimesUnknown",
+        "observedSamplesNotNativeHistory",
+        "multiSourceReadNotAtomic",
+        "nativeObservationParityNotRun",
+        "cachedSourceRefreshTimeUnknown"
+      ]
+    },
+    {
+      "data": {
+        "schemaVersion": 1,
+        "definitionRevision": "diagnosticMetrics.v1",
+        "scope": {
+          "kind": "city",
+          "line": null
+        },
+        "values": {
+          "labor.jobs.totalByEducation.uneducated": {
+            "value": 102.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_Uneducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.totalByEducation.poorlyEducated": {
+            "value": 103.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_PoorlyEducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.totalByEducation.educated": {
+            "value": 104.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_Educated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.totalByEducation.wellEducated": {
+            "value": 105.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_WellEducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.totalByEducation.highlyEducated": {
+            "value": 106.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_HighlyEducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.freeByEducation.uneducated": {
+            "value": 3.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_Uneducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.freeByEducation.poorlyEducated": {
+            "value": 4.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_PoorlyEducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.freeByEducation.educated": {
+            "value": 5.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_Educated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.freeByEducation.wellEducated": {
+            "value": 6.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_WellEducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.freeByEducation.highlyEducated": {
+            "value": 7.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_HighlyEducated",
+            "support": "supported",
+            "reason": null
+          }
+        },
+        "members": [],
+        "perMember": [],
+        "sources": [
+          {
+            "id": "city.labor",
+            "world": {
+              "bootId": "boot",
+              "epoch": 1
+            },
+            "startFrame": 110,
+            "endFrame": 110,
+            "sampledAtUtc": "2026-10-16T23:35:30.587101Z",
+            "freshness": "current",
+            "warnings": [
+              "nativeObservationParityNotRun",
+              "cachedSourceRefreshTimeUnknown"
+            ],
+            "completeness": "complete",
+            "refreshTimeUtc": null
+          },
+          {
+            "id": "state",
+            "world": {
+              "bootId": "boot",
+              "epoch": 1
+            },
+            "startFrame": 110,
+            "endFrame": 110,
+            "sampledAtUtc": "2026-10-16T23:35:30.5871018Z",
+            "freshness": "current",
+            "warnings": [
+              "nativeObservationParityNotRun",
+              "cachedSourceRefreshTimeUnknown"
+            ],
+            "completeness": "complete",
+            "refreshTimeUtc": null
+          }
+        ],
+        "clock": {
+          "source": "TimeSystem",
+          "rawNormalizedTime": 0.3,
+          "rawNormalizedDate": 0.3,
+          "rawYear": 2026,
+          "rawDaysPerYear": 12,
+          "frameIndex": 110,
+          "startFrame": 110,
+          "endFrame": 110,
+          "sourceObservationId": "state",
+          "frameEvidence": "sourceObservationEnd",
+          "conversionStatus": "unverified",
+          "reason": "nativeCalendarParityNotRun"
+        },
+        "memberEvidence": []
+      },
+      "world": {
+        "bootId": "boot",
+        "epoch": 1
+      },
+      "sampledAtUtc": "2026-10-16T23:35:30.5871287Z",
+      "startFrame": 110,
+      "endFrame": 110,
+      "freshness": "current",
+      "warnings": [
+        "nativeDiagnosticMetricParityNotRun",
+        "sourceRefreshTimesUnknown",
+        "observedSamplesNotNativeHistory",
+        "multiSourceReadNotAtomic",
+        "nativeObservationParityNotRun",
+        "cachedSourceRefreshTimeUnknown"
+      ]
+    },
+    {
+      "data": {
+        "schemaVersion": 1,
+        "definitionRevision": "diagnosticMetrics.v1",
+        "scope": {
+          "kind": "city",
+          "line": null
+        },
+        "values": {
+          "labor.jobs.totalByEducation.uneducated": {
+            "value": 110.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_Uneducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.totalByEducation.poorlyEducated": {
+            "value": 111.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_PoorlyEducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.totalByEducation.educated": {
+            "value": 112.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_Educated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.totalByEducation.wellEducated": {
+            "value": 113.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_WellEducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.totalByEducation.highlyEducated": {
+            "value": 114.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_HighlyEducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.freeByEducation.uneducated": {
+            "value": 20.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_Uneducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.freeByEducation.poorlyEducated": {
+            "value": 21.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_PoorlyEducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.freeByEducation.educated": {
+            "value": 22.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_Educated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.freeByEducation.wellEducated": {
+            "value": 23.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_WellEducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.freeByEducation.highlyEducated": {
+            "value": 24.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_HighlyEducated",
+            "support": "supported",
+            "reason": null
+          }
+        },
+        "members": [],
+        "perMember": [],
+        "sources": [
+          {
+            "id": "city.labor",
+            "world": {
+              "bootId": "boot",
+              "epoch": 1
+            },
+            "startFrame": 200,
+            "endFrame": 200,
+            "sampledAtUtc": "2026-10-16T23:35:30.5872297Z",
+            "freshness": "current",
+            "warnings": [
+              "nativeObservationParityNotRun",
+              "cachedSourceRefreshTimeUnknown"
+            ],
+            "completeness": "complete",
+            "refreshTimeUtc": null
+          },
+          {
+            "id": "state",
+            "world": {
+              "bootId": "boot",
+              "epoch": 1
+            },
+            "startFrame": 200,
+            "endFrame": 200,
+            "sampledAtUtc": "2026-10-16T23:35:30.5872303Z",
+            "freshness": "current",
+            "warnings": [
+              "nativeObservationParityNotRun",
+              "cachedSourceRefreshTimeUnknown"
+            ],
+            "completeness": "complete",
+            "refreshTimeUtc": null
+          }
+        ],
+        "clock": {
+          "source": "TimeSystem",
+          "rawNormalizedTime": 0.2,
+          "rawNormalizedDate": 0.3,
+          "rawYear": 2026,
+          "rawDaysPerYear": 12,
+          "frameIndex": 200,
+          "startFrame": 200,
+          "endFrame": 200,
+          "sourceObservationId": "state",
+          "frameEvidence": "sourceObservationEnd",
+          "conversionStatus": "unverified",
+          "reason": "nativeCalendarParityNotRun"
+        },
+        "memberEvidence": []
+      },
+      "world": {
+        "bootId": "boot",
+        "epoch": 1
+      },
+      "sampledAtUtc": "2026-10-16T23:35:30.5872468Z",
+      "startFrame": 200,
+      "endFrame": 200,
+      "freshness": "current",
+      "warnings": [
+        "nativeDiagnosticMetricParityNotRun",
+        "sourceRefreshTimesUnknown",
+        "observedSamplesNotNativeHistory",
+        "multiSourceReadNotAtomic",
+        "nativeObservationParityNotRun",
+        "cachedSourceRefreshTimeUnknown"
+      ]
+    },
+    {
+      "data": {
+        "schemaVersion": 1,
+        "definitionRevision": "diagnosticMetrics.v1",
+        "scope": {
+          "kind": "city",
+          "line": null
+        },
+        "values": {
+          "labor.jobs.totalByEducation.uneducated": {
+            "value": 112.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_Uneducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.totalByEducation.poorlyEducated": {
+            "value": 113.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_PoorlyEducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.totalByEducation.educated": {
+            "value": 114.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_Educated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.totalByEducation.wellEducated": {
+            "value": 115.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_WellEducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.totalByEducation.highlyEducated": {
+            "value": 116.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_HighlyEducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.freeByEducation.uneducated": {
+            "value": 23.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_Uneducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.freeByEducation.poorlyEducated": {
+            "value": 24.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_PoorlyEducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.freeByEducation.educated": {
+            "value": 25.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_Educated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.freeByEducation.wellEducated": {
+            "value": 26.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_WellEducated",
+            "support": "supported",
+            "reason": null
+          },
+          "labor.jobs.freeByEducation.highlyEducated": {
+            "value": 27.0,
+            "unit": "workplaceSlots",
+            "period": null,
+            "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_HighlyEducated",
+            "support": "supported",
+            "reason": null
+          }
+        },
+        "members": [],
+        "perMember": [],
+        "sources": [
+          {
+            "id": "city.labor",
+            "world": {
+              "bootId": "boot",
+              "epoch": 1
+            },
+            "startFrame": 210,
+            "endFrame": 210,
+            "sampledAtUtc": "2026-10-16T23:35:30.5873339Z",
+            "freshness": "current",
+            "warnings": [
+              "nativeObservationParityNotRun",
+              "cachedSourceRefreshTimeUnknown"
+            ],
+            "completeness": "complete",
+            "refreshTimeUtc": null
+          },
+          {
+            "id": "state",
+            "world": {
+              "bootId": "boot",
+              "epoch": 1
+            },
+            "startFrame": 210,
+            "endFrame": 210,
+            "sampledAtUtc": "2026-10-16T23:35:30.5873343Z",
+            "freshness": "current",
+            "warnings": [
+              "nativeObservationParityNotRun",
+              "cachedSourceRefreshTimeUnknown"
+            ],
+            "completeness": "complete",
+            "refreshTimeUtc": null
+          }
+        ],
+        "clock": {
+          "source": "TimeSystem",
+          "rawNormalizedTime": 0.3,
+          "rawNormalizedDate": 0.3,
+          "rawYear": 2026,
+          "rawDaysPerYear": 12,
+          "frameIndex": 210,
+          "startFrame": 210,
+          "endFrame": 210,
+          "sourceObservationId": "state",
+          "frameEvidence": "sourceObservationEnd",
+          "conversionStatus": "unverified",
+          "reason": "nativeCalendarParityNotRun"
+        },
+        "memberEvidence": []
+      },
+      "world": {
+        "bootId": "boot",
+        "epoch": 1
+      },
+      "sampledAtUtc": "2026-10-16T23:35:30.5873795Z",
+      "startFrame": 210,
+      "endFrame": 210,
+      "freshness": "current",
+      "warnings": [
+        "nativeDiagnosticMetricParityNotRun",
+        "sourceRefreshTimesUnknown",
+        "observedSamplesNotNativeHistory",
+        "multiSourceReadNotAtomic",
+        "nativeObservationParityNotRun",
+        "cachedSourceRefreshTimeUnknown"
+      ]
+    }
+  ],
+  "unavailable": {
+    "data": {
+      "schemaVersion": 1,
+      "definitionRevision": "diagnosticMetrics.v1",
+      "scope": {
+        "kind": "city",
+        "line": null
+      },
+      "values": {
+        "labor.jobs.totalByEducation.uneducated": {
+          "value": null,
+          "unit": "workplaceSlots",
+          "period": null,
+          "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_Uneducated",
+          "support": "unavailable",
+          "reason": "workplaceEducationCountersUnavailable"
+        },
+        "labor.jobs.totalByEducation.poorlyEducated": {
+          "value": null,
+          "unit": "workplaceSlots",
+          "period": null,
+          "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_PoorlyEducated",
+          "support": "unavailable",
+          "reason": "workplaceEducationCountersUnavailable"
+        },
+        "labor.jobs.totalByEducation.educated": {
+          "value": null,
+          "unit": "workplaceSlots",
+          "period": null,
+          "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_Educated",
+          "support": "unavailable",
+          "reason": "workplaceEducationCountersUnavailable"
+        },
+        "labor.jobs.totalByEducation.wellEducated": {
+          "value": null,
+          "unit": "workplaceSlots",
+          "period": null,
+          "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_WellEducated",
+          "support": "unavailable",
+          "reason": "workplaceEducationCountersUnavailable"
+        },
+        "labor.jobs.totalByEducation.highlyEducated": {
+          "value": null,
+          "unit": "workplaceSlots",
+          "period": null,
+          "source": "CountWorkplacesSystem.GetTotalWorkplaces.m_HighlyEducated",
+          "support": "unavailable",
+          "reason": "workplaceEducationCountersUnavailable"
+        },
+        "labor.jobs.freeByEducation.uneducated": {
+          "value": null,
+          "unit": "workplaceSlots",
+          "period": null,
+          "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_Uneducated",
+          "support": "unavailable",
+          "reason": "invalidNativeCount"
+        },
+        "labor.jobs.freeByEducation.poorlyEducated": {
+          "value": 24.0,
+          "unit": "workplaceSlots",
+          "period": null,
+          "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_PoorlyEducated",
+          "support": "supported",
+          "reason": null
+        },
+        "labor.jobs.freeByEducation.educated": {
+          "value": 25.0,
+          "unit": "workplaceSlots",
+          "period": null,
+          "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_Educated",
+          "support": "supported",
+          "reason": null
+        },
+        "labor.jobs.freeByEducation.wellEducated": {
+          "value": 26.0,
+          "unit": "workplaceSlots",
+          "period": null,
+          "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_WellEducated",
+          "support": "supported",
+          "reason": null
+        },
+        "labor.jobs.freeByEducation.highlyEducated": {
+          "value": 27.0,
+          "unit": "workplaceSlots",
+          "period": null,
+          "source": "CountWorkplacesSystem.GetFreeWorkplaces.m_HighlyEducated",
+          "support": "supported",
+          "reason": null
+        }
+      },
+      "members": [],
+      "perMember": [],
+      "sources": [
+        {
+          "id": "city.labor",
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "startFrame": 210,
+          "endFrame": 210,
+          "sampledAtUtc": "2026-10-16T23:35:30.5874686Z",
+          "freshness": "current",
+          "warnings": [
+            "nativeObservationParityNotRun",
+            "cachedSourceRefreshTimeUnknown"
+          ],
+          "completeness": "complete",
+          "refreshTimeUtc": null
+        },
+        {
+          "id": "state",
+          "world": {
+            "bootId": "boot",
+            "epoch": 1
+          },
+          "startFrame": 210,
+          "endFrame": 210,
+          "sampledAtUtc": "2026-10-16T23:35:30.5874691Z",
+          "freshness": "current",
+          "warnings": [
+            "nativeObservationParityNotRun",
+            "cachedSourceRefreshTimeUnknown"
+          ],
+          "completeness": "complete",
+          "refreshTimeUtc": null
+        }
+      ],
+      "clock": {
+        "source": "TimeSystem",
+        "rawNormalizedTime": 0.3,
+        "rawNormalizedDate": 0.3,
+        "rawYear": 2026,
+        "rawDaysPerYear": 12,
+        "frameIndex": 210,
+        "startFrame": 210,
+        "endFrame": 210,
+        "sourceObservationId": "state",
+        "frameEvidence": "sourceObservationEnd",
+        "conversionStatus": "unverified",
+        "reason": "nativeCalendarParityNotRun"
+      },
+      "memberEvidence": []
+    },
+    "world": {
+      "bootId": "boot",
+      "epoch": 1
+    },
+    "sampledAtUtc": "2026-10-16T23:35:30.5874861Z",
+    "startFrame": 210,
+    "endFrame": 210,
+    "freshness": "current",
+    "warnings": [
+      "nativeDiagnosticMetricParityNotRun",
+      "sourceRefreshTimesUnknown",
+      "observedSamplesNotNativeHistory",
+      "multiSourceReadNotAtomic",
+      "nativeObservationParityNotRun",
+      "cachedSourceRefreshTimeUnknown"
+    ]
+  }
+}

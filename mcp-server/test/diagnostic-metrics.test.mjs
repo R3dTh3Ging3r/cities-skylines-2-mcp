@@ -57,7 +57,8 @@ test("actual tools use typed GET dictionary/catalog and keys translate to empty 
   const catalog=tools.get("cs2_metric_catalog");const discovered=await catalog.handler(catalog.metadata.inputSchema.parse({}));assert.equal(discovered.isError,undefined);
   const observe=tools.get("cs2_observe");const input={world:cityRequest().world,scope:{kind:"city"},keys:["city.money","city.population"]};
   const result=await observe.handler(observe.metadata.inputSchema.parse(input));assert.equal(result.isError,undefined);assert.equal(calls.length,2);
-  assert.throws(()=>observe.metadata.inputSchema.parse({...input,queries:cityRequest().queries}));
+  assert.equal((await observe.handler(observe.metadata.inputSchema.parse({...input,queries:cityRequest().queries}))).isError,true);
+  assert.equal(calls.length,2);
 });
 test("actual BridgeClient.observe consumes fixed metric entry and caller abort reaches fetch",async()=>{
   const request={expectedWorld:cityRequest().world,items:[{id:"m",name:"metrics.read",args:cityRequest()}]};

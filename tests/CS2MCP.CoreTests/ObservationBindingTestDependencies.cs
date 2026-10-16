@@ -9,10 +9,13 @@ namespace CS2MCP {
         internal readonly List<string> BoundCalls=new List<string>();
         Observation<TransitPage> ReadTransitData(TransitQuery query){BoundCalls.Add("transit.selectedLine");var w=new WorldIdentity("boot");w.BeginLoad();w.CompleteLoad();return TransitReader.Read(query,w,()=>10,new TestTransitSource());}
         object Record(string name){BoundCalls.Add(name);return new Dictionary<string,object>{{"source",name}};}
-        CityStateData ReadStateData(){Record("state");return new CityStateData();}
+        internal CityStateData TestStateData=new CityStateData();
+        internal CityLaborData TestLaborData=new CityLaborData();
+        internal void SetMetricClock(long frame,float phase){m_System.CurrentFrame=frame;TestStateData=new CityStateData{simulation=new CitySimulationData{calendarMetadata=MetricContracts.DescribeCalendar(.3f,phase,2026,12)}};}
+        CityStateData ReadStateData(){Record("state");return TestStateData;}
         CityOverviewData ReadOverviewData(){Record("city.overview");return new CityOverviewData { PopulationAvailable=true,money=9,calendarMetadata=MetricContracts.DescribeCalendar(.2f,.3f,2026,12) };}
         object ReadServicesData()=>Record("city.services");
-        CityLaborData ReadLaborData(){Record("city.labor");return new CityLaborData();}
+        CityLaborData ReadLaborData(){Record("city.labor");return TestLaborData;}
         CityBudgetData ReadBudgetData(){Record("city.budget");return new CityBudgetData();}
 #if !CONSTRUCTION_NATIVE_BINDING
         Observation<ConstructionSnapshot> ReadConstructionInventory(IDictionary<string,string> query){BoundCalls.Add("construction.inventory");var world=new WorldIdentity("boot");world.BeginLoad();world.CompleteLoad();return ConstructionInventory.Read(query,world,()=>10,e=>new ConstructionEntity{entity=e,unavailableReason="missingDeletedOrRecycled"});}

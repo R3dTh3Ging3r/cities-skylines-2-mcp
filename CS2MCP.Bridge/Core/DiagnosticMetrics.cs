@@ -71,6 +71,18 @@ namespace CS2MCP.Core
                 Define("labor.homelessCitizens", "Homeless citizen count", "count", "citizens", "CountHouseholdDataSystem.HomelessCitizenCount", "cachedSimulationCounterRefreshTimeUnknown"),
                 Define("labor.jobs.total", "Total workplace slots", "count", "workplaceSlots", "CountWorkplacesSystem.GetTotalWorkplaces.TotalCount", "cachedSimulationCounterRefreshTimeUnknown"),
                 Define("labor.jobs.free", "Free workplace slots", "count", "workplaceSlots", "CountWorkplacesSystem.GetFreeWorkplaces.TotalCount", "cachedSimulationCounterRefreshTimeUnknown"),
+                // The same two native Workplaces structs supply these fixed buckets.
+                // Vacancies are not worker supply, and tier sums need not equal totals.
+                Define("labor.jobs.totalByEducation.uneducated", "Native total workplace slots: uneducated", "count", "workplaceSlots", "CountWorkplacesSystem.GetTotalWorkplaces.m_Uneducated", "cachedSimulationCounterRefreshTimeUnknown"),
+                Define("labor.jobs.totalByEducation.poorlyEducated", "Native total workplace slots: poorlyEducated", "count", "workplaceSlots", "CountWorkplacesSystem.GetTotalWorkplaces.m_PoorlyEducated", "cachedSimulationCounterRefreshTimeUnknown"),
+                Define("labor.jobs.totalByEducation.educated", "Native total workplace slots: educated", "count", "workplaceSlots", "CountWorkplacesSystem.GetTotalWorkplaces.m_Educated", "cachedSimulationCounterRefreshTimeUnknown"),
+                Define("labor.jobs.totalByEducation.wellEducated", "Native total workplace slots: wellEducated", "count", "workplaceSlots", "CountWorkplacesSystem.GetTotalWorkplaces.m_WellEducated", "cachedSimulationCounterRefreshTimeUnknown"),
+                Define("labor.jobs.totalByEducation.highlyEducated", "Native total workplace slots: highlyEducated", "count", "workplaceSlots", "CountWorkplacesSystem.GetTotalWorkplaces.m_HighlyEducated", "cachedSimulationCounterRefreshTimeUnknown"),
+                Define("labor.jobs.freeByEducation.uneducated", "Native free workplace slots: uneducated", "count", "workplaceSlots", "CountWorkplacesSystem.GetFreeWorkplaces.m_Uneducated", "cachedSimulationCounterRefreshTimeUnknown"),
+                Define("labor.jobs.freeByEducation.poorlyEducated", "Native free workplace slots: poorlyEducated", "count", "workplaceSlots", "CountWorkplacesSystem.GetFreeWorkplaces.m_PoorlyEducated", "cachedSimulationCounterRefreshTimeUnknown"),
+                Define("labor.jobs.freeByEducation.educated", "Native free workplace slots: educated", "count", "workplaceSlots", "CountWorkplacesSystem.GetFreeWorkplaces.m_Educated", "cachedSimulationCounterRefreshTimeUnknown"),
+                Define("labor.jobs.freeByEducation.wellEducated", "Native free workplace slots: wellEducated", "count", "workplaceSlots", "CountWorkplacesSystem.GetFreeWorkplaces.m_WellEducated", "cachedSimulationCounterRefreshTimeUnknown"),
+                Define("labor.jobs.freeByEducation.highlyEducated", "Native free workplace slots: highlyEducated", "count", "workplaceSlots", "CountWorkplacesSystem.GetFreeWorkplaces.m_HighlyEducated", "cachedSimulationCounterRefreshTimeUnknown"),
                 Define("budget.income", "Monthly income rate", "rate", "nativeMoney", "CityServiceBudgetSystem.GetTotalIncome", "gameHour", "month"),
                 Define("budget.expenses", "Signed monthly expenses rate", "rate", "nativeMoney", "CityServiceBudgetSystem.GetTotalExpenses", "gameHour", "month"),
                 Define("budget.taxIncome", "Monthly tax income rate", "rate", "nativeMoney", "CityServiceBudgetSystem.GetTotalTaxIncome", "gameHour", "month"),
@@ -156,7 +168,7 @@ namespace CS2MCP.Core
                 Fields(query, "key", "parameters");
                 if (query.Count != 2 || !query.TryGetValue("key", out var rawKey) || !(rawKey is string key) || key.Length < 1 || key.Length > 128 || keys.Contains(key) || !query.TryGetValue("parameters", out var rawParameters))
                     throw CommandJson.Invalid("invalid or duplicate metric query");
-                // All sixteen v1 definitions are parameterless: reject rather than ignore any scalar or nested parameter.
+                // All v1 definitions are parameterless: reject rather than ignore any scalar or nested parameter.
                 if (Map(rawParameters).Count != 0)
                     throw CommandJson.Invalid("metric definition accepts no parameters");
                 DiagnosticMetricCatalog.Find(key);
@@ -432,6 +444,46 @@ namespace CS2MCP.Core
                         break;
                     case "labor.jobs.free":
                         number = labor?.jobs?.free;
+                        break;
+                    case "labor.jobs.totalByEducation.uneducated":
+                        number = labor?.jobs?.totalByEducation?.uneducated;
+                        reason = "workplaceEducationCountersUnavailable";
+                        break;
+                    case "labor.jobs.totalByEducation.poorlyEducated":
+                        number = labor?.jobs?.totalByEducation?.poorlyEducated;
+                        reason = "workplaceEducationCountersUnavailable";
+                        break;
+                    case "labor.jobs.totalByEducation.educated":
+                        number = labor?.jobs?.totalByEducation?.educated;
+                        reason = "workplaceEducationCountersUnavailable";
+                        break;
+                    case "labor.jobs.totalByEducation.wellEducated":
+                        number = labor?.jobs?.totalByEducation?.wellEducated;
+                        reason = "workplaceEducationCountersUnavailable";
+                        break;
+                    case "labor.jobs.totalByEducation.highlyEducated":
+                        number = labor?.jobs?.totalByEducation?.highlyEducated;
+                        reason = "workplaceEducationCountersUnavailable";
+                        break;
+                    case "labor.jobs.freeByEducation.uneducated":
+                        number = labor?.jobs?.freeByEducation?.uneducated;
+                        reason = "workplaceEducationCountersUnavailable";
+                        break;
+                    case "labor.jobs.freeByEducation.poorlyEducated":
+                        number = labor?.jobs?.freeByEducation?.poorlyEducated;
+                        reason = "workplaceEducationCountersUnavailable";
+                        break;
+                    case "labor.jobs.freeByEducation.educated":
+                        number = labor?.jobs?.freeByEducation?.educated;
+                        reason = "workplaceEducationCountersUnavailable";
+                        break;
+                    case "labor.jobs.freeByEducation.wellEducated":
+                        number = labor?.jobs?.freeByEducation?.wellEducated;
+                        reason = "workplaceEducationCountersUnavailable";
+                        break;
+                    case "labor.jobs.freeByEducation.highlyEducated":
+                        number = labor?.jobs?.freeByEducation?.highlyEducated;
+                        reason = "workplaceEducationCountersUnavailable";
                         break;
                     case "budget.income":
                         number = budget?.totalIncome;
