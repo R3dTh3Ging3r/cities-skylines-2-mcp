@@ -31,13 +31,15 @@ namespace CS2MCP.Core
         private readonly Dictionary<string, string> inventory;
         private readonly TransitQuery transit;
         private readonly MetricReadRequest metrics;
-        internal ObservationRead(string id, string name, Dictionary<string, string> inventory = null, TransitQuery transit = null, MetricReadRequest metrics = null)
+        internal LifecycleTraceQuery Trace { get; }
+        internal ObservationRead(string id, string name, Dictionary<string, string> inventory = null, TransitQuery transit = null, MetricReadRequest metrics = null, LifecycleTraceQuery trace = null)
         {
             Id = id;
             Name = name;
             this.inventory = inventory;
             this.transit = transit;
             this.metrics = metrics;
+            Trace = trace;
         }
         internal IDictionary<string, string> Inventory() => inventory == null ? null : new Dictionary<string, string>(inventory, StringComparer.Ordinal);
         internal WorldRef ReferencedWorld => metrics?.World ?? transit?.World ?? (inventory == null ? null : ConstructionInventory.Parse(inventory).world);
@@ -65,6 +67,10 @@ namespace CS2MCP.Core
         Observation<TransitPage> Transit(TransitQuery query);
         Observation<MetricBatch> Metrics(MetricReadRequest request);
     }
+    public interface ILifecycleTraceReader
+    {
+        Observation<LifecycleTracePage> LifecycleTrace(LifecycleTraceQuery query);
+    }
     public interface IObservationDataWarnings
     {
         string[] ObservationWarnings
@@ -81,7 +87,7 @@ namespace CS2MCP.Core
             this.frame = frame;
             this.utc = utc;
         }
-        public static IReadOnlyList<string> Names { get; } = Array.AsReadOnly(new[] { "state", "city.overview", "city.services", "city.labor", "city.budget", "construction.inventory", "transit.selectedLine", "metrics.read" });
+        public static IReadOnlyList<string> Names { get; } = Array.AsReadOnly(new[] { "state", "city.overview", "city.services", "city.labor", "city.budget", "construction.inventory", "transit.selectedLine", "metrics.read", "construction.lifecycleTrace" });
         internal static Dictionary<string, object> Map(object value) => value as Dictionary<string, object> ?? throw CommandJson.Invalid("expected object");
         static void Keys(Dictionary<string, object> value, params string[] allowed)
         {
@@ -123,6 +129,7 @@ namespace CS2MCP.Core
                 Dictionary<string, string> compact = null;
                 TransitQuery transit = null;
                 MetricReadRequest metrics = null;
+                LifecycleTraceQuery trace = null;
                 if (key == "construction.inventory")
                 {
                     Keys(map, "world", "entities", "relationships", "geometryDiagnostics", "relationshipPage");
@@ -155,18 +162,35 @@ namespace CS2MCP.Core
                     }
                     ConstructionInventory.Parse(compact);
                 }
+                else if (key == "construction.lifecycleTrace")
+                {
+                    Keys(map, "bootId", "afterSequence", "limit");
+                    var fields = new Dictionary<string, string>();
+                    foreach (var pair in map)
+                    {
+                        if (pair.Key == "bootId" && !(pair.Value is string)) throw CommandJson.Invalid("invalid trace bootId");
+                        fields.Add(pair.Key, pair.Key == "bootId" ? (string)pair.Value : CommandJson.Stringify(pair.Value));
+                    }
+                    trace = LifecycleTraceQuery.Parse(fields);
+                }
                 else if (key == "metrics.read")
                     metrics = MetricReadRequest.ParseArguments(map);
                 else if (key == "transit.selectedLine")
                     transit = TransitQuery.ParseArguments(map);
                 else if (map.Count != 0)
                     throw CommandJson.Invalid("context observation args must be empty");
-                items[i] = new ObservationRead(text, key, compact, transit, metrics);
+                items[i] = new ObservationRead(text, key, compact, transit, metrics, trace);
             }
             return new ValidatedObservationBatch(items, expected);
         }
         internal Observation<object> Read(ObservationRead item)
         {
+            if (item.Name == "construction.lifecycleTrace")
+            {
+                var value = ((ILifecycleTraceReader)readers).LifecycleTrace(item.Trace);
+                return new Observation<object> { data = value.data, world = value.world, startFrame = value.startFrame,
+                    endFrame = value.endFrame, sampledAtUtc = value.sampledAtUtc, freshness = value.freshness, warnings = value.warnings };
+            }
             if (item.Name == "metrics.read")
             {
                 var value=readers.Metrics(item.Metrics);

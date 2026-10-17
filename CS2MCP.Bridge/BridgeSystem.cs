@@ -110,44 +110,6 @@ namespace CS2MCP
             base.OnGamePreload(purpose, mode);
         }
 
-        private bool TryEnqueue(BridgeRequest request)
-        {
-            if (request.Observations != null)
-            {
-                var group = m_Scheduler.Admit(request.Observations, bytes => request.Complete(new BridgeResponse { Body = bytes }));
-                request.AttachObservation(group.Detach);
-                return true;
-            }
-            EndpointDescriptor endpoint = EndpointCatalog.Resolve(request.Path, out _);
-            bool writer = endpoint == null || endpoint.access != "read";
-            return m_Scheduler.TryOrdinary(writer, () => DispatchOrdinary(request, writer));
-        }
-
-        private void DispatchOrdinary(BridgeRequest request, bool writer)
-        {
-            BridgeResponse response;
-            try
-            {
-                // Legacy ingress fencing is weaker than caller-observed world/lease authority.
-                // O5 still owns all-writer admission; ordinary mutation timeouts remain unknown outcomes.
-                if (writer)
-                    Mod.Worlds.Validate(request.IngressWorld);
-                response = m_Handlers.Handle(request);
-            }
-            catch (OperationException error)
-            {
-                var e = error.Error;
-                response = BridgeResponse.Error(e.httpStatus ?? 409, e.message, e.code, e.retryable, e.outcome, e.operationId);
-            }
-            catch (Exception error)
-            {
-                Mod.Log.Warn($"error handling {request.Method} {request.Path}: {error}");
-                response = BridgeResponse.Error(500, $"{error.GetType().Name}: {error.Message}");
-            }
-            if (response != null)
-                request.Complete(response);
-        }
-
         [Preserve]
         protected override void OnGameLoadingComplete(Purpose purpose, GameMode mode)
         {

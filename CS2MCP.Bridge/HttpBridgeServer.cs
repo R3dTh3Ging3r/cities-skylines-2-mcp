@@ -165,6 +165,11 @@ namespace CS2MCP
             }
             request.Path = rawUrl.Substring(0, questionMark);
             string queryText = rawUrl.Substring(questionMark + 1);
+            if (request.Path == "/diagnostics/construction-lifecycle")
+            {
+                request.Query = LifecycleTraceQuery.DecodeQuery(queryText);
+                return;
+            }
             if (request.Path == "/v2/construction/inventory")
             {
                 request.Query = ConstructionInventory.DecodeQuery(queryText);

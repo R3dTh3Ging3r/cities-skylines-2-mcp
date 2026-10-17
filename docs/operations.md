@@ -174,3 +174,14 @@ duplicate entries; exceeding it refuses before dereference. Source-slot
 completeness is distinct from complete facility/platform/approach geometry,
 upgrade effects and connectivity, which remain unverified. The same literal
 works in the fixed O7 inventory entry; no scan, recursion or writer is added.
+
+
+Passive construction tracing is available through the fixed
+`GET /diagnostics/construction-lifecycle` and existing O7
+`construction.lifecycleTrace` item. Inspect managed callback history using a
+boot-bound exclusive sequence cursor; never treat `legacy:<GuidN>` as an
+admitted operation UUID or retry authority. The trace preserves early Apply
+replies versus later Finish/rename observations and original-world evidence,
+while effects/cleanup/authority remain unknown or unverified. The
+[API contract](bridge-api.md#passive-construction-lifecycle-history) documents
+limits, losses and continuation. Generic displacement behavior is unchanged.

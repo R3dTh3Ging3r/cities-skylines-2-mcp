@@ -20,15 +20,27 @@ namespace CS2MCP
             public Func<string, BridgeResponse> BuildResponse;
             public DeferredWorldWork Work;
         }
+
         private readonly Queue<PendingRename> m_Pending = new Queue<PendingRename>();
         private NameSystem m_NameSystem;
-
-        public void Enqueue(Entity line, string name, BridgeRequest request,
-            Func<string, BridgeResponse> buildResponse, DeferredWorldWork work)
+        private static void Trace(BridgeRequest request, Entity line, TracePhase phase)
         {
-            if (work == null) throw new ArgumentNullException(nameof(work));
-            m_Pending.Enqueue(new PendingRename { Line = line, Name = name, Request = request,
-                BuildResponse = buildResponse, Work = work });
+            try
+            {
+                ConstructionLifecycleTrace.Record(request?.LifecycleContext, TraceAdapter.rename, TraceKind.line, phase, references: () => new[] { ConstructionLifecycleTrace.Reference(request?.LifecycleContext, TraceRole.line, line) });
+            }
+            catch
+            {
+                ConstructionLifecycleTrace.Loss();
+            }
+        }
+
+        public void Enqueue(Entity line, string name, BridgeRequest request, Func<string, BridgeResponse> buildResponse, DeferredWorldWork work)
+        {
+            if (work == null)
+                throw new ArgumentNullException(nameof(work));
+            m_Pending.Enqueue(new PendingRename { Line = line, Name = name, Request = request, BuildResponse = buildResponse, Work = work });
+            Trace(request, line, TracePhase.renameQueued);
         }
 
         [Preserve]
@@ -44,28 +56,37 @@ namespace CS2MCP
             while (m_Pending.Count > 0)
             {
                 PendingRename pending = m_Pending.Dequeue();
-                if (!pending.Work.TryRun(() => m_NameSystem.SetCustomName(pending.Line, pending.Name), out var error) ||
-                    !pending.Work.TryRun(() => base.World.GetExistingSystemManaged<Game.UI.InGame.TransportationOverviewUISystem>()?.RequestUpdate(), out error))
+                Trace(pending.Request, pending.Line, TracePhase.renameDequeued);
+                if (!pending.Work.TryRun(() =>
+                {
+                    Trace(pending.Request, pending.Line, TracePhase.setterAttempt);
+                    m_NameSystem.SetCustomName(pending.Line, pending.Name);
+                }, out var error) || !pending.Work.TryRun(() => base.World.GetExistingSystemManaged<Game.UI.InGame.TransportationOverviewUISystem>()?.RequestUpdate(), out error))
                 {
                     Fail(pending.Request, error);
                     continue;
                 }
+
                 // The builder reads SafeLabel. Guard it separately after the native setter/UI callback.
-                if (!pending.Work.TryRun(() => pending.BuildResponse(null) ?? throw new InvalidOperationException("line response builder returned no response"),
-                    out BridgeResponse response, out error))
+                if (!pending.Work.TryRun(() =>
+                {
+                    Trace(pending.Request, pending.Line, TracePhase.responseBuilderAttempt);
+                    return pending.BuildResponse(null) ?? throw new InvalidOperationException("line response builder returned no response");
+                }, out BridgeResponse response, out error))
                 {
                     Fail(pending.Request, error);
                     continue;
                 }
+
                 pending.Request?.Complete(response);
             }
         }
 
         private static void Fail(BridgeRequest request, BridgeErrorData error)
         {
+            Trace(request, Entity.Null, TracePhase.guardedWorkRefused);
             Mod.Log.Warn($"deferred transit naming stopped: {error.message}; the original line may already exist");
-            request?.Complete(BridgeResponse.Error(error.httpStatus ?? 500, error.message + "; the original line may already exist; do not blindly create it again",
-                error.code, retryable: false, outcome: error.outcome, operationId: error.operationId));
+            request?.Complete(BridgeResponse.Error(error.httpStatus ?? 500, error.message + "; the original line may already exist; do not blindly create it again", error.code, retryable: false, outcome: error.outcome, operationId: error.operationId));
         }
 
         [Preserve]
@@ -74,9 +95,10 @@ namespace CS2MCP
             while (m_Pending.Count > 0)
             {
                 var pending = m_Pending.Dequeue();
-                Fail(pending.Request, new BridgeErrorData(ErrorCodes.WorldMismatch,
-                    "line naming system was destroyed before completion", outcome: "partial", operationId: pending.Request?.OperationId));
+                Trace(pending.Request, pending.Line, TracePhase.destroyedObserved);
+                Fail(pending.Request, new BridgeErrorData(ErrorCodes.WorldMismatch, "line naming system was destroyed before completion", outcome: "partial", operationId: pending.Request?.OperationId));
             }
+
             base.OnDestroy();
         }
     }

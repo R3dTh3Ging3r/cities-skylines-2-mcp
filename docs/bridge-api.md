@@ -1,6 +1,6 @@
 # Bridge API
 
-The current source candidate has **75 native endpoint descriptors and 79 registered MCP
+The current source candidate has **76 native endpoint descriptors and 79 registered MCP
 tools**, verified by the catalog and offline MCP discovery tests. The legacy
 manifest retains `protocolVersion:1` / `schemaVersion:1` and advertises managed
 `operationProtocol.version:2`. Strict HTTP method/framing checks are implemented;
@@ -23,11 +23,10 @@ becomes nullable as documented below.
 `nativeSupport`, `degradedReasons`, `nativeValidation` `operationProtocol` and `observationProtocol`.
 `EndpointCatalog.All` in
 [EndpointCatalog.cs](../CS2MCP.Bridge/EndpointCatalog.cs) is the authoritative
-classification of the current 75 native endpoint descriptors. There are 79 registered
-MCP tools: the native endpoint consumers plus four bounded process-local history
-tools. These include discovery, three operation tools, partial C1 inspection,
+classification of the current 76 native endpoint descriptors. There are 79 registered
+MCP tools:75 endpoint consumers plus four bounded process-local history tools. The additional fixed lifecycle-history GET shares the existing O7 consumer. These include discovery, three operation tools, partial C1 inspection,
 selected transit, typed diagnostic metrics and bounded observation groups.
-Each native endpoint names its corresponding MCP capability. The four
+Most native endpoints name their corresponding MCP capability; the fixed lifecycle-history GET is consumed by the existing O7 tool. The four
 [M5 collection/comparison tools](observations.md#collected-diagnostic-history--bounded-m5-slice)
 appear separately as MCP `clientOnlyCapabilities`; they add no native endpoint or
 writer authority.
@@ -620,3 +619,43 @@ retains its256KiB item,4MiB group and1MiB body limits. The client caps streamed
 metric responses for all HTTP statuses. New endpoint capabilities are degraded
 `fixedTypedMetricsOnlyNativeNotRun`; native support is unverified. No history,
 comparison, persistence, writer/lease authority or gameplay controls are added.
+
+
+## Passive construction lifecycle history
+
+`GET /diagnostics/construction-lifecycle` and O7 `construction.lifecycleTrace`
+consume the same bounded managed journal. The GET is available while loading;
+O7 keeps ready-world admission. See [the lifecycle contract and coverage map](native/lifecycle.md#passive-source-instrumentation).
+There is no additional MCP tool and no native completion, delivery, cleanup,
+authority, cancellation or durability receipt.
+
+Optional query fields are `bootId`, `afterSequence`, `limit`. The default returns
+the latest16 events ascending; limit is1–32. `afterSequence` is exclusive,
+0–9007199254740991, and requires this process's bootId. Wrong boot returns409;
+a future cursor returns400. Unknown/duplicate decoded keys, bodies and wrong
+methods reject. To continue, pass `bootId` plus returned `nextSequence` as
+`afterSequence`. `hasMore`, `tailOmitted` and the precise `evictedFrom` /
+`evictedThrough` prefix distinguish forward continuation, default-tail omissions
+and eviction. Each page is an independent snapshot; loss counters do not invent
+sequence intervals for failed observations. `retainedBytes` reports the sum of encoded event bytes; admission also reserves journal-array commas/delimiters.
+
+Storage retains at most256 events,8KiB per event and2MiB serialized UTF8 (including journal-array framing), with
+safe-integer sequence/counter saturation and no rollover. Pages and trace MCP
+item/error wrappers are capped at256KiB; successful ordinary O7 groups retain
+their4MiB transport cap. These caps describe serialized data, not exact managed
+heap. No pagination, retry or polling is automatic. History survives world
+changes until eviction. `readWorld/readReady/readAtUtc` qualify the read;
+each event separately retains original `ingressWorld`, observed world/readiness,
+nullable frame/reason, UTC, finite route/adapter/kind/phase, optional status and
+ownership, and up to4 held raw versioned references with original worlds and
+omission counts. No ECS lookup is performed to enrich trace references.
+
+IDs are `legacy:<GuidN>` diagnostic identities, distinct from admitted operation
+UUIDs. `replyAttempt/completionAccepted` describes the managed completion-source
+attempt only; transport delivery remains unknown. `deactivateObserved` is a
+method-entry observation, and `restorationAttempt` occurs at the existing native
+assignment branch. `stopObserved` does not establish player takeover. Every
+event retains `effects:unknown`, `cleanup:unverified`, `authority:unverified`.
+O7's outer current frame/world span describes sampling this managed history,
+not the age or native correctness of its events; warnings are
+`managedHistoryNotNativeObservation` and `nativeLifecycleNotRun`.

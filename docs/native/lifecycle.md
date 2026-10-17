@@ -9,7 +9,7 @@ can run. Startup validation metadata grants no authority.
 
 Explicit collection: `powershell -NoProfile -File scripts/Test-NativeFixture.ps1
 -Fixture lifecycle -EvidenceDir .local/v04`. This contacts the configured local
-bridge for `/capabilities` and `/state` only. Ordinary build/test commands do not
+bridge for `/capabilities`, `/state` and the fixed `/diagnostics/construction-lifecycle` managed-history read. Ordinary build/test commands do not
 invoke the collector against the game. Tests pass an ephemeral fake loopback URL
 and `-Offline`; that flag labels provenance and **still performs HTTP reads**.
 Only `-ValidateEvidence .local/v04/report.json` guarantees no network.
@@ -239,3 +239,37 @@ discard and world-bound timer behavior. Generic tool creation/apply, transit
 pre-apply/pathfinding/stop callbacks, actual end-frame name playback and native
 cleanup order remain unverified. The lifecycle descriptor records the required
 native checks, all still **notRun**. No new native mutation capability is enabled.
+
+
+## Passive source instrumentation
+
+The source candidate records actual generic, road, transit and deferred rename
+control-flow boundaries, then exposes a fixed GET and existing O7 item. This is
+preparation evidence. All native lifecycle probes remain `notRun`, native
+validation dispatch remains disabled, and fixture `validated` /
+`compatibilityVerified` remain false until the existing complete native checks
+succeed. The fixed GET is the third registered read, so the unchanged collector
+stores it as `read-02.json`; it never promotes `toolApplyFinish` from this artifact.
+PowerShell/native collection was not executed in the portable implementation tests.
+
+| Adapter / routes | Observed source boundaries | Remaining evidence |
+| --- | --- | --- |
+| Generic: place/road/upgrade/junction/demolish/district, roadside/shoreline placement | Queue/busy, definitions, validation attempt/result, Apply assignment, early reply attempt, later Finish/deactivation/restoration branch, stop callback, exceptions | Apply reply precedes Finish; generic displacement still has no cleanup. No committed effects or cleanup proof. |
+| Road: connect/replace | Queue/busy, definitions, validation/result, Apply, Finish/readback reply, existing displacement/reset and restoration branches, exceptions | Native definitions/readback leaves are unchanged and not independently validated. |
+| Transit: stop/line | Queue/busy, definitions, validation/result, Apply, Finish, existing captured-world fence, deactivation/restoration and displacement branches, exceptions | Repeated path wait/regeneration frames do not add trace events. No committed line/stop or tool ownership proof. |
+| Deferred line rename | Existing queue/dequeue, guarded setter and response-builder attempts, refused work, destroy and reply attempts | SetCustomName acknowledgment is not playback, full cleanup or delivery proof. Old callbacks keep old identity and do not sample replacement-world tools/frames. |
+| Direct writers: zoning, taxes/policies/budgets/loans/fees, camera, simulation, save, tile purchase, line deletion/policies/vehicles | Dispatch/envelope error and managed reply attempt only; finite catalog-derived route enum identifies the route | No invented adapter phases, save durability, completion/cancellation/rollback or takeover authority. |
+
+The new linked-source lifecycle runner executes the real adapter stage methods,
+ordinary dispatch and diagnostic handler with native definition/readback leaves
+doubled. Serializer-to-TypeScript/actual MCP checks consume these synthetic
+observations and real fixed catalog metadata. They do not bind installed game
+assemblies or observe native callback cardinality, end-frame effects, cleanup,
+manual takeover or save durability. See [the API cursor/limits contract](../bridge-api.md#passive-construction-lifecycle-history)
+and [portable test instructions](../testing.md#passive-lifecycle-tests).
+
+Transit result-reference selection resets before each accepted queue observation
+and retains a diagnostic copy only after that trace's Apply assignment. Stale
+native result/applied fields left by the existing interruption path are preserved
+as native behavior and never selected for the next trace, including after a load.
+Deferred rename retains its original request identity and held current result.

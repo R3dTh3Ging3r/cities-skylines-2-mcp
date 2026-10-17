@@ -116,7 +116,8 @@ export interface ConstructionSnapshot {
   geometryDiagnostics?:GeometryDiagnosticSnapshot|null;
 }
 
-export type ObservationBatchItem = {id:string;name:"metrics.read";args:MetricReadRequest} | {
+import type {LifecycleTraceQuery} from "./construction-lifecycle-trace.js";
+export type ObservationBatchItem = {id:string;name:"construction.lifecycleTrace";args:LifecycleTraceQuery} | {id:string;name:"metrics.read";args:MetricReadRequest} | {
     id: string;
     name: "state" | "city.overview" | "city.services" | "city.labor" | "city.budget";
     args: Record<string, never>;
