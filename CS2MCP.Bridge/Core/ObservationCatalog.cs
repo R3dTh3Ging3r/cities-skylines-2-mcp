@@ -125,8 +125,8 @@ namespace CS2MCP.Core
                 MetricReadRequest metrics = null;
                 if (key == "construction.inventory")
                 {
-                    Keys(map, "world", "entities", "relationships");
-                    if ((map.Count != 2 && map.Count != 3) || !map.TryGetValue("world", out var entityWorld) || !map.TryGetValue("entities", out var entities) || !(entities is List<object> refs) || refs.Count < 1 || refs.Count > 32)
+                    Keys(map, "world", "entities", "relationships", "geometryDiagnostics");
+                    if ((map.Count < 2 || map.Count > 4) || !map.TryGetValue("world", out var entityWorld) || !map.TryGetValue("entities", out var entities) || !(entities is List<object> refs) || refs.Count < 1 || refs.Count > 32)
                         throw CommandJson.Invalid("invalid inventory arguments");
                     var observed = World(entityWorld);
                     var encoded = new List<string>();
@@ -142,6 +142,10 @@ namespace CS2MCP.Core
                     if(map.TryGetValue("relationships",out var relationshipMode)) {
                         if(!(relationshipMode is string selected)||selected!="directDepth1")throw CommandJson.Invalid("invalid relationship mode");
                         compact.Add("relationships",selected);
+                    }
+                    if(map.TryGetValue("geometryDiagnostics",out var geometryMode)) {
+                        if(!(geometryMode is string selected)||selected!="sampledCubicV1")throw CommandJson.Invalid("invalid geometry diagnostics mode");
+                        compact.Add("geometryDiagnostics",selected);
                     }
                     ConstructionInventory.Parse(compact);
                 }

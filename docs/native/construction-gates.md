@@ -84,3 +84,26 @@ geometry and exterior connector semantics with native panels in a disposable
 fixture, and establish a genuinely bounded spatial traversal plus edit-safe
 snapshot/cursors. The pure tests in this slice do not cover bowed-curve spatial
 selection or pagination. Transformations depending on these fields remain open.
+
+## Computed selected-network diagnostics — partial C5
+
+The optional `geometryDiagnostics:"sampledCubicV1"` inventory/O7 mode adds a
+consumed BCL calculation over the existing native root cubic, with no new native
+getter. It returns17 ordered t/XYZ samples per available curve, at most544 across
+32 roots, plus per-quantity grade/3D-curvature/radius support/reasons and sampled
+extrema/counts. Related target geometry is not profiled. Omitted mode preserves
+prior reads; native length remains separately reported.
+
+Scaled derivative and norm arithmetic guards representability loss, stationary
+and vertical tangents; nonzero curvature underflow does not become supported
+straightness. A finite reciprocal can remain available when the other quantity
+overflows. Strict actual C# serializer and TS direct/O7 consumers preserve nulls,
+reasons, counts, root identity and extrema provenance under existing byte caps.
+
+This is computed double-precision evidence in native worldXYZ coordinates, Y
+vertical. Grade is dimensionless; curvature/radius physical engineering units
+are unverified. Between-sample extrema are unmeasured. No prefab design limit,
+terrain, clearance/collision, lane/vehicle, native-preview or feasibility claim
+is supplied. The linked native-boundary tests prove consumed field selection,
+read reuse and serialization, not installed Game/Unity binding, game timing or
+performance. Full C5 snapping/splits/offsets/construction and G1–G4 remain open.

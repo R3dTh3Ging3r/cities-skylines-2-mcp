@@ -1,3 +1,4 @@
+import {geometryDiagnosticSchema,checkGeometryDiagnostics} from "./geometry-diagnostic-contracts.js";
 import { z } from "zod";
 import { constructionRequestSchema, entityRefSchema, worldRefSchema, type ConstructionRequest } from "./construction-query.js";
 const text=z.string().max(128), reason=text.nullable();
@@ -41,7 +42,7 @@ export type ConstructionRelationshipSnapshot=z.infer<typeof relationshipSnapshot
 export const constructionObservationSchema=z.object({data:z.object({scope:z.literal("explicitEntities"),
   requestedEntities:z.array(entityRefSchema).min(1).max(32),entities:z.array(entity).min(1).max(32),worldBounds:z.null(),
   worldBoundsReason:z.literal("notMeasured"),nextCursor:z.null(),truncated:z.literal(false),support:z.literal("partial"),
-  nativeVerification:z.literal("CON-01:notRun"),relationships:relationshipSnapshot.nullable().optional()}).strict(),
+  nativeVerification:z.literal("CON-01:notRun"),geometryDiagnostics:geometryDiagnosticSchema.nullable().optional(),relationships:relationshipSnapshot.nullable().optional()}).strict(),
   world:worldRefSchema,sampledAtUtc:z.string().max(64).datetime(),startFrame:frame,endFrame:frame,
   freshness:z.enum(["current","warming","unavailable"]),warnings:z.array(text).max(32)}).strict();
 const sameWorld=(a:z.infer<typeof worldRefSchema>,b:z.infer<typeof worldRefSchema>)=>a.bootId===b.bootId&&a.epoch===b.epoch;
@@ -70,6 +71,12 @@ export function parseConstructionObservation(value:unknown,input:ConstructionReq
     checkGeometry(row,request.world);if(row.owner&&!sameWorld(row.owner.world,request.world))invalid();
     if((row.owner===null)!==(row.ownerReason!==null))invalid();
   });
+  const diagnostics=data.geometryDiagnostics;
+  if(request.geometryDiagnostics===undefined){if(diagnostics!=null)invalid();}
+  else {
+    if(!diagnostics||!observed.warnings.includes("computedGeometrySamplesNotEngineeringValidation"))invalid();
+    checkGeometryDiagnostics(diagnostics,data.entities);
+  }
   const r=data.relationships;
   if(request.relationships===undefined){if(r!=null)invalid();return observed;}
   if(!r||!observed.warnings.includes("directRelationshipsNotCompleteFacilityGeometry")||r.rootReads!==request.entities.length||

@@ -1,3 +1,4 @@
+import type {GeometryDiagnosticSnapshot} from "./geometry-diagnostic-contracts.js";
 import type {ConstructionRelationshipSnapshot} from "./construction-contracts.js";
 import type {MetricReadRequest} from "./diagnostic-metric-contracts.js";
 import type {TransitRequest} from "./features/transit-contracts.js";
@@ -110,6 +111,7 @@ export interface ConstructionSnapshot {
   worldBounds:null; worldBoundsReason:"notMeasured"; nextCursor:null; truncated:false;
   support:"partial"; nativeVerification:"CON-01:notRun";
   relationships?:ConstructionRelationshipSnapshot|null;
+  geometryDiagnostics?:GeometryDiagnosticSnapshot|null;
 }
 
 export type ObservationBatchItem = {id:string;name:"metrics.read";args:MetricReadRequest} | {

@@ -308,7 +308,8 @@ GET /v2/construction/inventory?bootId=example-boot&epoch=7&entities=123%3A4
 
 Multiple refs use a percent-encoded comma-separated `index:version` list.
 The typed client uses the shared query encoder, preserving spaces and literal
-plus signs. Only `bootId`, `epoch`, `entities` and optional `relationships=directDepth1` query keys are accepted;
+plus signs. Only `bootId`, `epoch`, `entities` and optional
+`relationships=directDepth1` / `geometryDiagnostics=sampledCubicV1` query keys are accepted;
 duplicate decoded keys, malformed escapes, unknown keys, spatial/cursor/family
 expansion/limit options and bodies reject. Decoded boot ID is 1–128 characters
 and nonblank; epoch is an integer from 0 through 9007199254740991. Index/version
@@ -373,6 +374,45 @@ its native support is `unverified`. Full C1 and native G1/G2/CON-01 remain open.
 See [supported fields and deferred evidence](native/construction-gates.md).
 Existing `PrefabInfo` and `RoadGraph` payloads and midpoint-filter defaults retain
 their current behavior.
+
+### Computed network profiles (read-only C5 slice)
+
+Add `geometryDiagnostics:"sampledCubicV1"` to the same inventory request or fixed
+O7 item. The producer uses the already captured root cubics; it performs no
+additional native getter or relationship-target profile read. Omission accepts
+older responses without the additive nullable `data.geometryDiagnostics` field.
+When requested, the field and its ordered root profiles are required.
+
+Each available root curve supplies17 ordered samples at `t=i/16`, including
+endpoints, with XYZ and individual `{value,support,reason}` for signed grade,
+3D curvature and 3D osculating radius. Building, unsupported and missing roots
+retain unavailable profiles with reasons. Degenerate curves still retain all17
+samples; undefined quantities stay null. Summaries report supported/unavailable
+counts and sampled min/max with t/location; equal extrema select the earliest
+sample. `returnedSamplesOnly` and `betweenSamples:"unmeasured"` explicitly deny
+continuous/global bounds between samples.
+
+Grade is dimensionless rise/run along a→d, using Y vertical and the XZ horizontal
+derivative. This is parameter orientation, not lane travel direction. Curvature
+uses the full3D derivatives, not a horizontal road-turn-radius model. Curvature
+and radius use inverse/native-world-coordinate units; physical metre conversion
+and engineering suitability remain unverified. Native reported length stays in
+the original network field; no chord/polyline length replaces it.
+
+Zero horizontal derivative makes grade unavailable. Stationary derivatives make
+curvature/radius unavailable. Supported zero curvature has null radius with
+`zeroCurvatureUnboundedRadius`. Scaled arithmetic detects representability loss;
+an overflow/underflow affects the quantities it prevents, with independent
+reciprocal availability and explicit reasons. Unavailable positions retain their
+own reason. No NaN/Infinity is published. Detected underflow/conditioning loss
+is reported rather than clamped to supported flatness; arithmetic uses double precision.
+
+At most32 selected roots yield544 pure sample evaluations. Rich profiles may
+exceed the unchanged256KiB direct/item/MCP or4MiB O7 group budgets: select fewer
+roots after whole `RESULT_TOO_LARGE` refusal. Samples are never silently dropped.
+World/frame/freshness and partial/native-notRun warnings remain intact. This
+computed observation supplies no design threshold, collision/clearance, terrain,
+prefab acceptance, directed-lane, native-preview or improvement verdict.
 
 ## Observation groups (partial O7)
 
