@@ -1,5 +1,16 @@
 # Roadmap reconciliation after PRs 4–8
 
+**October 17 post-playtest update:** The historical source-only assessment below
+is now supplemented by [the completed native playtest reconciliation](POST-PLAYTEST-2026-10-17.md).
+The tested PR9 candidate is `0b913a3dcd41b0795e8c130aa81ee4c344a6c099`.
+Selected C1/C5/O7/M4/M5/T1 reads and a nine-mutation legacy construction expansion
+were observed successfully. Earlier tool-exposure blockers were resolved locally.
+This does not close G1 completion/takeover/save attribution or broad G2–G4 gates.
+The observed relationship-inventory overflow motivates bounded read recovery;
+the [next lifecycle sequence](../superpowers/plans/2026-10-17-construction-lifecycle-next.md)
+prepares consumed observation before changing writer semantics. No new native
+test, installation or gameplay session is requested by these updates.
+
 Started October 16, completed October 17, 2026. Reconciled from source at
 `d1840f736978748a6778feff44aba62a24ab9a98` and GitHub readback of all five
 open, unmerged draft PRs. This is a source delivery assessment, not native
