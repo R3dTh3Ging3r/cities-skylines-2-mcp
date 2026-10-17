@@ -1,6 +1,6 @@
 # Next construction lifecycle increment after the native expansion
 
-Status: development sequence and evidence requirements, not implemented or native accepted. This follows the [October 17 reconciliation](../../handoff/POST-PLAYTEST-2026-10-17.md) and refines O3/O5 in the [operations plan](2026-10-11-bridge-operations.md). No additional playtest is requested by this document.
+Status: development sequence and evidence requirements. The observation increment under the [bounded trace plan](2026-10-17-construction-lifecycle-trace.md) is implemented and independently accepted within its [source/offline scope](../../handoff/LIFECYCLE-TRACE-2026-10-17.md); it is not native accepted and does not complete O3/O5. This follows the [October 17 reconciliation](../../handoff/POST-PLAYTEST-2026-10-17.md) and refines O3/O5 in the [operations plan](2026-10-11-bridge-operations.md). No additional playtest is requested by this document.
 
 ## What changed
 
