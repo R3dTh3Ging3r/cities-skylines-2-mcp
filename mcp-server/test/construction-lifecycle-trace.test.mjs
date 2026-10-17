@@ -147,3 +147,66 @@ test('actual SDK item failures are sanitized while ordinary successful mixed obs
         await once(http, 'close');
     }
 });
+
+
+test('actual reused transit producer histories reach SDK without stale result attribution', async () => {
+    const { parseLifecycleTracePage } = await import('../dist/construction-lifecycle-trace.js');
+    const cases = ['line-stop-same-world', 'line-stop-new-world', 'stop-line-same-world', 'stop-line-new-world'];
+    const fixtures = cases.map(name => JSON.parse(readFileSync(`${dir}/lifecycle-reuse-${name}.json`, 'utf8')));
+    let calls = 0;
+    const http = createServer(async (req, res) => {
+        let body = '';
+        for await (const chunk of req) body += chunk;
+        const current = fixtures[calls++];
+        assert.deepEqual(JSON.parse(body), {
+            expectedWorld: current.world,
+            items: [{ id: 'reuse', name: 'construction.lifecycleTrace', args: { bootId: current.world.bootId, afterSequence: 0, limit: 32 } }],
+        });
+        res.end(JSON.stringify(current));
+    });
+    http.listen(0, '127.0.0.1');
+    await once(http, 'listening');
+    let mcp;
+    try {
+        mcp = await startOfflineMcp(`http://127.0.0.1:${http.address().port}`);
+        for (const [index, wire] of fixtures.entries()) {
+            const query = { bootId: wire.world.bootId, afterSequence: 0, limit: 32 };
+            const result = await mcp.client.callTool({ name: 'cs2_observe_batch', arguments: {
+                expectedWorld: wire.world,
+                items: [{ id: 'reuse', name: 'construction.lifecycleTrace', args: query }],
+            } });
+            assert.equal(result.isError, undefined);
+            assert.deepEqual(JSON.parse(result.content[0].text), wire);
+            const history = parseLifecycleTracePage(wire.results[0].observation.data, query);
+            const [previous, queued] = history.events.filter(e => e.phase === 'queued');
+            const current = history.events.filter(e => e.traceId === queued.traceId);
+            assert.notEqual(queued.traceId, previous.traceId);
+            assert.equal(queued.kind, cases[index].startsWith('line-stop') ? 'stop' : 'line');
+            assert.equal(queued.references.length, queued.kind === 'stop' ? 1 : 2);
+            assert.ok(current.every(e => e.references.every(r => r.index !== 7)));
+            assert.ok(current.filter(e => ['queued', 'definitions', 'validation', 'validationAccepted'].includes(e.phase))
+                .every(e => e.references.every(r => r.index !== 19)));
+            for (const phase of ['applyObserved', 'finishObserved']) {
+                const reference = current.find(e => e.phase === phase).references.find(r => r.index === 19);
+                assert.equal(reference.version, 3);
+                assert.equal(reference.role, queued.kind);
+                assert.deepEqual(reference.world, queued.ingressWorld);
+            }
+            assert.equal(queued.ingressWorld.epoch !== previous.ingressWorld.epoch, cases[index].endsWith('new-world'));
+            if (queued.kind === 'line') {
+                for (const phase of ['renameQueued', 'renameDequeued', 'setterAttempt', 'responseBuilderAttempt']) {
+                    const reference = current.find(e => e.phase === phase).references.find(r => r.index === 19);
+                    assert.equal(reference.role, 'line');
+                    assert.deepEqual(reference.world, queued.ingressWorld);
+                }
+            }
+            assert.ok(Buffer.byteLength(JSON.stringify(result)) <= 262144);
+        }
+        assert.equal(calls, 4);
+    } finally {
+        await mcp?.close();
+        http.closeAllConnections();
+        http.close();
+        await once(http, 'close');
+    }
+});

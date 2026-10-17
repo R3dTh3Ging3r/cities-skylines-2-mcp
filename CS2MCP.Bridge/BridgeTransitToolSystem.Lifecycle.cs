@@ -32,10 +32,15 @@ namespace CS2MCP
 
         private LifecycleTraceContext m_TraceContext;
         private TraceKind m_TraceKind;
+        // Diagnostic selection is independent of native interruption/cleanup state.
+        private Entity m_TraceResult;
+        private bool m_TraceResultAssigned;
         private void BeginTrace(BridgeRequest request, TraceKind kind)
         {
             try
             {
+                m_TraceResult = Entity.Null;
+                m_TraceResultAssigned = false;
                 m_TraceContext = ConstructionLifecycleTrace.Start(request);
                 m_TraceKind = kind;
                 Trace(TracePhase.queued);
@@ -62,9 +67,11 @@ namespace CS2MCP
         {
             var refs = new List<LifecycleTraceReference>
             {
-                ConstructionLifecycleTrace.Reference(m_TraceContext, TraceRole.prefab, m_PendingPrefabEntity),
-                ConstructionLifecycleTrace.Reference(m_TraceContext, m_PendingKind == OperationKind.Line ? TraceRole.line : TraceRole.stop, m_ResultEntity)
+                ConstructionLifecycleTrace.Reference(m_TraceContext, TraceRole.prefab, m_PendingPrefabEntity)
             };
+            if (m_TraceResultAssigned)
+                refs.Add(ConstructionLifecycleTrace.Reference(m_TraceContext,
+                    m_PendingKind == OperationKind.Line ? TraceRole.line : TraceRole.stop, m_TraceResult));
             if (m_LineStops != null)
                 for (int i = 0; i < Math.Min(2, m_LineStops.Length); i++)
                     refs.Add(ConstructionLifecycleTrace.Reference(m_TraceContext, TraceRole.stop, m_LineStops[i].Stop));
@@ -331,6 +338,8 @@ namespace CS2MCP
                     m_ResultEntity = tempRoute;
                     m_Applied = true;
                     applyMode = ApplyMode.Apply;
+                    m_TraceResult = m_ResultEntity;
+                    m_TraceResultAssigned = true;
                     Trace(TracePhase.applyObserved);
                 }
                 else
@@ -364,6 +373,8 @@ namespace CS2MCP
                 m_ResultEntity = tempStop;
                 m_Applied = true;
                 applyMode = ApplyMode.Apply;
+                m_TraceResult = m_ResultEntity;
+                m_TraceResultAssigned = true;
                 Trace(TracePhase.applyObserved);
             }
             else

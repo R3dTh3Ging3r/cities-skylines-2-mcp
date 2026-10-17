@@ -267,3 +267,9 @@ observations and real fixed catalog metadata. They do not bind installed game
 assemblies or observe native callback cardinality, end-frame effects, cleanup,
 manual takeover or save durability. See [the API cursor/limits contract](../bridge-api.md#passive-construction-lifecycle-history)
 and [portable test instructions](../testing.md#passive-lifecycle-tests).
+
+Transit result-reference selection resets before each accepted queue observation
+and retains a diagnostic copy only after that trace's Apply assignment. Stale
+native result/applied fields left by the existing interruption path are preserved
+as native behavior and never selected for the next trace, including after a load.
+Deferred rename retains its original request identity and held current result.

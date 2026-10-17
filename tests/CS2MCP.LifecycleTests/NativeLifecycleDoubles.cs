@@ -293,6 +293,7 @@ namespace CS2MCP
     public sealed partial class BridgeTransitToolSystem : Game.Tools.ObjectToolBaseSystem
     {
         internal bool Ready = true, PathUpdate, Committed = true;
+        internal Entity NativeResult = new Entity { Index = 7, Version = 1 };
         void CreateStopDefinitions() => Leaf("definitions");
         void CreateLineDefinitions()
         {
@@ -309,11 +310,7 @@ namespace CS2MCP
         bool TryGetReadyTempRoute(out Entity entity)
         {
             Leaf("pathReady");
-            entity = new Entity
-            {
-                Index = 7,
-                Version = 1
-            };
+            entity = NativeResult;
             return Ready;
         }
 
@@ -326,11 +323,7 @@ namespace CS2MCP
         Entity FindTempStop()
         {
             Leaf("findStop");
-            return new Entity
-            {
-                Index = 7,
-                Version = 1
-            };
+            return NativeResult;
         }
 
         List<string> CollectTempErrors()

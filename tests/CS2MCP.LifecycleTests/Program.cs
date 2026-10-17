@@ -118,8 +118,123 @@ internal static class LifecycleProgram
 
     static void Record(LifecycleTraceJournal journal, LifecycleTraceContext context, Func<WorldSnapshot> world = null, Func<long?> frame = null, Func<DateTime> utc = null, Func<bool?> owner = null, LifecycleTraceReference[] refs = null) => journal.Observe(context, TraceAdapter.generic, TraceKind.placement, TracePhase.queued, world ?? (() => Mod.Worlds.Snapshot), frame ?? (() => 5), utc ?? (() => DateTime.UtcNow), owner, references: refs);
     static string Snapshot(Game.Tools.ObjectToolBaseSystem tool, BridgeRequest request, bool busy) => string.Join(",", tool.Calls) + "|" + tool.applyMode + "|" + busy + "|" + (tool.Active == tool) + "|" + request.WaitForResponse(1)?.Status + "|" + Convert.ToBase64String(request.WaitForResponse(1)?.Body ?? Array.Empty<byte>());
+    // Run the actual same adapter through Apply, displacement and a different next kind.
+    // Recording must neither fix nor conceal the original interruption/native cleanup policy.
+    static string TransitReuse(bool firstLine, bool nextWorld, int recorderMode, string wireDirectory)
+    {
+        Reset();
+        ConstructionLifecycleTrace.Journal = NewJournal(e => recorderMode == 0 ? ObservationWire.TraceEvent(e).Length
+            : recorderMode == 1 ? 0 : throw new InvalidOperationException("controlled recording failure"));
+        var previous = Request();
+        previous.Path = firstLine ? "/transit/lines/create" : "/transit/stops/place";
+        var tool = Transit(previous, firstLine);
+        tool.Step();
+        tool.Step();
+        var nativeResult = typeof(BridgeTransitToolSystem).GetField("m_ResultEntity", BindingFlags.Instance | BindingFlags.NonPublic);
+        var nativeApplied = typeof(BridgeTransitToolSystem).GetField("m_Applied", BindingFlags.Instance | BindingFlags.NonPublic);
+        Equal(7, ((Entity)nativeResult.GetValue(tool)).Index);
+        Equal(true, nativeApplied.GetValue(tool));
+        Equal(ApplyMode.Apply, tool.applyMode);
+        tool.Active = new ToolBaseSystem();
+        tool.Stop();
+        Equal(409, previous.WaitForResponse(1).Status);
+        Equal(false, tool.IsBusy);
+        // Preserve the legacy stale native state. Selection alone must stop attributing it.
+        Equal(7, ((Entity)nativeResult.GetValue(tool)).Index);
+        Equal(true, nativeApplied.GetValue(tool));
+        string previousOutcome = Snapshot(tool, previous, tool.IsBusy);
+        if (nextWorld)
+        {
+            Mod.Worlds.BeginLoad();
+            Mod.Worlds.CompleteLoad();
+        }
+        var request = Request();
+        bool line = !firstLine;
+        request.Path = line ? "/transit/lines/create" : "/transit/stops/place";
+        tool.NativeResult = new Entity { Index = 19, Version = 3 };
+        True(line
+            ? tool.TryQueueLine(default, null, "private type", new[] { new BridgeTransitToolSystem.LineStop { Stop = new Entity { Index = 3, Version = 2 } } }, false, default, "current line", 1, request)
+            : tool.TryQueueStop(default, null, "private type", default, request));
+        Equal(Entity.Null, nativeResult.GetValue(tool));
+        Equal(false, nativeApplied.GetValue(tool));
+        Equal(ApplyMode.Apply, tool.applyMode);
+        if (recorderMode == 0)
+        {
+            var queued = Page("0").events.Single(e => e.traceId == request.LifecycleContext.traceId && e.phase == "queued");
+            Equal(line ? "line" : "stop", queued.kind);
+            True(WorldIdentity.Same(request.IngressWorld, queued.ingressWorld));
+            // New operation has no assigned result yet; its held line-stop input is distinct.
+            True(!queued.references.Any(r => r.index == 7 || r.index == 19));
+            Equal(line ? 2 : 1, queued.references.Count);
+        }
+        tool.Step();
+        tool.Step();
+        Equal(19, ((Entity)nativeResult.GetValue(tool)).Index);
+        Equal(true, nativeApplied.GetValue(tool));
+        Equal(null, request.WaitForResponse(1));
+        if (recorderMode == 0)
+        {
+            var current = Page("0").events.Where(e => e.traceId == request.LifecycleContext.traceId).ToArray();
+            var applied = current.Single(e => e.phase == "applyObserved");
+            var result = applied.references.Single(r => r.index == 19);
+            Equal(3, result.version);
+            Equal(line ? "line" : "stop", result.role);
+            True(WorldIdentity.Same(request.IngressWorld, result.world));
+            True(current.Where(e => e.phase != "applyObserved").All(e => !e.references.Any(r => r.index == 7 || r.index == 19)));
+        }
+        tool.Step();
+        if (line)
+        {
+            Equal(null, request.WaitForResponse(1));
+            var rename = tool.World.GetOrCreateSystemManaged<BridgeTransitRenameSystem>();
+            typeof(BridgeTransitRenameSystem).GetMethod("OnCreate", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(rename, null);
+            typeof(BridgeTransitRenameSystem).GetMethod("OnUpdate", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(rename, null);
+            Equal(1, tool.World.GetOrCreateSystemManaged<Game.UI.NameSystem>().Calls);
+        }
+        Equal(200, request.WaitForResponse(1).Status);
+        Equal(false, tool.IsBusy);
+        Equal(ApplyMode.None, tool.applyMode);
+        Equal(Entity.Null, nativeResult.GetValue(tool));
+        Equal(false, nativeApplied.GetValue(tool));
+        if (recorderMode == 0)
+        {
+            var page = Page("0");
+            var current = page.events.Where(e => e.traceId == request.LifecycleContext.traceId).ToArray();
+            True(current.All(e => !e.references.Any(r => r.index == 7)));
+            True(current.Single(e => e.phase == "finishObserved").references.Any(r => r.index == 19 && r.version == 3));
+            if (line)
+                foreach (string phase in new[] { "renameQueued", "renameDequeued", "setterAttempt", "responseBuilderAttempt" })
+                    True(current.Single(e => e.phase == phase).references.Any(r => r.role == "line" && r.index == 19 && r.version == 3 && WorldIdentity.Same(r.world, request.IngressWorld)));
+            if (wireDirectory != null)
+            {
+                Directory.CreateDirectory(wireDirectory);
+                string name = (firstLine ? "line-stop" : "stop-line") + (nextWorld ? "-new-world" : "-same-world");
+                var input = ObservationCatalog.Parse("{\"items\":[{\"id\":\"reuse\",\"name\":\"construction.lifecycleTrace\",\"args\":{\"bootId\":\"boot\",\"afterSequence\":0,\"limit\":32}}]}");
+                var catalog = new ObservationCatalog(new RequestHandlers(), () => 10, () => DateTime.UtcNow);
+                var scheduler = new ObservationScheduler(Mod.Worlds, catalog, () => 10, () => 0, new ObservationWire());
+                byte[] bytes = null;
+                var group = scheduler.Admit(input, value => bytes = value);
+                scheduler.Pump();
+                Equal(null, group.Result.results[0].error);
+                True(bytes.Length <= 262144);
+                File.WriteAllBytes(Path.Combine(wireDirectory, "lifecycle-reuse-" + name + ".json"), bytes);
+                group.Detach();
+            }
+        }
+        else
+            Equal(0, Page("0").events.Length);
+        return previousOutcome + "|" + Snapshot(tool, request, tool.IsBusy);
+    }
+
     static int Main(string[] args)
     {
+        foreach (bool firstLine in new[] { true, false })
+            foreach (bool nextWorld in new[] { false, true })
+                Check("same transit adapter " + (firstLine ? "line to stop" : "stop to line") + (nextWorld ? " after world transition" : " in same world") + " selects only current trace results", () => {
+                    string success = TransitReuse(firstLine, nextWorld, 0, args.Length > 0 ? args[0] : null);
+                    Equal(success, TransitReuse(firstLine, nextWorld, 1, null));
+                    Equal(success, TransitReuse(firstLine, nextWorld, 2, null));
+                });
         Check("actual dispatch envelope guards old writers and preserves direct replies", () =>
         {
             var request = Request();
