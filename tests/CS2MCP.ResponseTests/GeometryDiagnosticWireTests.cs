@@ -28,6 +28,7 @@ internal static class GeometryDiagnosticWireTests
     static Entity E(int index)=>new Entity{Index=index,Version=1};
     static float3 P(float x,float y,float z=0)=>new float3(x,y,z);
     static void Equal(object expected,object actual){if(!Equals(expected,actual))throw new Exception($"expected {expected}, got {actual}");}
+    static void Near(double expected,double actual){if(Math.Abs(expected-actual)>1e-10*Math.Max(1,Math.Abs(expected)))throw new Exception($"expected {expected}, got {actual}");}
     static RequestHandlers Fixture()
     {
         var handler=new RequestHandlers();
@@ -79,6 +80,43 @@ internal static class GeometryDiagnosticWireTests
                 fixture["arithmeticRequest"]=new JObject{{"world",JToken.FromObject(Mod.Worlds.Current)},{"entities",JArray.FromObject(result.data.requestedEntities)},{"geometryDiagnostics","sampledCubicV1"}};
                 fixture["arithmeticDirect"]=body;File.WriteAllText(path,fixture.ToString());
             }
+        });
+        check("actual producer and serializer preserve translated analytic curves and sampled summaries",()=>{
+            var curves=new List<CubicCurve>();
+            foreach(double offset in new[]{0d,100000d,1e16}) {
+                curves.Add(new CubicCurve{a=new Point3(offset,0,0),b=new Point3(offset+2,2,0),c=new Point3(offset+4,4,0),d=new Point3(offset+6,6,0)});
+                curves.Add(new CubicCurve{a=new Point3(offset,0,0),b=new Point3(offset+2,0,2),c=new Point3(offset+4,2,4),d=new Point3(offset+6,6,6)});
+            }
+            var line=curves[4];var bow=curves[5];
+            curves.Add(new CubicCurve{a=line.d,b=line.c,c=line.b,d=line.a});
+            curves.Add(new CubicCurve{a=bow.d,b=bow.c,c=bow.b,d=bow.a});
+            var query=new Dictionary<string,string>{{"bootId","boot"},{"epoch","1"},{"entities",string.Join(",",Enumerable.Range(1,curves.Count).Select(i=>i+":1"))},{"geometryDiagnostics","sampledCubicV1"}};
+            var observed=ConstructionInventory.Read(query,Mod.Worlds,()=>10,e=>new ConstructionEntity{entity=e,kind="networkEdge",networkReason=null,
+                network=new NetworkGeometry{start=e,end=e,length=99,curve=curves[e.index-1]}});
+            var direct=JObject.Parse(Encoding.UTF8.GetString(ObservationWire.Standalone(observed)));
+            var profiles=(JArray)direct["data"]["geometryDiagnostics"]["profiles"];
+            for(int i=0;i<curves.Count;i++) {
+                bool reversed=i>=6,straight=i%2==0;var profile=profiles[i];
+                for(int j=0;j<17;j++) {
+                    double t=reversed?1-j/16d:j/16d;var sample=profile["samples"][j];
+                    Near(straight?(reversed?-1:1):(reversed?-1:1)*Math.Sqrt(2)*t,(double)sample["grade"]["value"]);
+                    if(straight){Equal(0d,(double)sample["curvature"]["value"]);Equal("zeroCurvatureUnboundedRadius",(string)sample["radius"]["reason"]);}
+                    else {Near(1/(6*Math.Pow(1+2*t*t,1.5)),(double)sample["curvature"]["value"]);Near(6*Math.Pow(1+2*t*t,1.5),(double)sample["radius"]["value"]);}
+                }
+                Equal(17,(int)profile["curvature"]["supportedSamples"]);
+                Near(straight?0:1d/6,(double)profile["curvature"]["max"]["value"]);
+                Equal(straight?0d:reversed?1d:0d,(double)profile["curvature"]["max"]["t"]);
+                Equal(curves[i].a.x,(double)direct["data"]["entities"][i]["network"]["curve"]["a"]["x"]);
+                Equal(99d,(double)direct["data"]["entities"][i]["network"]["length"]);
+            }
+            var args=new JObject{{"world",JToken.FromObject(Mod.Worlds.Current)},{"entities",JArray.FromObject(observed.data.requestedEntities)},{"geometryDiagnostics","sampledCubicV1"}};
+            string request=new JObject{{"items",new JArray(new JObject{{"id","translation"},{"name","construction.inventory"},{"args",args.DeepClone()}})}}.ToString();
+            byte[] bytes=null;
+            var scheduler=new ObservationScheduler(Mod.Worlds,new ObservationCatalog(new FixedReaders{Observed=observed},()=>10,()=>DateTime.UtcNow),()=>10,()=>0,new ObservationWire());
+            var group=scheduler.Admit(ObservationCatalog.Parse(request),value=>bytes=value);scheduler.Pump();group.Detach();
+            var batch=JObject.Parse(Encoding.UTF8.GetString(bytes));Equal(true,JToken.DeepEquals(direct["data"],batch["results"][0]["observation"]["data"]));
+            string directory=Environment.GetEnvironmentVariable("GEOMETRY_WIRE_DIR");
+            if(directory!=null){string path=Path.Combine(directory,"geometry.json");var fixture=JObject.Parse(File.ReadAllText(path));fixture["translationRequest"]=args;fixture["translationDirect"]=direct;fixture["translationGroup"]=batch;File.WriteAllText(path,fixture.ToString());}
         });
         check("32 selected root curves perform544 pure evaluations and actual serializer refuses whole byte pressure",()=>{
             var world=new WorldIdentity(new string('\u0001',128));world.BeginLoad();world.CompleteLoad();

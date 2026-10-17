@@ -75,6 +75,40 @@ namespace CS2MCP.CoreTests
                 Near(0,p.samples[8].grade.value);Near(0,p.samples[8].curvature.value);
                 Program.Equal(true,p.samples[8].position.y>0);
             });
+            Program.Check("actual producer preserves translated straight and bowed derivative evidence and summaries",()=>{
+                var world=new WorldIdentity("boot");world.BeginLoad();world.CompleteLoad();
+                foreach(double offset in new[]{0d,100000d,1e16}) foreach(bool reversed in new[]{false,true}) {
+                    var straight=Curve(P(offset,0),P(offset+2,2),P(offset+4,4),P(offset+6,6));
+                    var bowed=Curve(P(offset,0,0),P(offset+2,0,2),P(offset+4,2,4),P(offset+6,6,6));
+                    if(reversed) {straight=Curve(straight.d,straight.c,straight.b,straight.a);bowed=Curve(bowed.d,bowed.c,bowed.b,bowed.a);}
+                    var query=ConstructionInventory.DecodeQuery("bootId=boot&epoch=1&entities=1:1,2:1&geometryDiagnostics=sampledCubicV1");
+                    var observed=ConstructionInventory.Read(query,world,()=>10,e=>new ConstructionEntity{entity=e,kind="networkEdge",networkReason=null,
+                        network=new NetworkGeometry{curve=e.index==1?straight:bowed,start=e,end=e,length=99}});
+                    var line=observed.data.geometryDiagnostics.profiles[0];
+                    var bend=observed.data.geometryDiagnostics.profiles[1];
+                    for(int i=0;i<17;i++) {
+                        Near(reversed?-1:1,line.samples[i].grade.value);Near(0,line.samples[i].curvature.value,0);
+                        Program.Equal("zeroCurvatureUnboundedRadius",line.samples[i].radius.reason);
+                        double t=reversed?1-i/16d:i/16d;
+                        Near((reversed?-1:1)*Math.Sqrt(2)*t,bend.samples[i].grade.value);
+                        Near(1/(6*Math.Pow(1+2*t*t,1.5)),bend.samples[i].curvature.value);
+                        Near(6*Math.Pow(1+2*t*t,1.5),bend.samples[i].radius.value);
+                    }
+                    Near(reversed?-1:1,line.grade.min.value);Near(0,line.curvature.max.value,0);Near(0,line.curvature.max.t);
+                    Near(1d/6,bend.curvature.max.value);Near(reversed?1:0,bend.curvature.max.t);
+                    Near(reversed?straight.a.x:offset,observed.data.entities[0].network.curve.a.x,0);
+                    Program.Equal(34,observed.data.geometryDiagnostics.evaluations);Near(99,observed.data.entities[0].network.length);
+                }
+            });
+            Program.Check("overflowing local subtraction preserves straight derivatives through scaled opposite endpoints",()=>{
+                var p=Profile(Curve(P(-1e308,-1e308),P(1e308,1e308),P(1e308,1e308),P(1e308,1e308)));
+                for(int i=0;i<16;i++) {
+                    Near(1,p.samples[i].grade.value);Near(0,p.samples[i].curvature.value,0);
+                    Program.Equal("zeroCurvatureUnboundedRadius",p.samples[i].radius.reason);
+                }
+                Program.Equal("stationaryDerivative",p.samples[16].curvature.reason);
+                Program.Equal(true,p.samples[8].position!=null);
+            });
         }
     }
 }

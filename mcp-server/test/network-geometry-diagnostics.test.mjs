@@ -53,6 +53,38 @@ test('actual C# finite wire keeps underflow overflow and positional uncertainty 
     assert.equal(underflow.samples[0].radius.reason, 'arithmeticOverflow');
 });
 
+test('actual translated C# producer wire preserves straightness, analytic bowed values and summary provenance', () => {
+    const value = parseConstructionObservation(wire.translationDirect, wire.translationRequest);
+    parseObservationResult(wire.translationGroup, {items: [{id: 'translation', name: 'construction.inventory', args: wire.translationRequest}]});
+    const profiles = value.data.geometryDiagnostics.profiles;
+    assert.equal(profiles.length, 8); assert.equal(value.data.geometryDiagnostics.evaluations, 136);
+    const near = (actual, expected) => assert.ok(actual !== null && Math.abs(actual - expected) <= 1e-10 * Math.max(1, Math.abs(expected)), `expected ${expected}, got ${actual}`);
+    for (let i = 0; i < profiles.length; i++) {
+        const p = profiles[i], reversed = i >= 6, straight = i % 2 === 0;
+        assert.equal(p.samples.length, 17); assert.equal(p.curvature.supportedSamples, 17);
+        for (const row of p.samples) {
+            const t = reversed ? 1 - row.t : row.t, sign = reversed ? -1 : 1;
+            near(row.grade.value, straight ? sign : sign * Math.sqrt(2) * t);
+            if (straight) {
+                assert.equal(row.curvature.value, 0); assert.equal(row.radius.value, null);
+                assert.equal(row.radius.reason, 'zeroCurvatureUnboundedRadius');
+            } else {
+                near(row.curvature.value, 1 / (6 * (1 + 2 * t * t) ** 1.5));
+                near(row.radius.value, 6 * (1 + 2 * t * t) ** 1.5);
+            }
+        }
+        near(p.curvature.max.value, straight ? 0 : 1 / 6);
+        assert.equal(p.curvature.max.t, straight ? 0 : reversed ? 1 : 0);
+        assert.equal(p.curvature.unavailableSamples, 0);
+        if (straight) {assert.equal(p.radius.unavailableSamples, 17); assert.equal(p.radius.min, null); assert.equal(p.grade.min.t, 0);}
+        const source = value.data.entities[i].network;
+        assert.equal(source.length, 99); assert.deepEqual(p.samples[0].position, source.curve.a);
+        assert.deepEqual(p.samples[16].position, source.curve.d);
+        assert.deepEqual(p.curvature.max.position, p.samples[p.curvature.max.t * 16].position);
+    }
+    assert.equal(value.data.entities[4].network.curve.a.x, 1e16);
+});
+
 test('direct and O7 parsers reject missing malformed count identity and extremum evidence', () => {
     const changes = [
         value => delete value.data.geometryDiagnostics,

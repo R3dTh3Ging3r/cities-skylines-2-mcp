@@ -140,23 +140,28 @@ namespace CS2MCP.Core
         {
             ConstructionGeometry.Validate(curve);
             var controls=new[]{curve.a,curve.b,curve.c,curve.d};
-            double scale=controls.Max(Max);
+            // Subtract captured coordinates first. Normalizing absolute positions
+            // before subtraction can distort small edges at a large world origin.
+            var edges=new[]{Sub(curve.b,curve.a),Sub(curve.c,curve.b),Sub(curve.d,curve.c)};
+            bool overflow=edges.Any(e=>!Finite(e.x)||!Finite(e.y)||!Finite(e.z));
+            double scale=overflow?controls.Max(Max):edges.Max(Max);
             bool lost=false;
-            Point3 Normalize(Point3 p)
+            Point3 NormalizeEdge(int index)
             {
-                // A constant axis cancels from derivatives even if its normalized
-                // coordinate is unrepresentable. Check lost differences below.
-                double Component(double value) => scale==0?0:value/scale;
-                return new Point3(Component(p.x),Component(p.y),Component(p.z));
+                double Component(double difference,double start,double end)
+                {
+                    // Only an overflowing subtraction uses scaled endpoints. Such
+                    // endpoints have opposite signs, so this does not cancel a
+                    // small local difference. Finite differences stay local even
+                    // when another edge requires the larger fallback scale.
+                    double value=Finite(difference)?(scale==0?0:difference/scale):end/scale-start/scale;
+                    if(difference!=0&&value==0)lost=true;
+                    return value;
+                }
+                var edge=edges[index];var a=controls[index];var b=controls[index+1];
+                return new Point3(Component(edge.x,a.x,b.x),Component(edge.y,a.y,b.y),Component(edge.z,a.z,b.z));
             }
-            var n=controls.Select(Normalize).ToArray();
-            // A representable original control difference must not disappear merely
-            // through normalization. Refuse affected metrics instead of inventing a flat curve.
-            for(int i=1;i<4;i++)
-                lost|=(controls[i].x!=controls[i-1].x&&n[i].x==n[i-1].x)||
-                    (controls[i].y!=controls[i-1].y&&n[i].y==n[i-1].y)||
-                    (controls[i].z!=controls[i-1].z&&n[i].z==n[i-1].z);
-            var e0=Sub(n[1],n[0]);var e1=Sub(n[2],n[1]);var e2=Sub(n[3],n[2]);
+            var e0=NormalizeEdge(0);var e1=NormalizeEdge(1);var e2=NormalizeEdge(2);
             var rows=new CurveDiagnosticSample[SamplesPerCurve];
             for(int i=0;i<rows.Length;i++)
             {
