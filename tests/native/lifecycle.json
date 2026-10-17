@@ -12,7 +12,8 @@
   "requiredCapabilities": ["preloadOrder", "toolApplyFinish", "manualToolSwitch", "saveIdentity", "previewOwnership"],
   "operations": [
     { "method": "GET", "path": "/capabilities" },
-    { "method": "GET", "path": "/state" }
+    { "method": "GET", "path": "/state" },
+    { "method": "GET", "path": "/diagnostics/construction-lifecycle" }
   ],
   "requiredChecks": ["catalogReadOnly", "capabilityExposure", "buildIdentity", "worldIdentity", "preloadOrder", "toolApplyFinish", "manualToolSwitch", "saveIdentity", "previewOwnership"],
   "steps": [

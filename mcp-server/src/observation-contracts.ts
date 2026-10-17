@@ -1,16 +1,18 @@
+import {lifecycleTraceQuerySchema,parseLifecycleTracePage} from "./construction-lifecycle-trace.js";
 import {parseConstructionObservation} from "./construction-contracts.js";
 import {metricReadRequestSchema,parseMetricBatchObservation} from "./diagnostic-metric-contracts.js";
 import {transitRequestSchema,parseTransitObservation} from "./features/transit-contracts.js";
 import { z } from "zod";
 import { constructionRequestSchema, worldRefSchema } from "./construction-query.js";
 import type { ObservationBatchRequest, ObservationBatchResult } from "./contracts.js";
+const lifecycleTrace = z.object({id:z.string().min(1).max(128),name:z.literal("construction.lifecycleTrace"),args:lifecycleTraceQuerySchema}).strict();
 const context = z.object({ id: z.string().min(1).max(128), name: z.enum(["state", "city.overview", "city.services", "city.labor", "city.budget"]), args: z.object({}).strict() }).strict();
 const metrics=z.object({id:z.string().min(1).max(128),name:z.literal("metrics.read"),args:metricReadRequestSchema}).strict();
 const transit = z.object({id:z.string().min(1).max(128),name:z.literal("transit.selectedLine"),args:transitRequestSchema}).strict();
 const inventory = z.object({ id: z.string().min(1).max(128), name: z.literal("construction.inventory"), args: constructionRequestSchema }).strict();
 // The SDK needs the object facade to discover fields. The typed client still
 // consumes the refined schema below, including all nested and cross-field checks.
-export const observationRequestObjectSchema = z.object({ expectedWorld: worldRefSchema.optional(), items: z.array(z.discriminatedUnion("name", [context, inventory, transit, metrics])).min(1).max(64) }).strict();
+export const observationRequestObjectSchema = z.object({ expectedWorld: worldRefSchema.optional(), items: z.array(z.discriminatedUnion("name", [context, inventory, transit, metrics, lifecycleTrace])).min(1).max(64) }).strict();
 export const observationRequestSchema = observationRequestObjectSchema.superRefine((request, ctx) => {
     const ids = new Set<string>();
     for (const [i, item] of request.items.entries()) {
@@ -48,6 +50,12 @@ export function parseObservationResult(value: unknown, request: ObservationBatch
         const observation = item.observation;
         if (!observation)
             continue;
+        if(expected.name === "construction.lifecycleTrace") {
+            const page = parseLifecycleTracePage(observation.data, expected.args);
+            if (!same(page.readWorld, observation.world) || !page.readReady || observation.freshness !== "current" ||
+                !observation.warnings.includes("managedHistoryNotNativeObservation") || !observation.warnings.includes("nativeLifecycleNotRun"))
+                throw new Error("invalid lifecycle history read evidence");
+        }
         if(expected.name === "construction.inventory") parseConstructionObservation(observation,expected.args);
         if(expected.name === "metrics.read") parseMetricBatchObservation(observation,expected.args);
         if(expected.name === "transit.selectedLine") parseTransitObservation(observation,expected.args);

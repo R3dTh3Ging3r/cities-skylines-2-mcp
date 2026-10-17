@@ -63,6 +63,7 @@ namespace CS2MCP
                 return stream.ToArray();
             }
         }
+        internal static byte[] TraceEvent(LifecycleTraceEvent entry) => Encode(entry, LifecycleTraceJournal.MaxEventBytes);
         internal static byte[] Standalone(object observation) => Encode(observation, ObservationScheduler.MaxItemBytes);
         public byte[] Item(ObservationItemResult item) => Encode(item, ObservationScheduler.MaxItemBytes);
         public byte[] Batch(ObservationBatchResult batch) => Encode(batch, ObservationScheduler.MaxGroupBytes);

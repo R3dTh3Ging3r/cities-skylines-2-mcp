@@ -48,18 +48,6 @@ namespace CS2MCP
                 && EntityManager.IsComponentEnabled<Game.Prefabs.Locked>(prefabEntity);
         }
 
-        public BridgeResponse Handle(BridgeRequest request)
-        {
-            try { return HandleCore(request); }
-            catch (Exception error)
-            {
-                Mod.Log.Warn($"error handling {request.Method} {request.Path}: {error}");
-                // Handler execution may already have changed native state before throwing.
-                return BridgeResponse.Error(500, $"{error.GetType().Name}: {error.Message}",
-                    ErrorCodes.OutcomeUnknown, retryable: false, outcome: "unknown");
-            }
-        }
-
         private BridgeResponse HandleCore(BridgeRequest request)
         {
             switch (request.Path)

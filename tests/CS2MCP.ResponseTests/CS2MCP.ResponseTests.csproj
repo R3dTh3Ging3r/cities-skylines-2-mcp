@@ -43,7 +43,7 @@
     <Compile Include="../../CS2MCP.Bridge/BridgeRequest.cs" Link="BridgeRequest.cs" />
     <Compile Include="../../CS2MCP.Bridge/Core/Contracts.cs" Link="Core/Contracts.cs" />
     <Compile Include="../../CS2MCP.Bridge/Core/ErrorCodes.cs" Link="Core/ErrorCodes.cs" />
-  <Compile Include="../../CS2MCP.Bridge/Core/ConstructionRelationships.cs" /><Compile Include="../../CS2MCP.Bridge/NativeConstructionReader.cs" /><Compile Include="../../CS2MCP.Bridge/RequestHandlers.Construction.cs" /><Compile Include="../../tests/CS2MCP.ResponseTests/ConstructionNativeTestDependencies.cs" /><Compile Include="../../tests/CS2MCP.ResponseTests/ConstructionWireTests.cs" /><Compile Include="../../CS2MCP.Bridge/Core/NetworkGeometryDiagnostics.cs" /><Compile Include="../../CS2MCP.Bridge/Core/ConstructionRelationshipPage.cs" /></ItemGroup>
+  <Compile Include="../../CS2MCP.Bridge/Core/ConstructionRelationships.cs" /><Compile Include="../../CS2MCP.Bridge/NativeConstructionReader.cs" /><Compile Include="../../CS2MCP.Bridge/RequestHandlers.Construction.cs" /><Compile Include="../../tests/CS2MCP.ResponseTests/ConstructionNativeTestDependencies.cs" /><Compile Include="../../tests/CS2MCP.ResponseTests/ConstructionWireTests.cs" /><Compile Include="../../CS2MCP.Bridge/Core/NetworkGeometryDiagnostics.cs" /><Compile Include="../../CS2MCP.Bridge/Core/ConstructionRelationshipPage.cs" /><Compile Include="../../CS2MCP.Bridge/Core/ConstructionLifecycleTrace.cs" /></ItemGroup>
   <Target Name="ValidateSerializerPath" BeforeTargets="ResolveReferences">
     <Error Condition="!Exists('$(NewtonsoftPath)')" Text="Pass -p:NewtonsoftPath=path/to/existing/runtime/Newtonsoft.Json.dll" />
   </Target>

@@ -118,3 +118,23 @@ differences; no managed success certifies native binding, getter internals,
 performance or G1/unit/calendar/panel parity. Do not repeat unavailable PowerShell
 `evidence.test.mjs` or `native-runner.test.mjs` as portable tests in this cloud
 environment. Preserve their native validation gates as `notRun`.
+
+
+## Passive lifecycle tests
+
+Build `tests/CS2MCP.LifecycleTests/CS2MCP.LifecycleTests.csproj` with
+`-p:SkipDeploy=true -p:NewtonsoftPath=<existing Framework Newtonsoft.Json.dll>`.
+The canonical target is net472. This separate runner links the exact production
+lifecycle partials, rename, dispatch, handler, HTTP ingress/server and serializer;
+only native leaves/types are doubled. Its first argument optionally writes
+synthetic `lifecycle-{page,group,old-world,metadata}.json` wire fixtures.
+A temporary net8 project linking exactly the same sources permits portable
+execution; this runtime/serializer evidence is distinct from native binding.
+
+`npm run build` and `node --test test/construction-lifecycle-trace.test.mjs`
+(from `mcp-server`) run actual SDK discovery/calls, strict query/output and finite
+error-consumption tests. Set `LIFECYCLE_WIRE_DIR` to fresh runner output for a live
+producer-to-TS check, or omit it to use checked-in synthetic fixtures. The suite
+is registered in `npm test`; no unavailable PowerShell suite needs repeating.
+The fixed `tests/native/lifecycle.json` read registration and actual produced
+endpoint/probe metadata are checked without claiming the PS collector ran.

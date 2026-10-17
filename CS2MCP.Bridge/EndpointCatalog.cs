@@ -98,8 +98,8 @@ namespace CS2MCP
             nativeValidation = validation;
             operationProtocol = new OperationProtocolMetadata(world);
             capabilities = Array.AsReadOnly(EndpointCatalog.All.Select(endpoint => new Capability {
-                name = endpoint.capability, support = endpoint.path.StartsWith("/v2/metrics", StringComparison.Ordinal) || endpoint.path.StartsWith("/v2/transit/", StringComparison.Ordinal) || endpoint.path == "/v2/observations" || endpoint.path == "/v2/construction/inventory" ? "degraded" : EndpointCatalog.IsOperationEndpoint(endpoint) ? "unverified" : "supported",
-                reason = endpoint.path.StartsWith("/v2/metrics", StringComparison.Ordinal) ? "fixedTypedMetricsOnlyNativeNotRun" : endpoint.path.StartsWith("/v2/transit/", StringComparison.Ordinal) ? "selectedLineOnlyStructuralFactsNativeNotRun" : endpoint.path == "/v2/observations" ? "fixedBoundedReadersOnlyNativeNotRun" : endpoint.path == "/v2/construction/inventory" ? "explicitEntitiesAndDirectRelationshipsNativeNotRun" : EndpointCatalog.IsOperationEndpoint(endpoint) ? "completionAndLeaseGuardsUnavailable" : null
+                name = endpoint.capability, support = endpoint.path == "/diagnostics/construction-lifecycle" || endpoint.path.StartsWith("/v2/metrics", StringComparison.Ordinal) || endpoint.path.StartsWith("/v2/transit/", StringComparison.Ordinal) || endpoint.path == "/v2/observations" || endpoint.path == "/v2/construction/inventory" ? "degraded" : EndpointCatalog.IsOperationEndpoint(endpoint) ? "unverified" : "supported",
+                reason = endpoint.path == "/diagnostics/construction-lifecycle" ? "passiveManagedHistoryNativeLifecycleNotRun" : endpoint.path.StartsWith("/v2/metrics", StringComparison.Ordinal) ? "fixedTypedMetricsOnlyNativeNotRun" : endpoint.path.StartsWith("/v2/transit/", StringComparison.Ordinal) ? "selectedLineOnlyStructuralFactsNativeNotRun" : endpoint.path == "/v2/observations" ? "fixedBoundedReadersOnlyNativeNotRun" : endpoint.path == "/v2/construction/inventory" ? "explicitEntitiesAndDirectRelationshipsNativeNotRun" : EndpointCatalog.IsOperationEndpoint(endpoint) ? "completionAndLeaseGuardsUnavailable" : null
             }).ToArray());
             nativeSupport = Array.AsReadOnly(EndpointCatalog.All
                 .Where(endpoint => endpoint.path != "/ping" && endpoint.path != "/capabilities")
@@ -124,6 +124,7 @@ namespace CS2MCP
     {
         public static IReadOnlyList<EndpointDescriptor> All { get; } = Array.AsReadOnly(new[] {
             new EndpointDescriptor("/ping", "read", "cs2_ping", "off-thread-liveness"),
+            new EndpointDescriptor("/diagnostics/construction-lifecycle", "read", "constructionLifecycleTrace", "managed-passive-history"),
             new EndpointDescriptor("/state", "read", "cs2_game_state", "sync-read"),
             new EndpointDescriptor("/city/overview", "read", "cs2_city_overview", "sync-read"),
             new EndpointDescriptor("/city/demand", "read", "cs2_demand", "sync-read"),

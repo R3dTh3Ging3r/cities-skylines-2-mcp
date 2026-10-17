@@ -44,7 +44,7 @@ test('actual O7 listTools exposes the strict bounded fixed catalog and full nest
             for (const key of name.enum ?? [name.const]) byName.set(key, resolve(branch.properties.args));
         }
         assert.deepEqual([...byName.keys()].sort(), ['state', 'city.overview', 'city.services', 'city.labor',
-            'city.budget', 'construction.inventory', 'transit.selectedLine', 'metrics.read'].sort());
+            'city.budget', 'construction.inventory', 'transit.selectedLine', 'metrics.read', 'construction.lifecycleTrace'].sort());
         for (const name of ['state', 'city.overview', 'city.services', 'city.labor', 'city.budget'])
             exact(byName.get(name), []);
         const inventory = byName.get('construction.inventory');

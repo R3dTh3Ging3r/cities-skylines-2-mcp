@@ -27,6 +27,7 @@ namespace CS2MCP
         public CommandRequest Command { get; internal set; }
         public string OperationId { get; internal set; }
         public ValidatedObservationBatch Observations { get; internal set; }
+        internal LifecycleTraceContext LifecycleContext { get; set; }
         internal Func<bool> ConnectionClosed;
         private readonly object m_TransportGate = new object();
         private Action m_Detach;
@@ -82,12 +83,14 @@ namespace CS2MCP
 
         public void Complete(BridgeResponse response)
         {
+            bool accepted;
             lock (m_TransportGate)
             {
                 if (Observations != null && m_Detached)
                     return;
-                m_Completion.TrySetResult(response);
+                accepted = m_Completion.TrySetResult(response);
             }
+            LifecycleContext?.Reply(response?.Status, accepted);
         }
 
         /// <summary>Returns null on timeout.</summary>

@@ -12,3 +12,7 @@ Thumbs.db
 .codex/
 .local/
 .superpowers/
+
+# Linked-source passive lifecycle test runner
+tests/CS2MCP.LifecycleTests/bin/
+tests/CS2MCP.LifecycleTests/obj/
