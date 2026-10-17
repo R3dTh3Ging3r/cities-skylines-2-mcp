@@ -15,14 +15,19 @@ const reference = z.object({
     world: worldRefSchema.nullable(), index: z.number().int().min(-2147483648).max(2147483647),
     version: z.number().int().min(-2147483648).max(2147483647),
 }).strict();
+const savePhases = [
+    "saveCallAttempt", "saveCallReturned", "saveCallThrew", "saveTaskTrue", "saveTaskFalse",
+    "saveTaskFaulted", "saveTaskCanceled", "saveObserverSkipped", "saveObserverUnavailable",
+] as const;
+const savePhaseSet = new Set<string>(savePhases);
 const event = z.object({
     route: z.enum(["unknown", "cityTaxesSet", "cityPoliciesSet", "cityServiceBudgetsSet", "buildPlace", "buildRoad", "buildUpgrade", "buildJunction", "buildZone", "buildDemolish", "cityLoanSet", "cityFeesSet", "cameraSet", "simControl", "simRun", "gameSave", "buildDistrict", "districtPoliciesSet", "transitStopsPlace", "transitLinesCreate", "transitLinesDelete", "cityTilesBuy", "buildRoadReplace", "buildRoadConnect", "buildPlaceShoreline", "buildPlaceRoadside", "transitLinesPoliciesSet", "transitLinesVehiclesSet"]),
     sequence: integer.min(1), traceId: z.string().regex(/^legacy:[a-f0-9]{32}$/), identityKind: z.literal("legacyDiagnosticOnly"),
     ingressWorld: worldRefSchema.nullable(), observedWorld: worldRefSchema, observedReady: z.boolean(),
     frame: integer.nullable(), frameReason: z.literal("notSampled").nullable(), recordedAtUtc: z.string().datetime(),
-    adapter: z.enum(["envelope", "generic", "road", "transit", "rename"]),
-    kind: z.enum(["direct", "placement", "net", "demolish", "upgrade", "area", "nodeUpgrade", "roadBuild", "roadReplace", "stop", "line"]),
-    phase: z.enum(["dispatch", "queued", "busy", "definitions", "validation", "validationAccepted", "validationRejected", "applyObserved", "finishObserved", "replyAttempt", "deactivateObserved", "restorationAttempt", "stopObserved", "displacedObserved", "exceptionObserved", "renameQueued", "renameDequeued", "setterAttempt", "responseBuilderAttempt", "guardedWorkRefused", "destroyedObserved"]),
+    adapter: z.enum(["envelope", "generic", "road", "transit", "rename", "save"]),
+    kind: z.enum(["direct", "placement", "net", "demolish", "upgrade", "area", "nodeUpgrade", "roadBuild", "roadReplace", "stop", "line", "save"]),
+    phase: z.enum(["dispatch", "queued", "busy", "definitions", "validation", "validationAccepted", "validationRejected", "applyObserved", "finishObserved", "replyAttempt", "deactivateObserved", "restorationAttempt", "stopObserved", "displacedObserved", "exceptionObserved", "renameQueued", "renameDequeued", "setterAttempt", "responseBuilderAttempt", "guardedWorkRefused", "destroyedObserved", ...savePhases]),
     status: z.number().int().min(100).max(599).nullable(), ownsActiveTool: z.boolean().nullable(), completionAccepted: z.boolean().nullable(),
     references: z.array(reference).max(4), omittedReferences: z.number().int().min(0).max(2147483647),
     effects: z.literal("unknown"), cleanup: z.literal("unverified"), authority: z.literal("unverified"),
@@ -32,6 +37,9 @@ const pageSchema = z.object({
     bootId: z.string().min(1).max(128), readWorld: worldRefSchema, readReady: z.boolean(), readAtUtc: z.string().datetime(),
     highWater: integer, retainedFloor: integer.min(1).nullable(), retainedCount: z.number().int().min(0).max(256), retainedBytes: integer.max(2097152),
     evictedEvents: integer, lostObservations: integer, saturated: z.boolean(), tailOmitted: integer,
+    saveTaskObservers: z.object({
+        capacity: z.literal(32), pending: integer.max(32), skippedAtCapacity: integer, attachmentFailures: integer,
+    }).strict(),
     evictedFrom: integer.min(1).nullable(), evictedThrough: integer.min(1).nullable(), nextSequence: integer.nullable(), hasMore: z.boolean(),
     limit: z.number().int().min(1).max(32), events: z.array(event).max(32),
 }).strict();
@@ -63,6 +71,14 @@ export function parseLifecycleTracePage(value: unknown, input: LifecycleTraceQue
             (entry.phase === "replyAttempt" ? entry.completionAccepted === null || entry.frame !== null : entry.completionAccepted !== null) ||
             entry.references.some(ref => !sameWorld(ref.world, entry.ingressWorld)))
             throw new Error("invalid lifecycle event evidence");
+        // Save-specific phases contain managed task evidence only. Native result/ownership/frames
+        // cannot be inferred from the diagnostic task outcome or the outer O7 sampling frame.
+        const savePhase = savePhaseSet.has(entry.phase);
+        if ((savePhase || entry.adapter === "save" || entry.kind === "save") &&
+            (!savePhase || entry.adapter !== "save" || entry.kind !== "save" || entry.route !== "gameSave" ||
+                entry.frame !== null || entry.status !== null || entry.ownsActiveTool !== null ||
+                entry.references.length !== 0 || entry.omittedReferences !== 0))
+            throw new Error("invalid managed save task evidence");
         previous = entry.sequence;
     }
     const after = query.afterSequence;

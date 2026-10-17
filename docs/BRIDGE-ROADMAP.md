@@ -8,6 +8,10 @@ G1–G4 gates remain open. Computed grade/curvature inspection of existing netwo
 is now independently accepted as a bounded read-only source slice; see its
 [acceptance and limitations](handoff/NETWORK-GEOMETRY-2026-10-17.md).
 The earlier curve-readback native smoke does not validate the newer source stack.
+The current source also passively observes the existing save call's Task<bool>
+through bounded lifecycle history. It preserves immediate legacy save behavior;
+task outcome is not native saveSuccess, durable checkpoint or full O4 completion.
+See [the passive task contract](bridge-api.md#passive-save-task-outcomes).
 
 October 13 execution status: see [the authoritative handoff](HANDOFF.md). F1–F6 are accepted offline; O1 awaits independent review; other tasks remain pending and native gates remain notRun. The dated proposal below is retained as planning history.
 

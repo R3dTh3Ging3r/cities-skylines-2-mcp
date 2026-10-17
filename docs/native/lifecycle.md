@@ -169,7 +169,9 @@ display name or identify the destination from transient metadata/GUIDs. Native
 event/task order under failure, durable package readback, contained metadata/data
 identities and concurrent-save attribution remain unproved. Neither Save
 signature takes a cancellation token; save cancellation is unsupported until
-demonstrated. Current legacy saving=true acknowledges start only.
+demonstrated. Current legacy `saving:true` is still an immediate call acknowledgment, not task
+or artifact verification. The returned task is now passively observed as described
+below; retained binding evidence does not prove installed-runtime compatibility.
 
 ### Preview ownership
 
@@ -258,7 +260,8 @@ PowerShell/native collection was not executed in the portable implementation tes
 | Road: connect/replace | Queue/busy, definitions, validation/result, Apply, Finish/readback reply, existing displacement/reset and restoration branches, exceptions | Native definitions/readback leaves are unchanged and not independently validated. |
 | Transit: stop/line | Queue/busy, definitions, validation/result, Apply, Finish, existing captured-world fence, deactivation/restoration and displacement branches, exceptions | Repeated path wait/regeneration frames do not add trace events. No committed line/stop or tool ownership proof. |
 | Deferred line rename | Existing queue/dequeue, guarded setter and response-builder attempts, refused work, destroy and reply attempts | SetCustomName acknowledgment is not playback, full cleanup or delivery proof. Old callbacks keep old identity and do not sample replacement-world tools/frames. |
-| Direct writers: zoning, taxes/policies/budgets/loans/fees, camera, simulation, save, tile purchase, line deletion/policies/vehicles | Dispatch/envelope error and managed reply attempt only; finite catalog-derived route enum identifies the route | No invented adapter phases, save durability, completion/cancellation/rollback or takeover authority. |
+| Save | Original call-expression attempt/return/throw and managed task true/false/fault/cancel; bounded observer skip/unavailable | Task true is independent of native saveSuccess. No save event, destination/durability, reload, cancellation or preview ownership proof. |
+| Other direct writers: zoning, taxes/policies/budgets/loans/fees, camera, simulation, tile purchase, line deletion/policies/vehicles | Dispatch/envelope error and managed reply attempt only; finite catalog-derived route enum identifies the route | No invented adapter phases, completion/cancellation/rollback or takeover authority. |
 
 The new linked-source lifecycle runner executes the real adapter stage methods,
 ordinary dispatch and diagnostic handler with native definition/readback leaves
@@ -273,3 +276,38 @@ and retains a diagnostic copy only after that trace's Apply assignment. Stale
 native result/applied fields left by the existing interruption path are preserved
 as native behavior and never selected for the next trace, including after a load.
 Deferred rename retains its original request identity and held current result.
+
+
+### Passive save-task capture
+
+`RequestHandlers.Save.cs` contains the original SaveGame control flow with
+best-effort observation around the retained Texture-overload call expression.
+Preparation/native argument evaluation, preview use and immediate legacy JSON
+remain unchanged. `BridgeSaveTaskObservation` attaches one static continuation
+using `CancellationToken.None`, `TaskContinuationOptions.None` and
+`TaskScheduler.Default`. It suppresses ambient ExecutionContext only during
+attachment. State retains only the immutable original trace context, original
+managed journal and an exactly-once reservation guard. Terminal callbacks read
+status (and bool Result only after RanToCompletion), managed world/readiness and
+UTC; they never inspect native objects, ECS, UI, frames, exception details or
+save destinations. There is no task registry, worker, timer or wait.
+
+The journal allows32 outstanding observations, including queued callbacks, and
+reports capacity/pending/skips/attachment failures through the existing GET/O7
+read. Never-completing tasks occupy their slots indefinitely; loading does not
+recycle them. Capacity never denies or serializes the real save. A callback
+releases its original journal's reservation despite recording failure. Null or
+failed attachment reports a lost terminal capture while preserving the legacy
+response. Event time is observation time, with no task/reply ordering guarantee.
+
+The linked-source runner executes actual SaveGame against native-leaf doubles,
+including argument getter failures, immediate/delayed terminal outcomes, bounded
+never-completing tasks, concurrency, reload and recorder failures. A narrow
+internal synchronous registration argument injects attachment failure in tests;
+production always uses the fixed BCL attachment. This is injected fault evidence,
+not a claim that native Save or the BCL produced that fault. Synthetic outputs
+are consumed through the actual serializer, strict TS parser and stdio SDK.
+Canonical net472 compilation and portable net8 execution remain distinct from
+installed-reference binding and native runtime validation. No actual save or
+PowerShell/native fixture was run. Full O4 remains blocked on event attribution,
+destination/package durability and reload evidence, and preview ownership.

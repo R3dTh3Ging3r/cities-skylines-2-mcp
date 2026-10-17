@@ -835,6 +835,7 @@ internal static class LifecycleProgram
                 server.Stop();
             }
         });
+        SaveTaskObservationTests.Run(Check, args.Length > 0 ? args[0] : null);
         Console.WriteLine($"Lifecycle: {passed + failed} checks, {passed} passed, {failed} failed");
         return failed == 0 ? 0 : 1;
     }

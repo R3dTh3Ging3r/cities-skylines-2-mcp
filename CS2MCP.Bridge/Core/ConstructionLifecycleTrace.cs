@@ -109,7 +109,8 @@ namespace CS2MCP.Core
         generic,
         road,
         transit,
-        rename
+        rename,
+        save
     }
 
     public enum TraceKind
@@ -124,7 +125,8 @@ namespace CS2MCP.Core
         roadBuild,
         roadReplace,
         stop,
-        line
+        line,
+        save
     }
 
     public enum TracePhase
@@ -149,7 +151,16 @@ namespace CS2MCP.Core
         setterAttempt,
         responseBuilderAttempt,
         guardedWorkRefused,
-        destroyedObserved
+        destroyedObserved,
+        saveCallAttempt,
+        saveCallReturned,
+        saveCallThrew,
+        saveTaskTrue,
+        saveTaskFalse,
+        saveTaskFaulted,
+        saveTaskCanceled,
+        saveObserverSkipped,
+        saveObserverUnavailable
     }
 
     public enum TraceRole
@@ -320,6 +331,20 @@ namespace CS2MCP.Core
         }
     }
 
+    public sealed class SaveTaskObserverSnapshot
+    {
+        public int capacity => LifecycleTraceJournal.SaveTaskObserverCapacity;
+        public int pending { get; }
+        public long skippedAtCapacity { get; }
+        public long attachmentFailures { get; }
+        internal SaveTaskObserverSnapshot(int pending, long skipped, long failures)
+        {
+            this.pending = pending;
+            skippedAtCapacity = skipped;
+            attachmentFailures = failures;
+        }
+    }
+
     public sealed class LifecycleTracePage
     {
         public string provenance => "managedPassiveHistory";
@@ -336,6 +361,7 @@ namespace CS2MCP.Core
         public long evictedEvents { get; internal set; }
         public long lostObservations { get; internal set; }
         public bool saturated { get; internal set; }
+        public SaveTaskObserverSnapshot saveTaskObservers { get; internal set; }
         public long tailOmitted { get; internal set; }
         public long? evictedFrom { get; internal set; }
         public long? evictedThrough { get; internal set; }
@@ -350,11 +376,14 @@ namespace CS2MCP.Core
     {
         public const int Capacity = 256, MaxEventBytes = 8192, MaxJournalBytes = 2097152;
         public const long MaxSafe = 9007199254740991;
+        public const int SaveTaskObserverCapacity = 32;
         private readonly object gate = new object();
         private readonly Queue<Tuple<LifecycleTraceEvent, int>> retained = new Queue<Tuple<LifecycleTraceEvent, int>>();
         private readonly Func<LifecycleTraceEvent, int> measure;
         private readonly string boot;
         private long sequence, bytes, evicted, lost;
+        private int savePending;
+        private long saveSkipped, saveAttachmentFailures;
         private bool saturated;
         public LifecycleTraceJournal(string bootId, Func<LifecycleTraceEvent, int> measure)
         {
@@ -374,6 +403,40 @@ namespace CS2MCP.Core
         {
             lock (gate)
                 Increment(ref lost);
+        }
+
+        // Counters describe diagnostic reservations, never admission or serialization of real saves.
+        internal bool TryReserveSaveTaskObserver()
+        {
+            lock (gate)
+            {
+                if (savePending == SaveTaskObserverCapacity)
+                {
+                    Increment(ref saveSkipped);
+                    Increment(ref lost);
+                    return false;
+                }
+                savePending++;
+                return true;
+            }
+        }
+
+        internal void ReleaseSaveTaskObserver()
+        {
+            lock (gate)
+            {
+                if (savePending > 0) savePending--;
+                else Increment(ref lost);
+            }
+        }
+
+        internal void SaveTaskAttachmentFailed()
+        {
+            lock (gate)
+            {
+                Increment(ref saveAttachmentFailures);
+                Increment(ref lost);
+            }
         }
 
         public void Observe(LifecycleTraceContext context, TraceAdapter adapter, TraceKind kind, TracePhase phase,
@@ -454,6 +517,7 @@ namespace CS2MCP.Core
                     evictedEvents = evicted,
                     lostObservations = lost,
                     saturated = saturated,
+                    saveTaskObservers = new SaveTaskObserverSnapshot(savePending, saveSkipped, saveAttachmentFailures),
                     tailOmitted = query.AfterSequence.HasValue ? 0 : Math.Max(0, all.Length - rows.Length),
                     evictedFrom = gap ? query.AfterSequence.Value + 1 : (long?)null,
                     evictedThrough = gap ? floor - 1 : (long?)null,

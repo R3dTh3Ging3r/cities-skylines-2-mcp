@@ -141,36 +141,6 @@ namespace CS2MCP
             });
         }
 
-        private BridgeResponse SaveGame(BridgeRequest request)
-        {
-            if (!TryGetCity(out _, out BridgeResponse error))
-            {
-                return error;
-            }
-            string name = request.Query.TryGetValue("name", out string rawName) && !string.IsNullOrEmpty(rawName)
-                ? rawName
-                : $"CS2MCP {DateTime.Now:yyyy-MM-dd HH-mm-ss}";
-
-            MenuUISystem menu = World.GetExistingSystemManaged<MenuUISystem>();
-            if (menu == null)
-            {
-                return BridgeResponse.Error(503, "menu system unavailable");
-            }
-            var saveInfo = menu.GetSaveInfo(autoSave: false);
-            // The save pipeline requires a preview texture (null crashes it) —
-            // capture one exactly like AutoSaveSystem does.
-            UnityEngine.RenderTexture preview = Game.UI.ScreenCaptureHelper.CreateRenderTarget("PreviewSaveGame-CS2MCP", 680, 383);
-            Game.UI.ScreenCaptureHelper.CaptureScreenshot(UnityEngine.Camera.main, preview, new MenuHelpers.SaveGamePreviewSettings());
-            _ = GameManager.instance.Save(name, saveInfo, Colossal.IO.AssetDatabase.AssetDatabase.user, preview);
-
-            return BridgeResponse.Json(new
-            {
-                saving = true,
-                name,
-                note = "save runs asynchronously; it appears in the game's load menu when finished",
-            });
-        }
-
         private BridgeResponse GetTilesInfo()
         {
             if (!TryGetCity(out _, out BridgeResponse error))

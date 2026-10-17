@@ -125,9 +125,11 @@ environment. Preserve their native validation gates as `notRun`.
 Build `tests/CS2MCP.LifecycleTests/CS2MCP.LifecycleTests.csproj` with
 `-p:SkipDeploy=true -p:NewtonsoftPath=<existing Framework Newtonsoft.Json.dll>`.
 The canonical target is net472. This separate runner links the exact production
-lifecycle partials, rename, dispatch, handler, HTTP ingress/server and serializer;
+lifecycle partials, SaveGame, the bounded task observer, rename, dispatch, handler,
+HTTP ingress/server and serializer;
 only native leaves/types are doubled. Its first argument optionally writes
-synthetic `lifecycle-{page,group,old-world,metadata}.json` wire fixtures.
+synthetic `lifecycle-{page,group,old-world,metadata}.json`, reused-transit and
+`lifecycle-save-{true,false,faulted,canceled,capacity,old-world}.json` wire fixtures.
 A temporary net8 project linking exactly the same sources permits portable
 execution; this runtime/serializer evidence is distinct from native binding.
 
@@ -138,3 +140,18 @@ producer-to-TS check, or omit it to use checked-in synthetic fixtures. The suite
 is registered in `npm test`; no unavailable PowerShell suite needs repeating.
 The fixed `tests/native/lifecycle.json` read registration and actual produced
 endpoint/probe metadata are checked without claiming the PS collector ran.
+
+
+The save checks preserve actual native-leaf call order, arguments, preview
+identity, default naming and legacy response bytes while controlled tasks cover
+immediate/delayed true/false/fault/cancel. They cover synchronous argument/call
+throws, null tasks,32 never-completing reservations, capacity skips without
+refusing saves, concurrent completion, recorder drop/throw, original-journal
+release through reload/replacement, ambient-free default-scheduler callbacks and
+saturating counters. Attachment failure is explicitly injected through a
+synchronous internal registration argument; the actual SaveGame path always
+uses fixed static BCL registration. This test boundary is never retained in a
+continuation. Checked-in wire files are synthetic production outputs, not city
+telemetry; fresh `LIFECYCLE_WIRE_DIR` runs distinguish this-run producer evidence.
+No test equates task true with native saveSuccess, durable artifact or O4
+completion, and no installed game save/event/preview behavior is proved.

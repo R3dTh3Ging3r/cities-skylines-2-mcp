@@ -659,3 +659,40 @@ event retains `effects:unknown`, `cleanup:unverified`, `authority:unverified`.
 O7's outer current frame/world span describes sampling this managed history,
 not the age or native correctness of its events; warnings are
 `managedHistoryNotNativeObservation` and `nativeLifecycleNotRun`.
+
+
+### Passive save task outcomes
+
+The existing legacy `/game/save` keeps its immediate `saving:true` response,
+name/default naming, native call order and preview ownership. Its returned
+`Task<bool>` is now passively observed in the same history, with adapter/kind
+`save`, finite route `gameSave`, and phases `saveCallAttempt`, `saveCallReturned`,
+`saveCallThrew`, `saveTaskTrue`, `saveTaskFalse`, `saveTaskFaulted`,
+`saveTaskCanceled`, `saveObserverSkipped`, `saveObserverUnavailable`.
+Attempt/throw describes the complete call expression, including instance and
+argument getters; it does not establish entry into native Save when a getter
+throws. Early city/menu/preview failures precede these save-specific phases.
+No name, path, metadata, exception body, preview or native reference is retained.
+
+Every page includes `saveTaskObservers:{capacity:32,pending,skippedAtCapacity,
+attachmentFailures}`. These are managed diagnostic reservations and saturating
+safe-integer counters, sampled atomically with journal metadata. A reservation
+covers registration and queued/running terminal callbacks until release. A
+never-completing task keeps its reservation, including across loading/reload.
+At capacity, the real save still runs; observation is skipped without queuing,
+refusal, retry, cancellation or waiting. Null tasks and registration failures
+report unavailable observation. Each missed terminal capture adds one
+`lostObservations`; failed event encoding can add further losses. Loss does not
+allocate a sequence number. Event eviction and pending observers are independent.
+
+Callbacks use the default managed task scheduler, suppress ambient execution
+context at registration, and sample only managed world/readiness and UTC.
+All save-specific events have null frame/status/ownership, no references, and
+`frameReason:notSampled`. They retain the original identity/ingress world and
+journal across world changes. UTC is callback observation time; task completion,
+reply attempts and task observations may occur in a different order. Pending
+zero establishes no save, event, artifact or durable completion guarantee.
+`saveTaskTrue` is distinct from native `saveSuccess` and verified checkpoint
+completion. False/fault/cancellation do not prove absence of partial effects.
+O4 world-scoped save admission, event attribution, destination/package readback,
+reload verification and preview ownership remain pending native evidence.

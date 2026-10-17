@@ -59,5 +59,9 @@
     <Compile Include="../../CS2MCP.Bridge/ConstructionLifecycleTrace.cs" />
     <Compile Include="../../CS2MCP.Bridge/RequestHandlers.LifecycleTrace.cs" />
     <Compile Include="../../CS2MCP.Bridge/BridgeSystem.Dispatch.cs" />
+    <Compile Include="../../CS2MCP.Bridge/RequestHandlers.Save.cs" />
+    <Compile Include="NativeSaveDoubles.cs" />
+    <Compile Include="SaveTaskObservationTests.cs" />
+    <Compile Include="../../CS2MCP.Bridge/BridgeSaveTaskObservation.cs" />
   </ItemGroup>
 </Project>

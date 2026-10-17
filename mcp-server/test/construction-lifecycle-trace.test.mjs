@@ -210,3 +210,89 @@ test('actual reused transit producer histories reach SDK without stale result at
         await once(http, 'close');
     }
 });
+
+// All fixtures below originate from the real SaveGame partial with native leaves doubled.
+test('actual SDK consumes passive true false fault cancel capacity and old-world save task evidence', async () => {
+    const names = ['true', 'false', 'faulted', 'canceled', 'capacity', 'old-world'];
+    const fixtures = names.map(name => JSON.parse(readFileSync(`${dir}/lifecycle-save-${name}.json`, 'utf8')));
+    let calls = 0;
+    const http = createServer(async (req, res) => {
+        let body = '';
+        for await (const chunk of req) body += chunk;
+        assert.deepEqual(JSON.parse(body).items, [{ id: 'save', name: item.name, args: { limit: 32 } }]);
+        res.end(JSON.stringify(fixtures[calls++]));
+    });
+    http.listen(0, '127.0.0.1');
+    await once(http, 'listening');
+    let mcp;
+    try {
+        mcp = await startOfflineMcp(`http://127.0.0.1:${http.address().port}`);
+        for (const [index, wire] of fixtures.entries()) {
+            const result = await mcp.client.callTool({ name: 'cs2_observe_batch', arguments: {
+                items: [{ id: 'save', name: item.name, args: { limit: 32 } }],
+            } });
+            assert.equal(result.isError, undefined);
+            assert.deepEqual(JSON.parse(result.content[0].text), wire);
+            const history = wire.results[0].observation.data;
+            const saves = history.events.filter(e => e.adapter === 'save');
+            assert.ok(saves.length > 0);
+            assert.ok(saves.every(e => e.kind === 'save' && e.route === 'gameSave' && e.frame === null &&
+                e.frameReason === 'notSampled' && e.status === null && e.ownsActiveTool === null &&
+                e.completionAccepted === null && e.references.length === 0 && e.omittedReferences === 0 &&
+                e.effects === 'unknown' && e.cleanup === 'unverified' && e.authority === 'unverified'));
+            if (index < 4) {
+                const suffix = names[index][0].toUpperCase() + names[index].slice(1);
+                assert.equal(saves.filter(e => e.phase === `saveTask${suffix}`).length, 1);
+                assert.deepEqual(history.saveTaskObservers, { capacity: 32, pending: 0, skippedAtCapacity: 0, attachmentFailures: 0 });
+            } else if (names[index] === 'capacity') {
+                assert.deepEqual(history.saveTaskObservers, { capacity: 32, pending: 32, skippedAtCapacity: 1, attachmentFailures: 0 });
+                assert.equal(history.lostObservations, 1);
+                assert.equal(saves.at(-1).phase, 'saveObserverSkipped');
+            } else {
+                const last = saves.at(-1);
+                assert.equal(last.phase, 'saveTaskTrue');
+                assert.notDeepEqual(last.ingressWorld, last.observedWorld);
+                assert.equal(last.observedReady, false);
+                assert.notDeepEqual(last.ingressWorld, wire.world);
+            }
+            assert.ok(!JSON.stringify(result).includes('private-'));
+            assert.ok(Buffer.byteLength(JSON.stringify(result)) <= 262144);
+        }
+        assert.equal(calls, names.length, 'one HTTP call per explicit read; no polling or retries');
+    } finally {
+        await mcp?.close();
+        http.closeAllConnections();
+        http.close();
+        await once(http, 'close');
+    }
+});
+
+test('strict save wire rejects unsupported task success claims unbounded counters and native evidence', async () => {
+    const { parseLifecycleTracePage } = await import('../dist/construction-lifecycle-trace.js');
+    const source = JSON.parse(readFileSync(`${dir}/lifecycle-save-true.json`, 'utf8')).results[0].observation.data;
+    assert.deepEqual(parseLifecycleTracePage(source, { limit: 32 }), source);
+    const terminal = p => p.events.find(e => e.phase === 'saveTaskTrue');
+    for (const mutate of [
+        p => delete p.saveTaskObservers,
+        p => p.saveTaskObservers.capacity = 33,
+        p => p.saveTaskObservers.pending = 33,
+        p => p.saveTaskObservers.pending = -1,
+        p => p.saveTaskObservers.attachmentFailures = Number.MAX_SAFE_INTEGER + 1,
+        p => p.saveTaskObservers.skippedAtCapacity = 1.5,
+        p => p.saveTaskObservers.nativeSuccess = true,
+        p => terminal(p).phase = 'saveSuccess',
+        p => terminal(p).adapter = 'envelope',
+        p => terminal(p).kind = 'direct',
+        p => terminal(p).route = 'cameraSet',
+        p => { terminal(p).frame = 10; terminal(p).frameReason = null; },
+        p => terminal(p).ownsActiveTool = true,
+        p => terminal(p).status = 200,
+        p => terminal(p).omittedReferences = 1,
+        p => terminal(p).references.push({ role: 'target', world: terminal(p).ingressWorld, index: 1, version: 1 }),
+        p => terminal(p).durable = true,
+    ]) {
+        const bad = structuredClone(source);
+        mutate(bad);
+        assert.throws(() => parseLifecycleTracePage(bad, { limit: 32 }));
+    }
+});
