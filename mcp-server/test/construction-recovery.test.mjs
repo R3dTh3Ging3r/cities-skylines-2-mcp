@@ -8,6 +8,7 @@ import {parseConstructionObservation} from '../dist/construction-contracts.js';
 import {parseObservationResult} from '../dist/observation-contracts.js';
 import {createBridgeClient} from '../dist/bridge-client.js';
 import {constructionResult} from '../dist/construction.js';
+import {readMessages} from '../dist/construction-read-diagnostics.js';
 const wire=JSON.parse(readFileSync(process.env.RECOVERY_WIRE_DIR?`${process.env.RECOVERY_WIRE_DIR}/construction-recovery.json`:new URL('./fixtures/construction-recovery-wire.json',import.meta.url),'utf8'));
 const world={bootId:'boot',epoch:1};
 const input={world,entities:[{world,index:1,version:1}]};
@@ -152,5 +153,76 @@ test('bounded HTTP and escaped MCP pressure have independent finite causes and n
         const wrapped=constructionResult({hostile:'\u0001'.repeat(50000)});assert.equal(wrapped.isError,true);
         assert.equal(JSON.parse(wrapped.content[0].text).error.reason,'mcpResultByteLimit');
         mode='good';const client=createBridgeClient({baseUrl:`http://127.0.0.1:${server.address().port}`});assert.deepEqual(await client.constructionInventory(wire.request),wire.direct);
+    }finally{await mcp?.close();server.closeAllConnections();server.close();await once(server,'close');}
+});
+
+test('actual O7 SDK bounds outer inventory and mixed-group refusals without leaking arbitrary diagnostics',async()=>{
+    const privateText='private-bridge-body-'.repeat(5000);
+    const exact={error:privateText,errorData:{code:'RESULT_TOO_LARGE',message:privateText,retryable:false,outcome:'notApplied'}};
+    assert.equal(Buffer.byteLength(JSON.stringify(exact)),200106);
+    const bodies=[
+        [exact,'RESULT_TOO_LARGE','unknownLimit'],
+        [{error:privateText},'PROTOCOL_ERROR','unknownCause'],
+        [{errorData:{code:privateText,message:privateText,nativeErrors:[privateText],operationId:privateText,retryable:true,outcome:'unknown'}},'PROTOCOL_ERROR','unknownCause'],
+        [{error:privateText,errorData:{code:'RESULT_TOO_LARGE',message:privateText,nativeErrors:[privateText],operationId:privateText,retryable:false,outcome:'notApplied'}},'RESULT_TOO_LARGE','unknownLimit'],
+        [{errorData:{code:'RESULT_TOO_LARGE',message:'direct relationships exceed128 slots; select fewer roots or omit expansion',retryable:false,outcome:'notApplied'}},'RESULT_TOO_LARGE','relationshipSlotLimit'],
+        [{errorData:{code:'RESULT_TOO_LARGE',message:'inventory result exceeds256KiB; select fewer roots or omit expansion',retryable:false,outcome:'notApplied'}},'RESULT_TOO_LARGE','inventoryByteLimit'],
+        [{errorData:{code:'RESULT_TOO_LARGE',message:readMessages.observationItemByteLimit,nativeErrors:[privateText],operationId:privateText,retryable:false,outcome:'notApplied'}},'RESULT_TOO_LARGE','observationItemByteLimit'],
+    ];
+    let body,calls=0;
+    const server=createServer((_req,res)=>{calls++;res.statusCode=413;res.end(JSON.stringify(body));});
+    server.listen(0,'127.0.0.1');await once(server,'listening');let mcp;
+    try{
+        mcp=await startOfflineMcp(`http://127.0.0.1:${server.address().port}`);
+        const exactPage={...input,relationshipPage:{kind:'subObject',offset:0,limit:1}};
+        for(const args of [exactPage,input,wire.request])for(const mixed of [false,true])for(const [payload,code,reason] of bodies){
+            body=payload;const before=calls;
+            const items=[{id:'p',name:'construction.inventory',args},...(mixed?[{id:'state',name:'state',args:{}}]:[])];
+            const result=await mcp.client.callTool({name:'cs2_observe_batch',arguments:{items}});
+            const encoded=JSON.stringify(result);
+            assert.equal(result.isError,true);assert.ok(Buffer.byteLength(encoded)<=262144);
+            assert.equal(encoded.includes('private-bridge-body-'),false);assert.equal(encoded.includes('nativeErrors'),false);assert.equal(encoded.includes('operationId'),false);
+            const failure=JSON.parse(result.content[0].text).error;
+            assert.equal(failure.code,code);assert.equal(failure.reason,reason);assert.equal(calls,before+1,'outer refusal retried');
+        }
+        body={errorData:{code:'CONTROLLED_CONTEXT_ERROR',message:'controlled context diagnostic',nativeErrors:['controlled'],operationId:'context-id',retryable:false,outcome:'notApplied'}};
+        const context=await mcp.client.callTool({name:'cs2_observe_batch',arguments:{items:[{id:'state',name:'state',args:{}}]}});
+        assert.equal(context.structuredContent.errorData.code,'CONTROLLED_CONTEXT_ERROR');
+        assert.deepEqual(context.structuredContent.errorData.nativeErrors,['controlled']);assert.equal(context.structuredContent.errorData.operationId,'context-id');
+    }finally{await mcp?.close();server.closeAllConnections();server.close();await once(server,'close');}
+});
+
+test('O7 preserves ordered non-inventory data while bounding inventory item errors and large64-item success groups',async()=>{
+    const base=structuredClone(wire.group),source=wire.group.results[0].observation;
+    const itemError={code:'RESULT_TOO_LARGE',message:'private-item-body',retryable:false,outcome:'notApplied',nativeErrors:['private-item-body'],operationId:'private-item-body'.repeat(20000)};
+    const contextError={code:'CONTROLLED_CONTEXT_ERROR',message:'controlled context diagnostic',retryable:false,outcome:'notApplied',nativeErrors:['controlled'],operationId:'context-id'};
+    let mode='item',calls=0;
+    const server=createServer(async(req,res)=>{
+        let text='';for await(const chunk of req)text+=chunk;const request=JSON.parse(text);calls++;
+        const value=structuredClone(base);
+        value.results=request.items.map((item,index)=>mode!=='success'&&index===0?{id:item.id,error:mode==='known'?{...itemError,message:readMessages.relationshipSlotLimit}:itemError}:
+            mode!=='success'&&index===63?{id:item.id,error:contextError}:
+            item.name==='construction.inventory'?{id:item.id,observation:structuredClone(source)}:
+            {id:item.id,observation:{...structuredClone(source),data:{payload:'x'.repeat(6000)}}});
+        res.end(JSON.stringify(value));
+    });
+    server.listen(0,'127.0.0.1');await once(server,'listening');let mcp;
+    try{
+        mcp=await startOfflineMcp(`http://127.0.0.1:${server.address().port}`);
+        const items=[{id:'page',name:'construction.inventory',args:wire.request},...Array.from({length:63},(_,i)=>({id:`state${i}`,name:'state',args:{}}))];
+        const failure=await mcp.client.callTool({name:'cs2_observe_batch',arguments:{items}});
+        assert.equal(failure.isError,undefined);const encoded=JSON.stringify(failure);
+        assert.equal(encoded.includes('private-item-body'),false);
+        const result=JSON.parse(failure.content[0].text);assert.deepEqual(result.results.map(row=>row.id),items.map(item=>item.id));
+        assert.equal(result.results[0].error.code,'RESULT_TOO_LARGE');assert.match(result.results[0].error.message,/unknownLimit/);
+        assert.equal(result.results[1].observation.data.payload.length,6000);assert.equal(calls,1);
+        assert.deepEqual(result.results[63].error,contextError);
+        mode='known';const known=await mcp.client.callTool({name:'cs2_observe_batch',arguments:{items}});
+        const knownData=JSON.parse(known.content[0].text);assert.equal(knownData.results[0].error.message,readMessages.relationshipSlotLimit);
+        assert.equal(knownData.results[0].error.code,'RESULT_TOO_LARGE');assert.equal(JSON.stringify(known).includes('private-item-body'),false);assert.equal(calls,2);
+        mode='success';const success=await mcp.client.callTool({name:'cs2_observe_batch',arguments:{items}});
+        assert.equal(success.isError,undefined);assert.ok(Buffer.byteLength(JSON.stringify(success))>262144);
+        const data=JSON.parse(success.content[0].text);assert.equal(data.results.length,64);
+        assert.deepEqual(data.results[0].observation,source);assert.equal(data.results[63].observation.data.payload.length,6000);assert.equal(calls,3);
     }finally{await mcp?.close();server.closeAllConnections();server.close();await once(server,'close');}
 });

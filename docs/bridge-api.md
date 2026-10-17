@@ -449,6 +449,14 @@ messages. These diagnostics do not identify which limit caused any earlier nativ
 playtest refusal without its raw response. The new page workflow is offline
 verified; future native validation remains required.
 
+For O7 batches containing inventory, an outer HTTP refusal uses the same finite
+diagnostics and a measured256KiB error-envelope cap, including text/structured
+wrappers. It does not attribute an unknown group failure to any particular item.
+Inventory item errors retain ordered IDs and safe canonical code/messages;
+arbitrary legacy prose, nativeErrors and operationId fields are omitted. Other
+item data remains unchanged. This error cap does not limit successful O7 groups
+to256KiB: valid64-item success responses retain the4MiB transport bound.
+
 ### Computed network profiles (read-only C5 slice)
 
 Add `geometryDiagnostics:"sampledCubicV1"` to the same inventory request or fixed
