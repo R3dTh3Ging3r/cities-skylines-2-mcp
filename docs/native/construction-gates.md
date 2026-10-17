@@ -83,7 +83,7 @@ Deferred CON-01 evidence must compare complete underground/platform/approach
 geometry and exterior connector semantics with native panels in a disposable
 fixture, and establish a genuinely bounded spatial traversal plus edit-safe
 snapshot/cursors. The pure tests in this slice do not cover bowed-curve spatial
-selection or pagination. Transformations depending on these fields remain open.
+selection or stable spatial pagination. Bounded raw relationship pages below are a different, live source-window read. Transformations depending on these fields remain open.
 
 ## Computed selected-network diagnostics — partial C5
 
@@ -107,3 +107,27 @@ terrain, clearance/collision, lane/vehicle, native-preview or feasibility claim
 is supplied. The linked native-boundary tests prove consumed field selection,
 read reuse and serialization, not installed Game/Unity binding, game timing or
 performance. Full C5 snapping/splits/offsets/construction and G1–G4 remain open.
+
+
+## Bounded raw relationship page recovery
+
+The optional existing inventory/O7 `relationshipPage` mode reads exactly one
+versioned root and one fixed source kind at offset/limit (all three fields
+required,1–32 slots). It retains all six presence/count headers but indexes only
+the selected slots directly, preserving null/invalid/duplicate evidence. It does
+not inspect target existence or geometry; clients can request selected full refs
+through ordinary inventory separately. Native getters are the existing concrete
+Owner/Attached/SubObject/InstalledUpgrade/SubNet/SubArea fields above, with exact
+root state and buffer count/bounds checks before indexing. There is no generic
+native API assumption, skipped-slot scan, full buffer copy or recursive read.
+
+Two header passes and at most32 selected-slot guard/reads are bounded source
+work; this is not a native latency guarantee. Detected selected-source count or
+presence changes refuse publication. Same-count edits cannot be detected from
+counts and remain explicitly unverified across live pages. Reaching a final
+window is not whole-source or facility completeness. Byte/slot refusals remain
+whole, with finite known-boundary diagnostics; no historical native413 is assigned
+a cause by synthetic reproduction. The linked ECS boundary/actual serializer/SDK
+checks prove the new source workflow offline. Prior selected native smokes remain
+reported evidence in the post-playtest receipt; the new page path, complete CON-01
+facility coverage and broader native gates are not certified by them.

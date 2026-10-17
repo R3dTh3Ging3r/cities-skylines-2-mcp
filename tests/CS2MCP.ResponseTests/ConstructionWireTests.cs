@@ -71,14 +71,14 @@ internal static class ConstructionWireTests
             var query=new Dictionary<string,string>{{"bootId",many},{"epoch","1"},{"entities",string.Join(",",Enumerable.Range(1,32).Select(i=>i+":1"))},{"relationships","directDepth1"}};
             var source=new BigSource();int geometryReads=0;ConstructionEntity Read(EntityRef e){geometryReads++;return new ConstructionEntity{entity=e,kind="networkEdge",network=new NetworkGeometry{curve=new CubicCurve{a=new Point3(0,0,0),b=new Point3(1,2,3),c=new Point3(4,5,6),d=new Point3(7,8,9)},start=new EntityRef{world=e.world,index=700,version=1},end=new EntityRef{world=e.world,index=701,version=1},length=1},networkReason=null};}
             var observation=ConstructionInventory.Read(query,worlds,()=>10,Read,source);Equal(128,observation.data.relationships.links.Length);Equal(128,observation.data.relationships.additionalTargetReads);Equal(160,geometryReads);
-            var capped=RequestHandlers.BoundedConstructionResponse(observation);Equal(413,capped.Status);Equal(true,capped.Body.Length<262144);Equal("RESULT_TOO_LARGE",(string)Json(capped)["errorData"]["code"]);
+            var capped=RequestHandlers.BoundedConstructionResponse(observation);Equal(413,capped.Status);Equal(true,capped.Body.Length<262144);Equal("RESULT_TOO_LARGE",(string)Json(capped)["errorData"]["code"]);Equal(ConstructionReadDiagnostics.Bytes,(string)Json(capped)["errorData"]["message"]);
             var wire=new ObservationWire();try{wire.Item(new ObservationItemResult{id="i",observation=new Observation<object>{world=observation.world,data=observation.data,startFrame=10,endFrame=10}});throw new Exception("oversized item accepted");}catch(InvalidOperationException){}
             var readers=new BigReaders{Value=observation};byte[] groupBytes=null;
             var args=new {world=worlds.Current,entities=observation.data.requestedEntities,relationships="directDepth1"};
             string body=Newtonsoft.Json.JsonConvert.SerializeObject(new {items=new[]{new {id="large",name="construction.inventory",args=args}}});
             var scheduler=new ObservationScheduler(worlds,new ObservationCatalog(readers,()=>10,()=>DateTime.UtcNow),()=>10,()=>0,wire);
             var group=scheduler.Admit(ObservationCatalog.Parse(body),bytes=>groupBytes=bytes);scheduler.Pump();
-            Equal(1,group.Result.results.Length);Equal("large",group.Result.results[0].id);Equal("RESULT_TOO_LARGE",group.Result.results[0].error.code);Equal(null,group.Result.results[0].observation);Equal(true,groupBytes.Length<=ObservationScheduler.MaxGroupBytes);group.Detach();
+            Equal(1,group.Result.results.Length);Equal("large",group.Result.results[0].id);Equal("RESULT_TOO_LARGE",group.Result.results[0].error.code);Equal(ConstructionReadDiagnostics.ItemBytes,group.Result.results[0].error.message);Equal(null,group.Result.results[0].observation);Equal(true,groupBytes.Length<=ObservationScheduler.MaxGroupBytes);group.Detach();
             observation.data.relationships.targets[0].network.curve.b.x=double.NaN;Equal(413,RequestHandlers.BoundedConstructionResponse(observation).Status);
         });
     }

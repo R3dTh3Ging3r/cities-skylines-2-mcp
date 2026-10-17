@@ -30,15 +30,23 @@ namespace CS2MCP.Core
         }
         public static ConstructionQuery Parse(IDictionary<string,string> query)
         {
-            if (query == null || (query.Count < 3 || query.Count > 5) || query.Keys.Any(k=>k!="bootId" && k!="epoch" && k!="entities" && k!="relationships" && k!="geometryDiagnostics") ||
+            if (query == null || (query.Count < 3 || query.Count > 7) || query.Keys.Any(k=>k!="bootId" && k!="epoch" && k!="entities" && k!="relationships" && k!="geometryDiagnostics" && k!="relationshipKind" && k!="relationshipOffset" && k!="relationshipLimit") ||
                 (query.TryGetValue("relationships",out string mode) && mode!="directDepth1") ||
                 (query.TryGetValue("geometryDiagnostics",out string diagnostics) && diagnostics!="sampledCubicV1") ||
                 !query.TryGetValue("bootId",out string boot) || string.IsNullOrWhiteSpace(boot) || boot.Length>128 ||
                 !query.TryGetValue("epoch",out string epochText) || !long.TryParse(epochText,NumberStyles.None,CultureInfo.InvariantCulture,out long epoch) || epoch>MaxSafeEpoch ||
                 !query.TryGetValue("entities",out string raw) || string.IsNullOrEmpty(raw) || raw.Length>704)
                 throw CommandJson.Invalid("require bounded bootId, safe epoch and 1–32 explicit index:version entities; other options unsupported");
+            ConstructionPageQuery page=null;
+            if(query.Keys.Any(k=>k=="relationshipKind"||k=="relationshipOffset"||k=="relationshipLimit")) {
+                if(query.ContainsKey("relationships")||!query.TryGetValue("relationshipKind",out string kind)||!ConstructionRelationshipPage.Kinds.Contains(kind)||
+                    !query.TryGetValue("relationshipOffset",out string offsetText)||!int.TryParse(offsetText,NumberStyles.None,CultureInfo.InvariantCulture,out int offset)||
+                    !query.TryGetValue("relationshipLimit",out string limitText)||!int.TryParse(limitText,NumberStyles.None,CultureInfo.InvariantCulture,out int limit)||limit<1||limit>32)
+                    throw CommandJson.Invalid("require single-root relationshipKind/relationshipOffset/relationshipLimit without directDepth1");
+                page=new ConstructionPageQuery{kind=kind,offset=offset,limit=limit};
+            }
             var parts=raw.Split(',');
-            if(parts.Length<1 || parts.Length>MaxEntities)throw CommandJson.Invalid("require 1–32 explicit entities");
+            if(parts.Length<1 || parts.Length>MaxEntities || page!=null&&parts.Length!=1)throw CommandJson.Invalid("require 1–32 explicit entities");
             var world=new WorldRef(boot,epoch);var entities=new EntityRef[parts.Length];var seen=new HashSet<int>();
             for(int i=0;i<parts.Length;i++) {
                 var pair=parts[i].Split(':');
@@ -47,7 +55,7 @@ namespace CS2MCP.Core
                     throw CommandJson.Invalid("invalid or duplicate explicit entity index/version");
                 entities[i]=new EntityRef{world=world,index=index,version=version};
             }
-            return new ConstructionQuery{world=world,entities=entities,relationships=query.TryGetValue("relationships",out string selected)?selected:null,geometryDiagnostics=query.TryGetValue("geometryDiagnostics",out string diagnosticMode)?diagnosticMode:null};
+            return new ConstructionQuery{relationshipPage=page,world=world,entities=entities,relationships=query.TryGetValue("relationships",out string selected)?selected:null,geometryDiagnostics=query.TryGetValue("geometryDiagnostics",out string diagnosticMode)?diagnosticMode:null};
         }
         public static Observation<ConstructionSnapshot> Read(IDictionary<string,string> query,WorldIdentity worlds,
             Func<long> frame,Func<EntityRef,ConstructionEntity> readEntity,IConstructionRelationshipSource relationships=null)
@@ -56,6 +64,7 @@ namespace CS2MCP.Core
             worlds.Validate(request.world);
             var observation=new Observation<ConstructionSnapshot>{world=request.world,startFrame=frame()};
             var headers=request.relationships==null?null:ConstructionRelationships.Reserve(request,worlds,relationships);
+            var pageHeaders=request.relationshipPage==null?null:ConstructionRelationshipPage.Prepare(request,worlds,relationships);
             var entities=new ConstructionEntity[request.entities.Length];
             for(int i=0;i<entities.Length;i++) {
                 worlds.Validate(request.world);
@@ -75,12 +84,14 @@ namespace CS2MCP.Core
                     } else if(ownerSource.present==null)entity.ownerReason=ownerSource.reason;
                 }
             }
+            var page=request.relationshipPage==null?null:ConstructionRelationshipPage.Read(request,worlds,relationships,pageHeaders);
             var geometry=request.geometryDiagnostics==null?null:NetworkGeometryDiagnostics.Read(entities,worlds,request.world);
             observation.endFrame=frame();observation.sampledAtUtc=DateTime.UtcNow;
             worlds.Validate(request.world);
-            observation.data=new ConstructionSnapshot{requestedEntities=request.entities,entities=entities,relationships=expanded,geometryDiagnostics=geometry};
+            observation.data=new ConstructionSnapshot{requestedEntities=request.entities,entities=entities,relationships=expanded,relationshipPage=page,geometryDiagnostics=geometry};
             observation.freshness="current";
             var warnings=new List<string>{"partialExplicitEntityInventory","rootGeometryOnly","nativeConstructionFixtureNotRun"};
+            if(page!=null)warnings.Add("relationshipPagesNotAtomicSnapshot");
             if(geometry!=null)warnings.Add("computedGeometrySamplesNotEngineeringValidation");
             if(expanded!=null)warnings.Add("directRelationshipsNotCompleteFacilityGeometry");
             if(observation.startFrame!=observation.endFrame)warnings.Add("multiFrameReadNotAtomic");

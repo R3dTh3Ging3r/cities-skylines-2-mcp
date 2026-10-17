@@ -72,6 +72,7 @@ internal static class Program
         DiagnosticMetricWireTests.Run(Check);
         WorkforceWireTests.Run(Check);
         GeometryDiagnosticWireTests.Run(Check);
+        ConstructionPageWireTests.Run(Check);
         Console.WriteLine($"Response serialization: {passed + failed} assertions, {passed} passed, {failed} failed");
         return failed == 0 ? 0 : 1;
     }

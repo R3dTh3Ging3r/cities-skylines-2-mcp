@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 namespace CS2MCP.Core
 {
+    public sealed class ObservationOutputLimitException:InvalidOperationException
+    {
+        public ObservationOutputLimitException():base("observation UTF8 output cap exceeded") { }
+    }
     public interface IObservationEncoder
     {
         byte[] Item(ObservationItemResult item); byte[] Batch(ObservationBatchResult batch);
@@ -258,22 +262,21 @@ namespace CS2MCP.Core
                 return e.Error;
             }
         }
-        static BridgeErrorData Bounded(BridgeErrorData error) => new BridgeErrorData(error.code, "observation reader rejected: " + error.code, httpStatus: error.httpStatus ?? 400);
+        static BridgeErrorData Bounded(BridgeErrorData error) => new BridgeErrorData(error.code, ConstructionReadDiagnostics.Known(error.code,error.message)?error.message:"observation reader rejected: " + error.code, httpStatus: error.httpStatus ?? 400);
         void Store(ObservationGroup group, int index, ObservationItemResult result)
         {
             byte[] bytes;
+            bool knownItemLimit=false;
             try
             {
                 bytes = encoder.Item(result);
             }
-            catch
-            {
-                bytes = null;
-            }
+            catch(ObservationOutputLimitException) { bytes=null;knownItemLimit=true; }
+            catch { bytes=null; }
             int remaining = group.Items.Length - index - 1;
             if (bytes == null || bytes.Length > MaxItemBytes || group.Bytes + (long)bytes.Length + remaining * ErrorReserve + EnvelopeReserve > MaxGroupBytes)
             {
-                result = Error(group.Items[index].Id, "RESULT_TOO_LARGE", "observation exceeds bounded response budget", 413);
+                result = Error(group.Items[index].Id, "RESULT_TOO_LARGE", bytes==null?(knownItemLimit?ConstructionReadDiagnostics.ItemBytes:"observation encoding unavailable; inspect a smaller bounded read"):bytes.Length>MaxItemBytes?ConstructionReadDiagnostics.ItemBytes:ConstructionReadDiagnostics.GroupBytes, 413);
                 bytes = encoder.Item(result);
             }
             group.Bytes += bytes.Length;

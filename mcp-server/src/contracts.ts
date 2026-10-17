@@ -1,3 +1,4 @@
+import type {ConstructionPageSnapshot} from "./construction-page-contracts.js";
 import type {GeometryDiagnosticSnapshot} from "./geometry-diagnostic-contracts.js";
 import type {ConstructionRelationshipSnapshot} from "./construction-contracts.js";
 import type {MetricReadRequest} from "./diagnostic-metric-contracts.js";
@@ -111,6 +112,7 @@ export interface ConstructionSnapshot {
   worldBounds:null; worldBoundsReason:"notMeasured"; nextCursor:null; truncated:false;
   support:"partial"; nativeVerification:"CON-01:notRun";
   relationships?:ConstructionRelationshipSnapshot|null;
+  relationshipPage?:ConstructionPageSnapshot|null;
   geometryDiagnostics?:GeometryDiagnosticSnapshot|null;
 }
 

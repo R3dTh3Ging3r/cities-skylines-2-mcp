@@ -85,6 +85,16 @@ namespace CS2MCP.Core
         static string Key(EntityRef value)=>value.index.ToString(CultureInfo.InvariantCulture)+":"+value.version.ToString(CultureInfo.InvariantCulture);
         public static bool Same(EntityRef a,EntityRef b)=>a!=null&&b!=null&&WorldIdentity.Same(a.world,b.world)&&a.index==b.index&&a.version==b.version;
         static OperationException Invalid()=>CommandJson.Invalid("invalid native relationship source evidence");
+        internal static void ValidateHeaders(EntityRef root,ConstructionRelationSource[] headers)
+        {
+            if(headers==null||headers.Length!=kinds.Length)throw Invalid();
+            for(int i=0;i<headers.Length;i++) {
+                var header=headers[i];
+                if(header==null||header.kind!=kinds[i]||!Same(header.source,root)||header.visitedCount!=0||header.coverageComplete||
+                    (header.present==true?(header.observedCount==null||header.observedCount<0||header.reason!=null||i<2&&header.observedCount!=1):
+                        header.observedCount!=null||string.IsNullOrEmpty(header.reason))||header.reason?.Length>128)throw Invalid();
+            }
+        }
         public static ConstructionRelationSource[] Reserve(ConstructionQuery request,WorldIdentity worlds,IConstructionRelationshipSource native)
         {
             if(native==null)throw new OperationException(new BridgeErrorData(ErrorCodes.Unsupported,"relationship reader unavailable",httpStatus:501));
@@ -94,18 +104,11 @@ namespace CS2MCP.Core
                 worlds.Validate(request.world);
                 var headers=native.Headers(root);
                 worlds.Validate(request.world);
-                if(headers==null||headers.Length!=kinds.Length)throw Invalid();
-                for(int i=0;i<headers.Length;i++) {
-                    var header=headers[i];
-                    if(header==null||header.kind!=kinds[i]||!Same(header.source,root)||header.visitedCount!=0||header.coverageComplete||
-                        (header.present==true?(header.observedCount==null||header.observedCount<0||header.reason!=null||i<2&&header.observedCount!=1):
-                            header.observedCount!=null||string.IsNullOrEmpty(header.reason))||header.reason?.Length>128)throw Invalid();
-                    total+=header.observedCount??0;
-                    sources.Add(header);
-                }
+                ValidateHeaders(root,headers);
+                foreach(var header in headers) {total+=header.observedCount??0;sources.Add(header);}
             }
             if(total>MaxSlots)throw new OperationException(new BridgeErrorData("RESULT_TOO_LARGE",
-                "direct relationships exceed128 slots; select fewer roots or omit expansion",httpStatus:413));
+                ConstructionReadDiagnostics.Slots,httpStatus:413));
             return sources.ToArray();
         }
         public static ConstructionRelationshipSnapshot Read(ConstructionQuery request,ConstructionEntity[] roots,

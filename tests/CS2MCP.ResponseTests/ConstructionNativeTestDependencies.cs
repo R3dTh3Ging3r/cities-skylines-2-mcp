@@ -19,18 +19,20 @@ namespace Unity.Entities
         readonly Dictionary<Entity,Dictionary<Type,object>> values=new Dictionary<Entity,Dictionary<Type,object>>();
         public int ElementReads,ComponentReads,HeaderReads;
         public readonly Dictionary<Type,int> ComponentReadsByType=new Dictionary<Type,int>();
+        public readonly List<int> ExistsIndices=new List<int>();
+        public readonly List<string> ElementVisits=new List<string>();
         public void Add(Entity entity,params object[] components){if(!values.ContainsKey(entity))values.Add(entity,new Dictionary<Type,object>());foreach(var item in components)values[entity][item.GetType()]=item;}
         public void Buffer<T>(Entity entity,params T[] elements){Add(entity);values[entity][typeof(List<T>)]=new List<T>(elements);}
-        public bool Exists(Entity entity)=>values.ContainsKey(entity);
+        public bool Exists(Entity entity){ExistsIndices.Add(entity.Index);return values.ContainsKey(entity);}
         public bool HasComponent<T>(Entity entity)=>values.TryGetValue(entity,out var row)&&row.ContainsKey(typeof(T));
         public T GetComponentData<T>(Entity entity){ComponentReads++;ComponentReadsByType[typeof(T)]=ComponentReadsByType.TryGetValue(typeof(T),out int count)?count+1:1;return (T)values[entity][typeof(T)];}
         public bool HasBuffer<T>(Entity entity)=>values.TryGetValue(entity,out var row)&&row.ContainsKey(typeof(List<T>));
-        public DynamicBuffer<T> GetBuffer<T>(Entity entity,bool isReadOnly){if(!isReadOnly)throw new Exception("writable buffer requested");HeaderReads++;return new DynamicBuffer<T>((List<T>)values[entity][typeof(List<T>)],()=>ElementReads++);}
+        public DynamicBuffer<T> GetBuffer<T>(Entity entity,bool isReadOnly){if(!isReadOnly)throw new Exception("writable buffer requested");HeaderReads++;return new DynamicBuffer<T>((List<T>)values[entity][typeof(List<T>)],slot=>{ElementReads++;ElementVisits.Add(typeof(T).FullName+":"+slot);});}
     }
     public struct DynamicBuffer<T>
     {
-        readonly List<T> items;readonly Action read;public DynamicBuffer(List<T> items,Action read){this.items=items;this.read=read;}
-        public int Length=>items.Count;public T this[int index]{get{read();return items[index];}}
+        readonly List<T> items;readonly Action<int> read;public DynamicBuffer(List<T> items,Action<int> read){this.items=items;this.read=read;}
+        public int Length=>items.Count;public T this[int index]{get{read(index);return items[index];}}
     }
 }
 namespace Unity.Mathematics
