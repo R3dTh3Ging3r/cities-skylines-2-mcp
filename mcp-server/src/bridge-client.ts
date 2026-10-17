@@ -1,3 +1,4 @@
+import {readMessages} from "./construction-read-diagnostics.js";
 import {legacyMetricKeys,metricFamilySchema,metricCatalogSchema,metricReadRequestSchema,metricQuery,parseMetricObservation,type MetricDefinition,type MetricReadRequest} from "./diagnostic-metric-contracts.js";
 import {transitRequestSchema,transitQuery,parseTransitObservation,transitCapabilitiesSchema,type TransitRequest,type TransitPage,type TransitCapabilities} from "./features/transit-contracts.js";
 import {observationRequestSchema,parseObservationResult} from "./observation-contracts.js";
@@ -241,7 +242,7 @@ export function createBridgeClient(options: {
   }
   // Read all HTTP statuses under the new protocol cap; legacy getResponse is unchanged.
   async function boundedTransit(path: string, query?: URLSearchParams,
-    options?: {signal?: AbortSignal}): Promise<unknown> {
+    options?: {signal?: AbortSignal; inventoryDiagnostics?: boolean}): Promise<unknown> {
     const address = new URL(baseUrl);
     if (address.protocol !== "http:" || !["127.0.0.1", "localhost", "[::1]"].includes(address.hostname) ||
         address.username || address.password || address.pathname !== "/" || address.search || address.hash) {
@@ -269,6 +270,7 @@ export function createBridgeClient(options: {
           length += part.value.length;
           if (length > 262144) {
             await reader.cancel();
+            if(options?.inventoryDiagnostics)throw new BridgeClientError({code:"RESULT_TOO_LARGE",message:readMessages.transportResponseByteLimit,retryable:false,outcome:"notApplied"});
             throw new Error("bounded response exceeds256KiB");
           }
           chunks.push(part.value);
@@ -320,7 +322,7 @@ export function createBridgeClient(options: {
     constructionInventory: async input => {
       let request:ConstructionRequest;
       try {request=constructionRequestSchema.parse(input);}catch {throw new BridgeClientError({code:"INVALID_ARGUMENT",message:"invalid bounded inventory request",retryable:false,outcome:"notApplied"});}
-      try{return parseConstructionObservation(await boundedTransit("/v2/construction/inventory",constructionQuery(request)),request);}
+      try{return parseConstructionObservation(await boundedTransit("/v2/construction/inventory",constructionQuery(request),{inventoryDiagnostics:true}),request);}
       catch(error){if(error instanceof BridgeClientError)throw error;throw new BridgeClientError({code:"PROTOCOL_ERROR",message:"invalid bounded inventory observation",retryable:false,outcome:"notApplied"});}
     },
     submit: command => operationRequest("POST","/v2/commands",command.operationId,command),

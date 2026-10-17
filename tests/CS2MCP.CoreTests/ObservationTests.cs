@@ -95,8 +95,8 @@ namespace CS2MCP.CoreTests
                 var second=new Fixture();ObservationGroup active=null;second.Readers.During=()=>active.Detach();active=second.Admit(5,_=>done++);second.Scheduler.Pump();Program.Equal(1,second.Readers.Calls);Program.Equal(0,second.Scheduler.Pending);Program.Equal(0,done);
             });
             Program.Check("item and group limits replace oversize items with ordered explicit errors",()=>{
-                var f=new Fixture();f.Encoder.ItemSize=ObservationScheduler.MaxItemBytes+1;var g=f.Admit(2);f.Scheduler.Pump();Program.Equal(2,g.Result.results.Length);Program.Equal("RESULT_TOO_LARGE",g.Result.results[0].error.code);
-                var second=new Fixture();second.Encoder.ItemSize=ObservationScheduler.MaxItemBytes;var many=second.Admit(64);for(int i=0;i<8;i++)second.Scheduler.Pump();Program.Equal(64,many.Result.results.Length);Program.Equal(true,many.Result.results.Any(r=>r.error?.code=="RESULT_TOO_LARGE"));Program.Equal(0,second.Scheduler.Pending);
+                var f=new Fixture();f.Encoder.ItemSize=ObservationScheduler.MaxItemBytes+1;var g=f.Admit(2);f.Scheduler.Pump();Program.Equal(2,g.Result.results.Length);Program.Equal("RESULT_TOO_LARGE",g.Result.results[0].error.code);Program.Equal(ConstructionReadDiagnostics.ItemBytes,g.Result.results[0].error.message);
+                var second=new Fixture();second.Encoder.ItemSize=ObservationScheduler.MaxItemBytes;var many=second.Admit(64);for(int i=0;i<8;i++)second.Scheduler.Pump();Program.Equal(64,many.Result.results.Length);Program.Equal(true,many.Result.results.Any(r=>r.error?.code=="RESULT_TOO_LARGE"));Program.Equal(0,second.Scheduler.Pending);Program.Equal(true,many.Result.results.Any(r=>r.error?.message==ConstructionReadDiagnostics.GroupBytes));
             });
         }
     }

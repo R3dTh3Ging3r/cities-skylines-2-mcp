@@ -12,9 +12,10 @@ namespace CS2MCP
         internal static BridgeResponse BoundedConstructionResponse(object observation)
         {
             try {return new BridgeResponse{Body=ObservationWire.Standalone(observation)};}
-            catch(System.InvalidOperationException) {
-                return BridgeResponse.Error(413,"inventory result exceeds256KiB; select fewer roots or omit expansion","RESULT_TOO_LARGE");
+            catch(ObservationOutputLimitException) {
+                return BridgeResponse.Error(413,ConstructionReadDiagnostics.Bytes,"RESULT_TOO_LARGE");
             }
+            catch(System.InvalidOperationException) {return BridgeResponse.Error(413,"bounded inventory encoding unavailable; inspect smaller reads","RESULT_TOO_LARGE");}
         }
 
         private BridgeResponse ConstructionInventoryRequest(BridgeRequest request)

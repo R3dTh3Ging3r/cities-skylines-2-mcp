@@ -125,8 +125,8 @@ namespace CS2MCP.Core
                 MetricReadRequest metrics = null;
                 if (key == "construction.inventory")
                 {
-                    Keys(map, "world", "entities", "relationships", "geometryDiagnostics");
-                    if ((map.Count < 2 || map.Count > 4) || !map.TryGetValue("world", out var entityWorld) || !map.TryGetValue("entities", out var entities) || !(entities is List<object> refs) || refs.Count < 1 || refs.Count > 32)
+                    Keys(map, "world", "entities", "relationships", "geometryDiagnostics", "relationshipPage");
+                    if ((map.Count < 2 || map.Count > 5) || !map.TryGetValue("world", out var entityWorld) || !map.TryGetValue("entities", out var entities) || !(entities is List<object> refs) || refs.Count < 1 || refs.Count > 32)
                         throw CommandJson.Invalid("invalid inventory arguments");
                     var observed = World(entityWorld);
                     var encoded = new List<string>();
@@ -146,6 +146,12 @@ namespace CS2MCP.Core
                     if(map.TryGetValue("geometryDiagnostics",out var geometryMode)) {
                         if(!(geometryMode is string selected)||selected!="sampledCubicV1")throw CommandJson.Invalid("invalid geometry diagnostics mode");
                         compact.Add("geometryDiagnostics",selected);
+                    }
+                    if(map.TryGetValue("relationshipPage",out var pageRaw)) {
+                        var page=Map(pageRaw);Keys(page,"kind","offset","limit");
+                        if(page.Count!=3||!page.TryGetValue("kind",out var kind)||!(kind is string textKind)||
+                            !page.TryGetValue("offset",out var offset)||!page.TryGetValue("limit",out var limit))throw CommandJson.Invalid("invalid relationship page");
+                        compact.Add("relationshipKind",textKind);compact.Add("relationshipOffset",CommandJson.Stringify(offset));compact.Add("relationshipLimit",CommandJson.Stringify(limit));
                     }
                     ConstructionInventory.Parse(compact);
                 }

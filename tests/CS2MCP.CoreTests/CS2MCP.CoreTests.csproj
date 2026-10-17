@@ -23,7 +23,7 @@
     <Compile Include="../../CS2MCP.Bridge/Core/ObservationScheduler.cs" Link="Core/ObservationScheduler.cs" />
     <Compile Include="DeferredWorkTests.cs" />
     <Compile Include="../../CS2MCP.Bridge/Core/DeferredWorldWork.cs" Link="Core/DeferredWorldWork.cs" />
-    <Compile Include="ConstructionInventoryTests.cs" /><Compile Include="ConstructionRelationshipTests.cs" />
+    <Compile Include="ConstructionInventoryTests.cs" /><Compile Include="ConstructionPageTests.cs" /><Compile Include="ConstructionRelationshipTests.cs" />
     <Compile Include="HttpServerTestDependencies.cs" />
     <Compile Include="../../CS2MCP.Bridge/HttpBridgeServer.cs" Link="HttpBridgeServer.cs" />
     <Compile Include="OperationTests.cs" />
@@ -42,5 +42,5 @@
     <Compile Include="../../CS2MCP.Bridge/EndpointCatalog.cs" Link="EndpointCatalog.cs" />
     <Compile Include="../../CS2MCP.Bridge/Core/ConstructionContracts.cs" Link="Core/ConstructionContracts.cs" />
     <Compile Include="../../CS2MCP.Bridge/Core/ConstructionInventory.cs" Link="Core/ConstructionInventory.cs" />
-  <Compile Include="ObservationBindingTestDependencies.cs" /><Compile Include="../../CS2MCP.Bridge/RequestHandlers.Observations.cs" /><Compile Include="../../CS2MCP.Bridge/Core/ConstructionRelationships.cs" /><Compile Include="../../CS2MCP.Bridge/Core/NetworkGeometryDiagnostics.cs" /><Compile Include="NetworkGeometryDiagnosticTests.cs" /></ItemGroup>
+  <Compile Include="ObservationBindingTestDependencies.cs" /><Compile Include="../../CS2MCP.Bridge/RequestHandlers.Observations.cs" /><Compile Include="../../CS2MCP.Bridge/Core/ConstructionRelationships.cs" /><Compile Include="../../CS2MCP.Bridge/Core/NetworkGeometryDiagnostics.cs" /><Compile Include="NetworkGeometryDiagnosticTests.cs" /><Compile Include="../../CS2MCP.Bridge/Core/ConstructionRelationshipPage.cs" /></ItemGroup>
 </Project>

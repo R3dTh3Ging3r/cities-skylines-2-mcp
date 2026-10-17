@@ -309,7 +309,8 @@ GET /v2/construction/inventory?bootId=example-boot&epoch=7&entities=123%3A4
 Multiple refs use a percent-encoded comma-separated `index:version` list.
 The typed client uses the shared query encoder, preserving spaces and literal
 plus signs. Only `bootId`, `epoch`, `entities` and optional
-`relationships=directDepth1` / `geometryDiagnostics=sampledCubicV1` query keys are accepted;
+`relationships=directDepth1` / `geometryDiagnostics=sampledCubicV1` or the three
+`relationshipKind` / `relationshipOffset` / `relationshipLimit` page keys are accepted;
 duplicate decoded keys, malformed escapes, unknown keys, spatial/cursor/family
 expansion/limit options and bodies reject. Decoded boot ID is 1–128 characters
 and nonblank; epoch is an integer from 0 through 9007199254740991. Index/version
@@ -374,6 +375,87 @@ its native support is `unverified`. Full C1 and native G1/G2/CON-01 remain open.
 See [supported fields and deferred evidence](native/construction-gates.md).
 Existing `PrefabInfo` and `RoadGraph` payloads and midpoint-filter defaults retain
 their current behavior.
+
+### Recovering large relationship reads
+
+The existing inventory tool and O7 `construction.inventory` item accept a raw
+reference page for exactly one root:
+
+```json
+{
+  "world": {"bootId": "example-boot", "epoch": 7},
+  "entities": [{"world": {"bootId": "example-boot", "epoch": 7}, "index": 123, "version": 4}],
+  "relationshipPage": {"kind": "subObject", "offset": 0, "limit": 32}
+}
+```
+
+All three page fields are required. Kind is `owner`, `attached`, `subObject`,
+`installedUpgrade`, `subNet` or `subArea`; offset is an integer0..2147483647 and
+limit1..32. The corresponding GET uses `relationshipKind=subObject`,
+`relationshipOffset=0` and `relationshipLimit=32`, all or none. Page mode cannot
+combine with `relationships:directDepth1`; root geometry diagnostics may coexist.
+There is no new tool, endpoint, global discovery or automatic retry.
+
+`data.relationshipPage` returns all six source headers and only the selected
+window's slots. Null, invalid and duplicate references keep their original slot
+positions. A positive ref has status `referenceObserved`: target existence,
+geometry, role and usability have not been checked. `additionalTargetReads=0`
+and `targetResolution=notRequested`. Choose returned full refs and explicitly
+call ordinary inventory on up to32 distinct indices for geometry; missing or
+unsupported targets can still be returned there. Reading all automatic target
+geometry is deliberately separate from reading attachment references.
+
+`observedCount` and `endObservedCount` describe the selected source in this
+observation; absent/unavailable sources keep null counts and reasons.
+`returnedCount`, `visitedSlots`, `endExclusive` and `nextOffset` describe only
+the selected kind. Continue by explicitly passing nextOffset as the next offset.
+Offset equal to an available count returns an empty terminal window; a larger
+offset rejects. Absent/unavailable sources require offset0. A count may exceed128
+without causing unbounded allocation or scans: only the requested1..32 slots are
+indexed. No skipped slots or target buffers are visited.
+
+`sourceCoverage=complete` requires offset0 and coverage of the entire currently
+observed source. A final page from a nonzero offset remains `partial`; it cannot
+prove earlier pages saw the same contents. Nonselected headers are not marked
+visited or complete. `windowComplete` concerns this one window only. The existing
+root-list `truncated=false`/`nextCursor=null` does not assert relationship completeness.
+
+Pages explicitly report `consistency=livePageNotSnapshot`,
+`crossPageConsistency=unverified` and warning `relationshipPagesNotAtomicSnapshot`,
+even when frames/counts match. Same-length replacement or reordering can change
+membership between calls. A source presence/count/liveness change detected during
+one page refuses with `RELATIONSHIP_SOURCE_CHANGED`; the caller decides whether
+to restart manually. There is no stable cursor, saved snapshot or automatic
+aggregate-completeness claim. Complete facility, platform and connector semantics
+remain unknown.
+
+Existing work and output caps remain. DirectDepth1 still reserves at most128
+total slots before geometry or any slot dereference. A page reads one root,
+two fixed six-header sets and at most32 guarded selected slots, with zero target
+geometry reads. Headers/count checks are distinct from element visits and do not
+promise native callback latency. An optional root profile adds at most17 pure
+evaluations. Results still refuse whole on direct256KiB, O7 item256KiB/group4MiB
+or escaped dedicated MCP256KiB pressure; they never silently reduce a page.
+
+The dedicated MCP error preserves `RESULT_TOO_LARGE` and adds a finite `reason`:
+`relationshipSlotLimit`, `inventoryByteLimit`, `observationItemByteLimit`,
+`observationGroupByteBudget`, `transportResponseByteLimit` or `mcpResultByteLimit`
+when that boundary establishes the cause. Known source messages are mapped
+exactly; arbitrary bridge text is not echoed. Unknown older failures retain
+`unknownLimit`/`unknownCause` and manual recovery guidance. Offset errors use
+`relationshipOffsetOutOfRange`; detected source changes use
+`relationshipSourceChanged`. O7 item errors retain canonical known producer
+messages. These diagnostics do not identify which limit caused any earlier native
+playtest refusal without its raw response. The new page workflow is offline
+verified; future native validation remains required.
+
+For O7 batches containing inventory, an outer HTTP refusal uses the same finite
+diagnostics and a measured256KiB error-envelope cap, including text/structured
+wrappers. It does not attribute an unknown group failure to any particular item.
+Inventory item errors retain ordered IDs and safe canonical code/messages;
+arbitrary legacy prose, nativeErrors and operationId fields are omitted. Other
+item data remains unchanged. This error cap does not limit successful O7 groups
+to256KiB: valid64-item success responses retain the4MiB transport bound.
 
 ### Computed network profiles (read-only C5 slice)
 

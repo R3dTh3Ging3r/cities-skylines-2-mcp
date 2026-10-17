@@ -16,6 +16,7 @@ namespace CS2MCP.CoreTests
         public static void Run()
         {
             ConstructionRelationshipTests.Run();
+            ConstructionPageTests.Run();
             NetworkGeometryDiagnosticTests.Run();
             Program.Check("sampledCubicV1 passes actual query decoder and consumed producer", () => {
                 var query=ConstructionInventory.DecodeQuery("bootId=boot&epoch=1&entities=1:1&geometryDiagnostics=sampledCubicV1");

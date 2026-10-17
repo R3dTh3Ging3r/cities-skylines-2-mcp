@@ -70,7 +70,7 @@ internal static class ObservationHttpTests
             string json=CommandJson.Stringify(new System.Collections.Generic.Dictionary<string,object>{{"items",items}});byte[] bytes=null;
             var scheduler=new ObservationScheduler(worlds,new ObservationCatalog(readers,()=>10,()=>DateTime.UtcNow),()=>10,()=>0,wire);var group=scheduler.Admit(ObservationCatalog.Parse(json),value=>bytes=value);
             for(int i=0;i<8;i++)scheduler.Pump();Equal(64,readers.Count);Equal(true,bytes.Length<=ObservationScheduler.MaxGroupBytes);Equal(true,bytes.Length>3000000);
-            var results=group.Result.results;Equal(64,results.Length);Equal(true,results.Any(row=>row.error?.code=="RESULT_TOO_LARGE"));Equal(true,results.Any(row=>row.observation!=null));
+            var results=group.Result.results;Equal(64,results.Length);Equal(true,results.Any(row=>row.error?.code=="RESULT_TOO_LARGE"));Equal(true,results.Any(row=>row.error?.message==ConstructionReadDiagnostics.GroupBytes));Equal(true,results.Any(row=>row.observation!=null));
             for(int i=0;i<64;i++){Equal(new string('\u0001',124)+i.ToString("D4"),results[i].id);Equal(true,wire.Item(results[i]).Length<=ObservationScheduler.MaxItemBytes);}
             Equal(64,((JArray)JObject.Parse(Encoding.UTF8.GetString(bytes))["results"]).Count);group.Detach();Equal(0,scheduler.Pending);Equal(0,scheduler.ActiveGroups);
         });

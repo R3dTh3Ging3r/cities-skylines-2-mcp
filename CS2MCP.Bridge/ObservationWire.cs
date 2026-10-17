@@ -29,7 +29,7 @@ namespace CS2MCP
             public override void Write(byte[] buffer, int offset, int count)
             {
                 if (Length + count > limit)
-                    throw new InvalidOperationException("observation UTF8 output cap exceeded");
+                    throw new ObservationOutputLimitException();
                 base.Write(buffer, offset, count);
             }
         }

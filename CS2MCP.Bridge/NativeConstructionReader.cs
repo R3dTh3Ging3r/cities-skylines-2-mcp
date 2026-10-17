@@ -10,7 +10,7 @@ using CS2MCP.Core;
 namespace CS2MCP
 {
     /// <summary>Game-thread-only adapter. Exact roots and fixed direct instance sources; no query or recursive traversal.</summary>
-    internal sealed class NativeConstructionReader:IConstructionRelationshipSource
+    internal sealed class NativeConstructionReader:IConstructionPageSource
     {
         private readonly Lazy<EntityManager> managerSource;
         private EntityManager manager=>managerSource.Value;
@@ -85,10 +85,53 @@ namespace CS2MCP
                 case "subArea":target=manager.GetBuffer<Game.Areas.SubArea>(entity,true)[slot].m_Area;break;
                 default:throw CommandJson.Invalid("unsupported relationship source");
             }
+            return Reference(target,root.world);
+        }
+        public ConstructionReference PageSlot(EntityRef root,string kind,int slot,int expectedCount)
+        {
+            var entity=new Entity{Index=root.index,Version=root.version};
+            if(State(entity)!=null)throw ConstructionRelationshipPage.Changed();
+            void CheckCount(int count) {
+                if(count!=expectedCount||slot<0||slot>=count)throw ConstructionRelationshipPage.Changed();
+            }
+            Entity target;
+            switch(kind) {
+                case "owner":
+                    if(expectedCount!=1||slot!=0||!manager.HasComponent<Owner>(entity))throw ConstructionRelationshipPage.Changed();
+                    target=manager.GetComponentData<Owner>(entity).m_Owner;break;
+                case "attached":
+                    if(expectedCount!=1||slot!=0||!manager.HasComponent<Game.Objects.Attached>(entity))throw ConstructionRelationshipPage.Changed();
+                    target=manager.GetComponentData<Game.Objects.Attached>(entity).m_Parent;break;
+                case "subObject": {
+                    if(!manager.HasBuffer<Game.Objects.SubObject>(entity))throw ConstructionRelationshipPage.Changed();
+                    var buffer=manager.GetBuffer<Game.Objects.SubObject>(entity,true);CheckCount(buffer.Length);
+                    target=buffer[slot].m_SubObject;break;
+                }
+                case "installedUpgrade": {
+                    if(!manager.HasBuffer<Game.Buildings.InstalledUpgrade>(entity))throw ConstructionRelationshipPage.Changed();
+                    var buffer=manager.GetBuffer<Game.Buildings.InstalledUpgrade>(entity,true);CheckCount(buffer.Length);
+                    target=buffer[slot].m_Upgrade;break;
+                }
+                case "subNet": {
+                    if(!manager.HasBuffer<Game.Net.SubNet>(entity))throw ConstructionRelationshipPage.Changed();
+                    var buffer=manager.GetBuffer<Game.Net.SubNet>(entity,true);CheckCount(buffer.Length);
+                    target=buffer[slot].m_SubNet;break;
+                }
+                case "subArea": {
+                    if(!manager.HasBuffer<Game.Areas.SubArea>(entity))throw ConstructionRelationshipPage.Changed();
+                    var buffer=manager.GetBuffer<Game.Areas.SubArea>(entity,true);CheckCount(buffer.Length);
+                    target=buffer[slot].m_Area;break;
+                }
+                default:throw CommandJson.Invalid("unsupported relationship source");
+            }
+            return Reference(target,root.world);
+        }
+        static ConstructionReference Reference(Entity target,WorldRef world)
+        {
             if(target==Entity.Null)return new ConstructionReference{reason="nullReference"};
             if(target.Index<=0||target.Version<=0)return new ConstructionReference{
                 reason="invalidNativeReference",rawIndex=target.Index,rawVersion=target.Version};
-            return new ConstructionReference{target=Ref(target,root.world)};
+            return new ConstructionReference{target=Ref(target,world)};
         }
         private void ReadNetwork(Entity entity,Entity prefab,WorldRef world,ConstructionEntity result)
         {
