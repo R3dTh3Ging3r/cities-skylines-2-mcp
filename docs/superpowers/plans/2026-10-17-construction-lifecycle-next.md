@@ -20,9 +20,9 @@ The tested `0b913a3` candidate built against CS2 1.6.2f1 and supported a real ro
 | Direct zoning and setters | Bypass these tool stage machines | A complete admission map and action-specific readback, not inferred tool ownership |
 | `RequestHandlers.Meta.SaveGame` | Returns saving=true after discarding Save task | Task/event/destination correlation, durable artifact and preview ownership |
 
-Retained native metadata identifies active-tool setter/event and later stop callbacks but does not prove their runtime order or cleanup. A tool switch must not be treated as rollback or permission to reactivate the prior bridge tool. `RequestHandlers.Meta.SaveGame` still discards the Save task. A successful Task<bool>, preview event URI, or readable older checkpoint does not identify a completed new save package.
+Retained native metadata identifies active-tool setter/event and later stop callbacks but does not prove their runtime order or cleanup. A tool switch must not be treated as rollback or permission to reactivate the prior bridge tool. The tested source discarded the Save task. The subsequent [passive save-task increment](2026-10-17-save-task-observation.md) retains bounded managed terminal observations while preserving the legacy response and preview behavior. A successful Task<bool>, preview event URI, or readable older checkpoint does not identify a completed new save package.
 
-## Next source package: consumed lifecycle observation
+## Implemented source package: consumed lifecycle observation
 
 1. Map all concrete construction dispatch, reply, Apply, Finish, exception and deactivation sites in the generic, road and transit adapters. Record which sites are actual source observations and which desired postconditions have no verified native signal. Include direct zoning/setters in the writer-coverage map even though they bypass ToolBaseSystem.
 2. Add bounded, passive correlation at these real sites before changing completion semantics. A legacy diagnostic correlation ID must be explicitly distinguished from an admitted v2 operation UUID. Capture world, frame, adapter, phase, acknowledgement and observed ownership; include only exact entity references already available from the adapter. Do not add citywide scans, tool switches, scheduling changes, saves or gameplay calls. Unknown effect/cleanup evidence stays unknown.
@@ -46,4 +46,4 @@ Only then can O7 sequential mutation batches start the next action after verifie
 - Destination package identity and durability for a newly requested save; save task/event success and preview ownership.
 - Action-specific preview validity/cleanup, connector/overlay preservation, and route edit/dispatch behavior.
 
-Accumulate reviewed source packages and their offline tests before the next consolidated native validation. Do not mark these gates passed, enable guarded writers, or solicit a routine small test merely because the legacy expansion succeeded. If a source decision depends on one of these missing native facts, retain the exact blocked decision and proceed with independent work.
+The construction-phase and passive save-task increments exhaust the currently supported capture for this sequence. The [consolidated native checklist](../../native/CONSOLIDATED-CHECKS-2026-10-17.md) identifies the next evidence gate. Do not mark it passed, enable guarded writers, solicit a routine small test or add unused instrumentation merely because the legacy expansion succeeded. Completion and resource-ownership decisions remain blocked on the identified native facts.
