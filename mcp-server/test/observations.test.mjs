@@ -48,8 +48,9 @@ test('actual O7 listTools exposes the strict bounded fixed catalog and full nest
         for (const name of ['state', 'city.overview', 'city.services', 'city.labor', 'city.budget'])
             exact(byName.get(name), []);
         const inventory = byName.get('construction.inventory');
-        exact(inventory, ['world', 'entities'], ['world', 'entities', 'relationships']); checkWorld(inventory.properties.world);
+        exact(inventory, ['world', 'entities'], ['world', 'entities', 'relationships', 'geometryDiagnostics']); checkWorld(inventory.properties.world);
         assert.deepEqual(inventory.properties.relationships, {type: 'string', const: 'directDepth1'});
+        assert.deepEqual(inventory.properties.geometryDiagnostics, {type: 'string', const: 'sampledCubicV1'});
         assert.equal(inventory.properties.entities.minItems, 1); assert.equal(inventory.properties.entities.maxItems, 32);
         checkRef(inventory.properties.entities.items);
         const transit = byName.get('transit.selectedLine');

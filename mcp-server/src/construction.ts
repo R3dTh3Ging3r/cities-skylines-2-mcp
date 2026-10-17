@@ -14,8 +14,9 @@ function constructionError(code:string,message:string):CallToolResult {
 }
 export function registerConstructionTools(registerTool:McpServer["registerTool"],bridge:BridgeClient):void {
   registerTool("cs2_construction_inventory",{
-    title:"Inspect explicit construction geometry and direct relationships",
+    title:"Inspect construction geometry and computed network profiles",
     description:"Partial read-only inventory of 1–32 explicit versioned entities in one observed world. Returns full network cubic curves and root building geometry bounds. " +
+      "Optional geometryDiagnostics=sampledCubicV1 returns17 computed t/XYZ/grade/3D-curvature/radius samples per root curve; sampled extrema only, unknown physical units and engineering validity. " +
       "Optional relationships=directDepth1 reads at most128 direct source slots and128 additional exact targets, without recursion. " +
       "Family compatibility, complete facility/platform/approach envelopes, connectors, costs and capacity remain unknown; native CON-01 notRun. Spatial scans, cursors and family expansion unsupported.",
     inputSchema:boundedObjectInput(constructionObjectSchema),

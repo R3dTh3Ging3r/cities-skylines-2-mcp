@@ -16,6 +16,19 @@ namespace CS2MCP.CoreTests
         public static void Run()
         {
             ConstructionRelationshipTests.Run();
+            NetworkGeometryDiagnosticTests.Run();
+            Program.Check("sampledCubicV1 passes actual query decoder and consumed producer", () => {
+                var query=ConstructionInventory.DecodeQuery("bootId=boot&epoch=1&entities=1:1&geometryDiagnostics=sampledCubicV1");
+                var world=new WorldIdentity("boot");world.BeginLoad();world.CompleteLoad();
+                var result=ConstructionInventory.Read(query,world,()=>10,e=>new ConstructionEntity{entity=e,networkReason="notNetworkEdge"});
+                var property=result.data.GetType().GetProperty("geometryDiagnostics");
+                Program.Equal(true,property!=null&&property.GetValue(result.data)!=null);
+                foreach(string invalid in new[]{"true","17","adaptive","sampledCubicV2"}) {
+                    query["geometryDiagnostics"]=invalid;Program.Throws<OperationException>(()=>ConstructionInventory.Parse(query));
+                }
+                foreach(string flag in new[]{"geometryDiagnostics","%67eometryDiagnostics"})
+                    Program.Throws<OperationException>(()=>ConstructionInventory.DecodeQuery("bootId=boot&epoch=1&entities=1:1&geometryDiagnostics=sampledCubicV1&"+flag+"=sampledCubicV1"));
+            });
             Program.Check("directDepth1 literal passes actual inventory decode and parsing", () => {
                 var query=ConstructionInventory.DecodeQuery("bootId=boot&epoch=1&entities=1:1&relationships=directDepth1");
                 Program.Equal(1,ConstructionInventory.Parse(query).entities.Length);

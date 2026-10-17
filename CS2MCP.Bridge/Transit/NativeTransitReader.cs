@@ -148,7 +148,7 @@ namespace CS2MCP
                 facts.connectionState = State(stop);
                 if (facts.connectionState == "available")
                 {
-                    if (manager.HasComponent<TransportStop>(stop))
+                    if (manager.HasComponent<Game.Routes.TransportStop>(stop))
                         facts.stop = ReadStop(stop);
                     else
                         facts.connectionState = "notTransportStop";
@@ -186,7 +186,7 @@ namespace CS2MCP
                 }
             }
 
-            facts.active = (manager.GetComponentData<TransportStop>(stop).m_Flags & StopFlags.Active) != 0;
+            facts.active = (manager.GetComponentData<Game.Routes.TransportStop>(stop).m_Flags & StopFlags.Active) != 0;
             facts.outsideConnection = manager.HasComponent<Game.Objects.OutsideConnection>(stop);
             Entity prefab = Prefab(stop);
             if (prefab != Unity.Entities.Entity.Null && manager.HasComponent<TransportStopData>(prefab))

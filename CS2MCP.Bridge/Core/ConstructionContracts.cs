@@ -19,7 +19,7 @@ namespace CS2MCP.Core
         public Point3 axisX { get; set; } public Point3 axisY { get; set; } public Point3 axisZ { get; set; }
         public string scope => "rootGeometryOnly";
     }
-    public sealed class ConstructionQuery { public WorldRef world { get; internal set; } public EntityRef[] entities { get; internal set; } public string relationships { get; internal set; } }
+    public sealed class ConstructionQuery { public WorldRef world { get; internal set; } public EntityRef[] entities { get; internal set; } public string relationships { get; internal set; } public string geometryDiagnostics { get; internal set; } }
     public sealed class NetworkGeometry
     {
         public CubicCurve curve { get; set; } public EntityRef start { get; set; } public EntityRef end { get; set; }
@@ -57,6 +57,7 @@ namespace CS2MCP.Core
         public string scope => "explicitEntities";
         public EntityRef[] requestedEntities { get; set; } public ConstructionEntity[] entities { get; set; }
         public ConstructionRelationshipSnapshot relationships { get; set; }
+        public GeometryDiagnosticSnapshot geometryDiagnostics { get; set; }
         public object worldBounds => null; public string worldBoundsReason => "notMeasured";
         public string nextCursor => null; public bool truncated => false;
         public string support => "partial"; public string nativeVerification => "CON-01:notRun";

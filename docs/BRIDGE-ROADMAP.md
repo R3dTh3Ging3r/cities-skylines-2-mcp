@@ -1,8 +1,13 @@
 # CS2 bridge improvement roadmap
 
-October 16: development resumed by Eric's instruction; O1 preparation-only source
-review is accepted. See [current bounded scope](handoff/RESUME-2026-10-16.md).
-The curve-readback native smoke pass does not close G1–G4 or the remaining tasks.
+October 17: [the PR4–8 reconciliation](handoff/ROADMAP-RECONCILIATION-2026-10-16.md)
+records the current accepted source stack and remaining dependencies. It includes
+bounded geometry/relationships, city/transit observations, typed metrics and
+collected comparisons; operation completion, all-writer control and native
+G1–G4 gates remain open. Computed grade/curvature inspection of existing network curves through C1/O7
+is now independently accepted as a bounded read-only source slice; see its
+[acceptance and limitations](handoff/NETWORK-GEOMETRY-2026-10-17.md).
+The earlier curve-readback native smoke does not validate the newer source stack.
 
 October 13 execution status: see [the authoritative handoff](HANDOFF.md). F1–F6 are accepted offline; O1 awaits independent review; other tasks remain pending and native gates remain notRun. The dated proposal below is retained as planning history.
 

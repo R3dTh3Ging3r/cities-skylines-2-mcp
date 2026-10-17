@@ -43,7 +43,11 @@ async function actualExit(kind,admission=false){
  for await(const chunk of req){}
  res.on('close',()=>detached=true);entered();
  });http.listen(0,'127.0.0.1');await once(http,'listening');
- const child=spawn(process.execPath,['dist/index.js'],{cwd:new URL('..',import.meta.url),env:{...process.env,CS2_BRIDGE_URL:`http://127.0.0.1:${http.address().port}`},stdio:['pipe','pipe','pipe']});
+ const windowsSignal=process.platform==='win32'&&kind==='signal';
+ const entryUrl=new URL('../dist/index.js',import.meta.url).href;
+ // Windows child.kill('SIGTERM') is forceful, so use IPC to emit the same Node signal event there.
+ const windowsBootstrap=`process.on('message',message=>{if(message==='SIGTERM'){process.emit('SIGTERM');process.disconnect();}});void import(${JSON.stringify(entryUrl)});`;
+ const child=spawn(process.execPath,windowsSignal?['-e',windowsBootstrap]:['dist/index.js'],{cwd:new URL('..',import.meta.url),env:{...process.env,CS2_BRIDGE_URL:`http://127.0.0.1:${http.address().port}`},stdio:windowsSignal?['pipe','pipe','pipe','ipc']:['pipe','pipe','pipe']});
  child.stderr.on('data',()=>{});const lines=createInterface({input:child.stdout});const pending=new Map();
  lines.on('line',line=>{const response=JSON.parse(line);pending.get(response.id)?.(response);});
  const send=(id,method,params)=>new Promise(resolve=>{pending.set(id,resolve);child.stdin.write(JSON.stringify({jsonrpc:'2.0',id,method,params})+'\n');});
@@ -53,13 +57,13 @@ async function actualExit(kind,admission=false){
  child.stdin.write(JSON.stringify({jsonrpc:'2.0',method:'notifications/initialized'})+'\n');
  void send(2,'tools/call',{name:'cs2_collect_observations',arguments:spec()});
  await Promise.race([incoming,delay(1500).then(()=>{throw new Error('no HTTP poll/admission');})]);
- if(kind==='eof')child.stdin.end();else child.kill('SIGTERM');
+ if(kind==='eof')child.stdin.end();else if(windowsSignal)child.send('SIGTERM');else child.kill('SIGTERM');
  const exit=await Promise.race([exited,delay(1500).then(()=>{throw new Error('collector kept stdio child alive after disconnect');})]);
  assert.equal(exit[0],0);for(let i=0;!detached&&i<30;i++)await delay(10);assert.equal(detached,true,'pending HTTP was not detached');
  }finally{child.kill('SIGKILL');lines.close();http.closeAllConnections();http.close();await once(http,'close');}
 }
 test('actual stdio EOF aborts collection HTTP and exits before client termination fallback',()=>actualExit('eof'));
-test('actual stdio SIGTERM aborts pending admission HTTP and exits cleanly',()=>actualExit('signal',true));
+test('stdio SIGTERM lifecycle aborts pending admission HTTP and exits cleanly',()=>actualExit('signal',true));
 
 test('actual SDK keeps error hooks through queued onclose errors for owner and external close',async()=>{
  for(const external of [false,true]){

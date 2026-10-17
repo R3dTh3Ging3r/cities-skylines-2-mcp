@@ -30,8 +30,9 @@ namespace CS2MCP.Core
         }
         public static ConstructionQuery Parse(IDictionary<string,string> query)
         {
-            if (query == null || (query.Count != 3 && query.Count != 4) || query.Keys.Any(k=>k!="bootId" && k!="epoch" && k!="entities" && k!="relationships") ||
+            if (query == null || (query.Count < 3 || query.Count > 5) || query.Keys.Any(k=>k!="bootId" && k!="epoch" && k!="entities" && k!="relationships" && k!="geometryDiagnostics") ||
                 (query.TryGetValue("relationships",out string mode) && mode!="directDepth1") ||
+                (query.TryGetValue("geometryDiagnostics",out string diagnostics) && diagnostics!="sampledCubicV1") ||
                 !query.TryGetValue("bootId",out string boot) || string.IsNullOrWhiteSpace(boot) || boot.Length>128 ||
                 !query.TryGetValue("epoch",out string epochText) || !long.TryParse(epochText,NumberStyles.None,CultureInfo.InvariantCulture,out long epoch) || epoch>MaxSafeEpoch ||
                 !query.TryGetValue("entities",out string raw) || string.IsNullOrEmpty(raw) || raw.Length>704)
@@ -46,7 +47,7 @@ namespace CS2MCP.Core
                     throw CommandJson.Invalid("invalid or duplicate explicit entity index/version");
                 entities[i]=new EntityRef{world=world,index=index,version=version};
             }
-            return new ConstructionQuery{world=world,entities=entities,relationships=query.TryGetValue("relationships",out string selected)?selected:null};
+            return new ConstructionQuery{world=world,entities=entities,relationships=query.TryGetValue("relationships",out string selected)?selected:null,geometryDiagnostics=query.TryGetValue("geometryDiagnostics",out string diagnosticMode)?diagnosticMode:null};
         }
         public static Observation<ConstructionSnapshot> Read(IDictionary<string,string> query,WorldIdentity worlds,
             Func<long> frame,Func<EntityRef,ConstructionEntity> readEntity,IConstructionRelationshipSource relationships=null)
@@ -74,11 +75,13 @@ namespace CS2MCP.Core
                     } else if(ownerSource.present==null)entity.ownerReason=ownerSource.reason;
                 }
             }
+            var geometry=request.geometryDiagnostics==null?null:NetworkGeometryDiagnostics.Read(entities,worlds,request.world);
             observation.endFrame=frame();observation.sampledAtUtc=DateTime.UtcNow;
             worlds.Validate(request.world);
-            observation.data=new ConstructionSnapshot{requestedEntities=request.entities,entities=entities,relationships=expanded};
+            observation.data=new ConstructionSnapshot{requestedEntities=request.entities,entities=entities,relationships=expanded,geometryDiagnostics=geometry};
             observation.freshness="current";
             var warnings=new List<string>{"partialExplicitEntityInventory","rootGeometryOnly","nativeConstructionFixtureNotRun"};
+            if(geometry!=null)warnings.Add("computedGeometrySamplesNotEngineeringValidation");
             if(expanded!=null)warnings.Add("directRelationshipsNotCompleteFacilityGeometry");
             if(observation.startFrame!=observation.endFrame)warnings.Add("multiFrameReadNotAtomic");
             observation.warnings=warnings.ToArray();

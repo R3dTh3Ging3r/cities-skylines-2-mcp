@@ -42,5 +42,5 @@
     <Compile Include="../../CS2MCP.Bridge/EndpointCatalog.cs" Link="EndpointCatalog.cs" />
     <Compile Include="../../CS2MCP.Bridge/Core/ConstructionContracts.cs" Link="Core/ConstructionContracts.cs" />
     <Compile Include="../../CS2MCP.Bridge/Core/ConstructionInventory.cs" Link="Core/ConstructionInventory.cs" />
-  <Compile Include="ObservationBindingTestDependencies.cs" /><Compile Include="../../CS2MCP.Bridge/RequestHandlers.Observations.cs" /><Compile Include="../../CS2MCP.Bridge/Core/ConstructionRelationships.cs" /></ItemGroup>
+  <Compile Include="ObservationBindingTestDependencies.cs" /><Compile Include="../../CS2MCP.Bridge/RequestHandlers.Observations.cs" /><Compile Include="../../CS2MCP.Bridge/Core/ConstructionRelationships.cs" /><Compile Include="../../CS2MCP.Bridge/Core/NetworkGeometryDiagnostics.cs" /><Compile Include="NetworkGeometryDiagnosticTests.cs" /></ItemGroup>
 </Project>
